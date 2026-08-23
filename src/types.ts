@@ -1,0 +1,198 @@
+export type NavTab = 
+  | 'impact' 
+  | 'about' 
+  | 'team' 
+  | 'projects' 
+  | 'donate' 
+  | 'gallery' 
+  | 'news' 
+  | 'volunteer' 
+  | 'transparency'
+  | 'contact' 
+  | 'admin';
+
+export type Language = 'en' | 'np';
+
+export type Currency = 'NPR' | 'USD';
+
+export interface ProjectUpdate {
+  date: string;
+  title: string;
+  titleNp?: string;
+  description: string;
+  descriptionNp?: string;
+}
+
+export interface Project {
+  id: string;
+  title: string;
+  titleNp?: string;
+  category: string;
+  categoryNp?: string;
+  categoryType: 'clean-energy' | 'water' | 'agriculture' | 'education' | 'healthcare' | 'relief' | 'infrastructure';
+  description: string;
+  descriptionNp?: string;
+  fullDescription?: string;
+  fullDescriptionNp?: string;
+  status: 'Active' | 'Completed';
+  fundedPercentage: number;
+  goalAmountNpr: number;
+  raisedAmountNpr: number;
+  goalAmountUsd: number;
+  raisedAmountUsd: number;
+  location: string;
+  locationNp?: string;
+  beneficiaries: string;
+  beneficiariesNp?: string;
+  imageUrl: string;
+  imageAlt: string;
+  galleryImages?: string[];
+  updates?: ProjectUpdate[];
+}
+
+export interface StatMetric {
+  id: string;
+  number: string;
+  label: string;
+  labelNp?: string;
+  color: 'primary' | 'secondary';
+  description?: string;
+  descriptionNp?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  nameNp?: string;
+  role: string;
+  roleNp?: string;
+  category: 'core' | 'advisor' | 'volunteer';
+  bio: string;
+  bioNp?: string;
+  location: string;
+  avatarUrl: string;
+  phone?: string;
+  email?: string;
+  facebook?: string;
+  linkedin?: string;
+}
+
+export interface GalleryMedia {
+  id: string;
+  title: string;
+  titleNp?: string;
+  category: 'Education' | 'Clean Water' | 'Healthcare' | 'Disaster Relief' | 'Agriculture & Environment';
+  type: 'photo' | 'video';
+  mediaUrl: string;
+  thumbnailUrl: string;
+  videoEmbedUrl?: string;
+  location: string;
+  date: string;
+  description?: string;
+}
+
+export interface NewsArticle {
+  id: string;
+  title: string;
+  titleNp?: string;
+  category: string;
+  date: string;
+  readTime: string;
+  author: string;
+  summary?: string;
+  summaryNp?: string;
+  excerpt?: string;
+  excerptNp?: string;
+  content: string;
+  contentNp?: string;
+  imageUrl: string;
+  isEvent?: boolean;
+  eventDate?: string;
+  eventLocation?: string;
+}
+
+export interface ExpenseLedgerItem {
+  id: string;
+  date: string;
+  item: string;
+  itemNp?: string;
+  category: string;
+  project: string;
+  vendor: string;
+  amountNpr: number;
+  status: 'Verified' | 'Audited';
+}
+
+export interface AnnualAuditReport {
+  id: string;
+  fiscalYear: string;
+  title: string;
+  titleNp?: string;
+  fileSize: string;
+  auditor: string;
+  totalIncomeNpr: number;
+  totalExpenditureNpr: number;
+}
+
+export interface VolunteerFormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  province: string;
+  district: string;
+  interest: string;
+  availability: string;
+  reason: string;
+  experience?: string;
+  agreeTerms?: boolean;
+}
+
+export interface VolunteerRecord extends VolunteerFormData {
+  id: string;
+  submittedAt: string;
+  status: 'Pending' | 'Approved' | 'Contacted';
+  volunteerId: string;
+}
+
+export interface DonationSubmission {
+  amount: number;
+  currency: Currency;
+  customAmount?: string;
+  frequency: 'one-time' | 'monthly';
+  paymentMethod: 'esewa' | 'khalti' | 'fonepay' | 'bank' | 'card';
+  donorName: string;
+  donorEmail: string;
+  donorPhone?: string;
+  projectId?: string;
+  projectName?: string;
+  address?: string;
+  receiptNumber?: string;
+  transactionRef?: string;
+  date?: string;
+}
+
+export interface DonationRecord {
+  id: string;
+  donorName: string;
+  donorEmail: string;
+  donorPhone?: string;
+  amount: number;
+  currency: Currency;
+  frequency: 'one-time' | 'monthly';
+  paymentMethod: 'esewa' | 'khalti' | 'fonepay' | 'bank' | 'card';
+  projectName: string;
+  date: string;
+  receiptNumber: string;
+  status: 'Verified' | 'Pending';
+}
+
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  date: string;
+  status: 'New' | 'Replied';
+}
