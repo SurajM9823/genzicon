@@ -90,13 +90,12 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#00743a] block mb-0.5">
-                {isNp ? 'प्रत्यक्ष तथा पारदर्शी सहयोग' : 'Direct & Transparent Giving'}
+                {isNp ? 'पारदर्शी सहयोग' : 'Transparent Giving'}
               </span>
               <h1
-                className="text-xl sm:text-2xl md:text-3xl font-bold text-[#111c2d]"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
+                className="text-xl sm:text-2xl md:text-3xl font-bold text-[#111c2d] font-heading"
               >
-                {isNp ? 'अनलाइन सहयोग पोर्टल' : 'Official Donation Portal'}
+                {isNp ? 'सहयोग पोर्टल' : 'Support Our Mission'}
               </h1>
             </div>
             <p className="text-xs text-[#434653] max-w-md">

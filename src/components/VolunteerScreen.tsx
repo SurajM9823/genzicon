@@ -4,7 +4,11 @@ import {
   CheckCircle2, 
   HeartHandshake, 
   ShieldCheck,
-  Send
+  Send,
+  Shirt,
+  Trees,
+  Briefcase,
+  MapPin
 } from 'lucide-react';
 import { Language, VolunteerFormData } from '../types';
 
@@ -22,10 +26,10 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
     fullName: '',
     email: '',
     phone: '',
-    province: 'Madhesh Province',
-    district: 'Dhanusha',
-    interest: 'Clean Water & Field Engineering',
-    availability: 'Weekends (8-10 hours/week)',
+    province: 'Bagmati Province',
+    district: 'Kathmandu',
+    interest: 'Clothes Bank Nepal (Collection, Sorting & Distribution)',
+    availability: 'Weekends (Saturday/Sunday)',
     reason: '',
     experience: '',
     agreeTerms: true
@@ -34,24 +38,24 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
   const [loading, setLoading] = useState(false);
 
   const nepalProvinces = [
-    'Madhesh Province',
     'Bagmati Province',
-    'Karnali Province',
+    'Madhesh Province',
     'Gandaki Province',
     'Koshi Province',
     'Lumbini Province',
+    'Karnali Province',
     'Sudurpashchim Province',
     'International / Remote'
   ];
 
   const interestAreas = [
-    'Clean Water & Field Engineering',
-    'Solar Electricity & Mountain Classrooms',
-    'Rural Health & Medical Camps',
-    'Girls in Tech & Computer Literacy',
-    'Monsoon Flood & Disaster Relief',
-    'Chure Range Agroforestry & Tree Plantation',
-    'Photography, Video & Social Media'
+    'Clothes Bank Nepal (Collection, Sorting & Quality Inspection)',
+    'Clothes Bank Nepal (Field Distribution & Cold Wave Relief)',
+    'Clean Nepal, Green Nepal (100K Tree Plantation & Chure Reforestation)',
+    'Clean Nepal, Green Nepal (Bagmati River Cleanups & Plastic Reduction)',
+    'Skills & Business (Women Tailoring & Garment Making Trainer)',
+    'Skills & Business (Youth Digital IT, Computer & Mobile Repair Trainer)',
+    'Logistics, Warehousing & Vehicle Transportation'
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -72,19 +76,18 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#003c90] block mb-0.5">
-                {isNp ? 'युवा स्वयंसेवक सञ्जाल' : 'Youth Volunteer Taskforce'}
+                {isNp ? 'स्वयंसेवक सञ्जाल' : 'Volunteer Taskforce'}
               </span>
               <h1
-                className="text-xl sm:text-2xl md:text-3xl font-bold text-[#111c2d]"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
+                className="text-xl sm:text-2xl md:text-3xl font-bold text-[#111c2d] font-heading"
               >
                 {isNp ? 'स्वयंसेवक दर्ता फारम' : 'Join Our Volunteer Network'}
               </h1>
             </div>
             <p className="text-xs text-[#434653] max-w-md">
               {isNp
-                ? 'खानेपानी, सौर्य ऊर्जा र स्वास्थ्य शिविरमा प्रत्यक्ष योगदान गर्नुहोस्। दर्तापश्चात डिजिटल पास प्राप्त हुन्छ।'
-                : 'Connect with local field coordinators across all 7 provinces. Receive an official digital volunteer ID pass.'}
+                ? 'कपडा बैंक, वृक्षारोपण र महिला सिलाई तालिममा आफ्नो सीप र समय योगदान गर्नुहोस्।'
+                : 'Serve in Clothes Bank sorting hubs, plant trees in Chure, or train women in sewing and youth in tech.'}
             </p>
           </div>
         </div>
@@ -119,7 +122,7 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="you@example.com"
+                    placeholder="name@example.com"
                     className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
                   />
                 </div>
@@ -128,7 +131,7 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                    {isNp ? 'फोन / ह्वाट्सएप *' : 'Phone / WhatsApp *'}
+                    {isNp ? 'सम्पर्क फोन *' : 'Mobile Phone *'}
                   </label>
                   <input
                     type="tel"
@@ -136,163 +139,161 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="98XXXXXXXX"
-                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                    {isNp ? 'प्रदेश *' : 'Province *'}
+                    {isNp ? 'प्रदेश' : 'Province'}
                   </label>
                   <select
                     value={formData.province}
                     onChange={(e) => setFormData({ ...formData, province: e.target.value })}
-                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   >
-                    {nepalProvinces.map((p) => (
-                      <option key={p} value={p}>{p}</option>
+                    {nepalProvinces.map((prov) => (
+                      <option key={prov} value={prov}>
+                        {prov}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                    {isNp ? 'जिल्ला वा ठेगाना *' : 'District *'}
+                    {isNp ? 'जिल्ला / सहर' : 'District / City'}
                   </label>
                   <input
                     type="text"
                     required
                     value={formData.district}
                     onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                    placeholder="e.g. Dhanusha / Jumla"
-                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    placeholder="Kathmandu / Janakpur"
+                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                    {isNp ? 'रुचि भएको क्षेत्र *' : 'Interest Area *'}
-                  </label>
-                  <select
-                    value={formData.interest}
-                    onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
-                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
-                  >
-                    {interestAreas.map((area) => (
-                      <option key={area} value={area}>{area}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                    {isNp ? 'उपलब्धता *' : 'Availability *'}
-                  </label>
-                  <select
-                    value={formData.availability}
-                    onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
-                    className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
-                  >
-                    <option value="Weekends (8-10 hours/week)">Weekends (8-10 hrs/week)</option>
-                    <option value="Full-Time Field Deployment (2-4 weeks)">Full-Time Deployment (2-4 wks)</option>
-                    <option value="Flexible Remote Online">Flexible Online</option>
-                    <option value="On-Call Emergency Flood/Earthquake">Emergency Relief Only</option>
-                  </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                  {isNp ? 'छोटो विवरण वा अनुभव (वैकल्पिक)' : 'Skills / Experience (Optional)'}
+                  {isNp ? 'तपाईंको रुचिको मुख्य क्षेत्र *' : 'Primary Area of Interest (3 Pillars) *'}
+                </label>
+                <select
+                  value={formData.interest}
+                  onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
+                  className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                >
+                  {interestAreas.map((area) => (
+                    <option key={area} value={area}>
+                      {area}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                  {isNp ? 'उपलब्धता / समय' : 'Availability / Time Commitment'}
+                </label>
+                <select
+                  value={formData.availability}
+                  onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
+                  className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                >
+                  <option value="Weekends (Saturday/Sunday)">Weekends (Saturday / Sunday)</option>
+                  <option value="Part-time (5-10 hours/week)">Part-time (5-10 hours/week)</option>
+                  <option value="Full-time Field Volunteer">Full-time Field Volunteer</option>
+                  <option value="Emergency Disaster Callout">On-call Emergency & Disaster Callout</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                  {isNp ? 'स्वयंसेवक बन्न चाहनुको कारण र अनुभव' : 'Why do you want to volunteer? & Prior Experience'}
                 </label>
                 <textarea
-                  rows={2}
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  placeholder={isNp ? 'तपाईंको अनुभव वा सीप...' : 'Tell us about your background...'}
-                  className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  rows={3}
+                  required
+                  value={formData.reason}
+                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+                  placeholder={isNp ? 'तपाईं कसरी सहयोग गर्न सक्नुहुन्छ...' : 'Tell us about your background, skills, or why you want to serve...'}
+                  className="w-full px-3 py-2 rounded-none sm:rounded-xs border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="agreeTerms"
-                  checked={formData.agreeTerms}
-                  onChange={(e) => setFormData({ ...formData, agreeTerms: e.target.checked })}
-                  className="w-3.5 h-3.5 text-[#003c90] border-[#d8e3fb] rounded-none focus:ring-0"
-                />
-                <label htmlFor="agreeTerms" className="text-[11px] text-[#434653]">
-                  {isNp ? 'म जेन्जिकन फाउन्डेशनको स्वयंसेवक आचारसंहिता पालना गर्न सहमत छु।' : 'I agree to the Genzicon Volunteer Code of Conduct.'}
-                </label>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-2.5 bg-[#003c90] hover:bg-[#002660] text-white rounded-none sm:rounded-xs text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  {loading ? (
+                    <span>Submitting...</span>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>{isNp ? 'दर्ता पेश गर्नुहोस् (Submit Registration)' : 'Submit Volunteer Application'}</span>
+                    </>
+                  )}
+                </button>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading || !formData.agreeTerms}
-                className="w-full py-2.5 bg-[#003c90] hover:bg-[#002660] disabled:bg-[#737784] text-white rounded-none sm:rounded-xs text-xs font-bold uppercase tracking-wider transition-colors shadow-xs flex items-center justify-center gap-2"
-              >
-                <span>{loading ? (isNp ? 'दर्ता हुँदैछ...' : 'Registering...') : (isNp ? 'आवेदन दर्ता गर्नुहोस्' : 'Submit Registration')}</span>
-                <Send className="w-3.5 h-3.5" />
-              </button>
             </form>
           </div>
 
-          {/* Volunteer Benefits Sidebar (Right) */}
+          {/* Right Information Sidebar */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="bg-white p-4 sm:p-5 rounded-none sm:rounded-xs border border-[#d8e3fb]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#00743a] block mb-1">
-                {isNp ? 'स्वयंसेवक सुविधाहरू' : 'Volunteer Perks'}
-              </span>
-              <h3 className="text-sm font-bold text-[#111c2d] mb-3">
-                {isNp ? 'हामीसँग जोडिएपछि के पाउनुहुन्छ?' : 'Official Field Accreditation'}
+            <div className="bg-white p-5 rounded-none sm:rounded-xs border border-[#d8e3fb] shadow-xs">
+              <h3 className="text-xs font-bold text-[#003c90] uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <HeartHandshake className="w-4 h-4 text-[#00743a]" />
+                <span>{isNp ? 'स्वयंसेवकका मुख्य अवसरहरू' : 'Volunteer Tracks across 3 Pillars'}</span>
               </h3>
 
-              <div className="space-y-2.5 text-xs text-[#434653]">
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#00743a] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-[#111c2d] block text-xs">Official Digital Volunteer ID:</strong>
-                    <span>Instant verifiable pass with SWC registration affiliation.</span>
+              <div className="space-y-3 text-xs text-[#434653]">
+                <div className="p-3 bg-[#f9f9ff] border-l-2 border-[#003c90]">
+                  <div className="font-bold text-[#111c2d] flex items-center gap-1">
+                    <Shirt className="w-3.5 h-3.5 text-[#003c90]" />
+                    <span>Clothes Bank Operations</span>
                   </div>
+                  <p className="text-[11px] text-[#737784] mt-0.5">
+                    {isNp ? 'कपडा छनोट, सफाइ, प्याकिङ र फिल्ड वितरण व्यवस्थापन।' : 'Sorting pre-loved clothes at city hubs, quality checks, and cold-wave distributions.'}
+                  </p>
                 </div>
 
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#00743a] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-[#111c2d] block text-xs">Certificate of Service:</strong>
-                    <span>Signed credential useful for academic and fellowship applications.</span>
+                <div className="p-3 bg-[#f9f9ff] border-l-2 border-[#00743a]">
+                  <div className="font-bold text-[#111c2d] flex items-center gap-1">
+                    <Trees className="w-3.5 h-3.5 text-[#00743a]" />
+                    <span>Clean & Green Eco-Brigade</span>
                   </div>
+                  <p className="text-[11px] text-[#737784] mt-0.5">
+                    {isNp ? 'चुरे क्षेत्रमा वृक्षारोपण र बागमती नदी सरसफाइ।' : 'Planting fruit trees, monitoring survival rates, and leading river plastic cleanups.'}
+                  </p>
                 </div>
 
-                <div className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#00743a] shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-[#111c2d] block text-xs">Field Travel & Food Stipend:</strong>
-                    <span>Covered during rural deployments and medical eye camps.</span>
+                <div className="p-3 bg-[#f9f9ff] border-l-2 border-amber-600">
+                  <div className="font-bold text-[#111c2d] flex items-center gap-1">
+                    <Briefcase className="w-3.5 h-3.5 text-amber-700" />
+                    <span>Skills & Entrepreneurship Mentor</span>
                   </div>
+                  <p className="text-[11px] text-[#737784] mt-0.5">
+                    {isNp ? 'महिलाहरूलाई सिलाई र युवालाई कम्प्युटर/मोबाइल तालिम।' : 'Teaching tailoring, bookkeeping, computer literacy, and business planning.'}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-[#003c90] text-white p-4 sm:p-5 rounded-none sm:rounded-xs">
-              <div className="flex items-center gap-2 mb-2">
-                <HeartHandshake className="w-5 h-5 text-emerald-400" />
-                <h4 className="font-bold text-xs">Direct WhatsApp Support</h4>
-              </div>
-              <p className="text-[11px] text-white/80 mb-3">
-                Have questions regarding upcoming camps? Talk directly to our volunteer coordinator.
+            <div className="bg-[#003c90] text-white p-5 rounded-none sm:rounded-xs">
+              <h4 className="text-xs font-bold uppercase tracking-wider mb-2">
+                {isNp ? 'स्वयंसेवक प्रमाण-पत्र र आईडी' : 'Official Certificate & ID Pass'}
+              </h4>
+              <p className="text-xs text-blue-100 leading-relaxed mb-3">
+                {isNp
+                  ? '५० घण्टाभन्दा बढी सामाजिक कार्यमा खटिएका स्वयंसेवकहरूलाई आधिकारिक अनुभव प्रमाण-पत्र र सिफारिस पत्र प्रदान गरिन्छ।'
+                  : 'Volunteers completing over 50 field hours receive an official verified certificate, digital volunteer pass, and career recommendation letter.'}
               </p>
-              <a
-                href="https://wa.me/9779823000000"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-block px-3 py-1.5 bg-white text-[#003c90] text-[11px] font-bold uppercase tracking-wider rounded-none hover:bg-slate-100 transition-colors"
-              >
-                Chat on WhatsApp (+977-9823000000)
-              </a>
+              <div className="text-[11px] font-mono text-emerald-300 font-bold">
+                • 5,800+ Active Youth Volunteers across 77 Districts
+              </div>
             </div>
           </div>
         </div>

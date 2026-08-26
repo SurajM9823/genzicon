@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomeScreen } from './components/HomeScreen';
+import { ClothesBankScreen } from './components/ClothesBankScreen';
+import { PillarsScreen } from './components/PillarsScreen';
 import { VolunteerScreen } from './components/VolunteerScreen';
 import { DonateScreen } from './components/DonateScreen';
-import { ProjectsScreen } from './components/ProjectsScreen';
-import { AboutScreen } from './components/AboutScreen';
-import { TransparencyScreen } from './components/TransparencyScreen';
-import { NewsScreen } from './components/NewsScreen';
-import { TeamScreen } from './components/TeamScreen';
-import { GalleryScreen } from './components/GalleryScreen';
 import { ContactScreen } from './components/ContactScreen';
 import { AdminScreen } from './components/AdminScreen';
+import { FloatingSocialSidebar } from './components/FloatingSocialSidebar';
 import { ProjectDetailModal } from './components/ProjectDetailModal';
 import { DonationReceiptModal } from './components/DonationReceiptModal';
 import { VolunteerSuccessModal } from './components/VolunteerSuccessModal';
@@ -24,10 +21,6 @@ export default function App() {
   const [activeProjectDetail, setActiveProjectDetail] = useState<Project | null>(null);
   const [lastDonation, setLastDonation] = useState<DonationSubmission | null>(null);
   const [volunteerSuccessData, setVolunteerSuccessData] = useState<VolunteerFormData | null>(null);
-
-  const handleToggleLanguage = () => {
-    setLanguage((prev) => (prev === 'en' ? 'np' : 'en'));
-  };
 
   const handleSelectTab = (tab: NavTab) => {
     setCurrentTab(tab);
@@ -57,14 +50,16 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f9f9ff] text-[#111c2d]">
+    <div className="min-h-screen flex flex-col bg-[#f9f9ff] text-[#111c2d] relative">
+      {/* Floating Left-Side WhatsApp & Facebook NGO Quick Connect Dock */}
+      <FloatingSocialSidebar />
+
       {/* Fixed Sticky Header Navigation */}
       <Navbar
         currentTab={currentTab}
         language={language}
         onSelectTab={handleSelectTab}
         onOpenDonate={() => handleOpenDonate()}
-        onToggleLanguage={handleToggleLanguage}
       />
 
       {/* Main Content View Switcher */}
@@ -78,32 +73,27 @@ export default function App() {
           />
         )}
 
-        {currentTab === 'projects' && (
-          <ProjectsScreen
+        {currentTab === 'clothes-bank' && (
+          <ClothesBankScreen
             language={language}
-            onOpenProjectDetail={handleOpenProjectDetail}
-            onQuickDonateProject={handleOpenDonate}
-            onSelectTab={handleSelectTab}
+            onOpenDonateModal={() => handleOpenDonate()}
+            onNavigateToVolunteer={() => handleSelectTab('volunteer')}
           />
         )}
 
-        {currentTab === 'about' && (
-          <AboutScreen
+        {(currentTab === 'initiatives' || currentTab === 'projects') && (
+          <PillarsScreen
             language={language}
-            onSelectTab={handleSelectTab}
+            onNavigateToClothesBank={() => handleSelectTab('clothes-bank')}
+            onOpenDonateModal={() => handleOpenDonate()}
+            onNavigateToVolunteer={() => handleSelectTab('volunteer')}
           />
         )}
 
-        {currentTab === 'team' && (
-          <TeamScreen
+        {(currentTab === 'contact' || currentTab === 'about') && (
+          <ContactScreen
             language={language}
             onSelectTab={handleSelectTab}
-          />
-        )}
-
-        {currentTab === 'gallery' && (
-          <GalleryScreen
-            language={language}
           />
         )}
 
@@ -119,24 +109,6 @@ export default function App() {
             language={language}
             selectedProject={selectedProject}
             onDonateComplete={handleDonateComplete}
-          />
-        )}
-
-        {currentTab === 'transparency' && (
-          <TransparencyScreen
-            language={language}
-          />
-        )}
-
-        {currentTab === 'news' && (
-          <NewsScreen
-            language={language}
-          />
-        )}
-
-        {currentTab === 'contact' && (
-          <ContactScreen
-            language={language}
           />
         )}
 

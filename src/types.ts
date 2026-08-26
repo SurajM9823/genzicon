@@ -1,19 +1,87 @@
 export type NavTab = 
   | 'impact' 
+  | 'clothes-bank'
+  | 'initiatives'
   | 'about' 
   | 'team' 
-  | 'projects' 
-  | 'donate' 
-  | 'gallery' 
-  | 'news' 
   | 'volunteer' 
-  | 'transparency'
+  | 'donate' 
   | 'contact' 
-  | 'admin';
+  | 'admin'
+  | 'projects'
+  | 'gallery'
+  | 'transparency'
+  | 'news';
 
 export type Language = 'en' | 'np';
 
 export type Currency = 'NPR' | 'USD';
+
+export interface ClothesDonationRequest {
+  id: string;
+  donorName: string;
+  phone: string;
+  email: string;
+  province: string;
+  district: string;
+  city: string;
+  address: string;
+  clothesType: 'winter' | 'summer' | 'kids' | 'blankets' | 'mixed';
+  approxItemsCount: number;
+  donationMode: 'doorstep_pickup' | 'dropoff_center';
+  dropoffHub?: string;
+  pickupDate?: string;
+  notes?: string;
+  date: string;
+  status: 'Pending' | 'Scheduled' | 'Collected' | 'Distributed';
+}
+
+export interface ClothesAssistanceRequest {
+  id: string;
+  applicantName: string;
+  organization?: string;
+  phone: string;
+  email?: string;
+  province: string;
+  district: string;
+  locationDetails: string;
+  beneficiaryCount: number;
+  urgencyReason: 'winter_cold_wave' | 'flood_disaster' | 'orphanage_elderly' | 'marginalized_community' | 'remote_school';
+  requiredTypes: string[];
+  notes?: string;
+  date: string;
+  status: 'Pending' | 'Approved' | 'Dispatched' | 'Completed';
+}
+
+export interface DropoffHub {
+  id: string;
+  name: string;
+  nameNp: string;
+  city: string;
+  district: string;
+  address: string;
+  addressNp: string;
+  phone: string;
+  timing: string;
+  timingNp: string;
+}
+
+export interface PillarData {
+  id: 'clothes-bank' | 'clean-green-nepal' | 'skills-development';
+  key: string;
+  title: string;
+  titleNp: string;
+  subtitle: string;
+  subtitleNp: string;
+  badge: string;
+  badgeNp: string;
+  description: string;
+  descriptionNp: string;
+  highlights: string[];
+  highlightsNp: string[];
+  metrics: { value: string; label: string; labelNp: string }[];
+  imageUrl: string;
+}
 
 export interface ProjectUpdate {
   date: string;
