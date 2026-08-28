@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import (
-    SiteContent, ImpactStat, Project, 
+    SiteContent, ImpactStat, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry
 )
 
@@ -78,6 +78,34 @@ class ProjectAdmin(admin.ModelAdmin):
             'fields': ('description', 'description_np', 'full_description', 'full_description_np')
         }),
     )
+
+@admin.register(ClothesDonor)
+class ClothesDonorAdmin(admin.ModelAdmin):
+    list_display = ('name', 'location', 'items_count', 'clothes_type', 'date', 'is_verified', 'is_featured', 'image_preview')
+    list_editable = ('items_count', 'is_verified', 'is_featured')
+    list_filter = ('is_verified', 'is_featured', 'clothes_type')
+    search_fields = ('name', 'name_np', 'location', 'location_np', 'clothes_type', 'note')
+    fieldsets = (
+        ('Donor Profile', {
+            'fields': ('name', 'name_np', 'location', 'location_np', 'date')
+        }),
+        ('Contribution Details', {
+            'fields': ('items_count', 'clothes_type', 'clothes_type_np', 'note', 'note_np')
+        }),
+        ('Photo / Avatar (Upload OR URL)', {
+            'fields': ('donor_image', 'image_url')
+        }),
+        ('Display Settings', {
+            'fields': ('is_verified', 'is_featured')
+        })
+    )
+
+    def image_preview(self, obj):
+        url = obj.final_image_url
+        if url:
+            return format_html('<img src="{}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />', url)
+        return "-"
+    image_preview.short_description = "Avatar"
 
 @admin.register(ClothesDonation)
 class ClothesDonationAdmin(admin.ModelAdmin):

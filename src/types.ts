@@ -18,6 +18,23 @@ export type Language = 'en' | 'np';
 
 export type Currency = 'NPR' | 'USD';
 
+export interface ClothesDonor {
+  id: string;
+  name: string;
+  nameNp?: string;
+  location: string;
+  locationNp?: string;
+  itemsCount: number;
+  clothesType: string;
+  clothesTypeNp?: string;
+  imageUrl?: string;
+  note?: string;
+  noteNp?: string;
+  date: string;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+}
+
 export interface ClothesDonationRequest {
   id: string;
   donorName: string;

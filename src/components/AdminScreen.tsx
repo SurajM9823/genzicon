@@ -446,8 +446,6 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
             language={language}
             clothesDonations={clothesDonations}
             onSaveClothesDonations={handleSaveClothesDonations}
-            clothesAssistance={clothesAssistance}
-            onSaveClothesAssistance={handleSaveClothesAssistance}
           />
         )}
 

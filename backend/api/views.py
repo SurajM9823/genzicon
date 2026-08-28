@@ -6,11 +6,11 @@ from django.contrib.auth import authenticate
 from django.db.models import Sum, Count
 
 from .models import (
-    SiteContent, ImpactStat, Project, 
+    SiteContent, ImpactStat, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry
 )
 from .serializers import (
-    SiteContentSerializer, ImpactStatSerializer, ProjectSerializer,
+    SiteContentSerializer, ImpactStatSerializer, ProjectSerializer, ClothesDonorSerializer,
     ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer
 )
 
@@ -470,6 +470,134 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'project': ProjectSerializer(project, context={'request': request}).data
         })
 
+
+DEFAULT_CLOTHES_DONORS = [
+    {
+        'name': 'Suman Thapa',
+        'name_np': 'सुमन थापा',
+        'location': 'Kathmandu',
+        'location_np': 'काठमाडौँ',
+        'items_count': 45,
+        'clothes_type': 'Winter Jackets & Sweaters',
+        'clothes_type_np': 'जाडोको न्यानो ज्याकेट र स्विटर',
+        'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+        'note': 'Glad to contribute 45 warm jackets and woolen blankets for the winter relief drive.',
+        'note_np': 'शीतलहर पीडित दाजुभाइ तथा दिदीबहिनीका लागि ४५ थान न्यानो ज्याकेट सहयोग गर्न पाउँदा खुसी लागेको छ।',
+        'date': '2024-08-25',
+        'is_verified': True,
+        'is_featured': True
+    },
+    {
+        'name': 'Anjali Shrestha',
+        'name_np': 'अञ्जली श्रेष्ठ',
+        'location': 'Lalitpur (Kupondole)',
+        'location_np': 'ललितपुर (कुपण्डोल)',
+        'items_count': 32,
+        'clothes_type': 'Kids Wear & School Sweaters',
+        'clothes_type_np': 'बालबालिकाका कपडा र विद्यालय स्विटर',
+        'image_url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        'note': 'Happy to support children in remote mountain schools with warm school wear.',
+        'note_np': 'हिमाली विद्यालयका साना बालबालिकालाई न्यानो पोशाक पुगोस् भन्ने कामना गर्दछु।',
+        'date': '2024-08-24',
+        'is_verified': True,
+        'is_featured': True
+    },
+    {
+        'name': 'Prabin Adhikari',
+        'name_np': 'प्रबिन अधिकारी',
+        'location': 'Pokhara',
+        'location_np': 'पोखरा',
+        'items_count': 55,
+        'clothes_type': 'Blankets & Quilts',
+        'clothes_type_np': 'कम्बल तथा बाक्लो सिरक',
+        'image_url': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+        'note': 'Sent 55 warm blankets to protect vulnerable families from the Terai cold wave.',
+        'note_np': 'तराईको शीतलहरबाट विपन्न मुसहर बस्तीलाई जोगाउन ५५ थान कम्बल पठाएका छौँ।',
+        'date': '2024-08-22',
+        'is_verified': True,
+        'is_featured': True
+    },
+    {
+        'name': 'Bina Maharjan',
+        'name_np': 'बिना महर्जन',
+        'location': 'Bhaktapur',
+        'location_np': 'भक्तपुर',
+        'items_count': 28,
+        'clothes_type': 'Sweaters & Woolen Caps',
+        'clothes_type_np': 'ऊनको स्विटर र टोपी',
+        'image_url': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+        'note': 'Warm wishes for our sisters and brothers in need across Nepal.',
+        'note_np': 'जेन्जिकन कपडा बैंकको यो पवित्र अभियानलाई निरन्तर साथ रहनेछ।',
+        'date': '2024-08-20',
+        'is_verified': True,
+        'is_featured': True
+    },
+    {
+        'name': 'Roshan Khadka',
+        'name_np': 'रोशन खड्का',
+        'location': 'Chitwan / Bharatpur',
+        'location_np': 'चितवन / भरतपुर',
+        'items_count': 40,
+        'clothes_type': 'Mixed Family Clothing Pack',
+        'clothes_type_np': 'मिश्रित पारिवारिक कपडा सेट',
+        'image_url': 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=400&q=80',
+        'note': 'Honored to be part of Genzicon Clothes Bank Nepal movement.',
+        'note_np': 'घरमा रहेका सफा र उपयोगी कपडाहरू सही हातमा पुगेकोमा पूर्ण सन्तुष्ट छु।',
+        'date': '2024-08-18',
+        'is_verified': True,
+        'is_featured': True
+    },
+    {
+        'name': 'Sunita Chaudhary',
+        'name_np': 'सुनिता चौधरी',
+        'location': 'Janakpurdham',
+        'location_np': 'जनकपुरधाम',
+        'items_count': 35,
+        'clothes_type': 'Winter Shawls & Jackets',
+        'clothes_type_np': 'न्यानो सल तथा ज्याकेट',
+        'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+        'note': 'Directly dropped off warm shawls and clothes at the central hub.',
+        'note_np': 'केन्द्रमै पुगेर कपडा हस्तान्तरण गरेँ, स्वयंसेवकहरूको सेवाभाव अतुलनीय छ।',
+        'date': '2024-08-15',
+        'is_verified': True,
+        'is_featured': True
+    }
+]
+
+def ensure_default_clothes_donors():
+    """Seed sample clothes donors if table is empty"""
+    if ClothesDonor.objects.count() == 0:
+        for d in DEFAULT_CLOTHES_DONORS:
+            ClothesDonor.objects.create(
+                name=d['name'],
+                name_np=d.get('name_np', ''),
+                location=d['location'],
+                location_np=d.get('location_np', ''),
+                items_count=d['items_count'],
+                clothes_type=d['clothes_type'],
+                clothes_type_np=d.get('clothes_type_np', ''),
+                image_url=d['image_url'],
+                note=d.get('note', ''),
+                note_np=d.get('note_np', ''),
+                date=d['date'],
+                is_verified=d.get('is_verified', True),
+                is_featured=d.get('is_featured', True),
+            )
+
+class ClothesDonorViewSet(viewsets.ModelViewSet):
+    queryset = ClothesDonor.objects.all().order_by('-date', '-created_at')
+    serializer_class = ClothesDonorSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'name_np', 'location', 'location_np', 'clothes_type', 'note']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+
+    def list(self, request, *args, **kwargs):
+        ensure_default_clothes_donors()
+        return super().list(request, *args, **kwargs)
 
 class ClothesDonationViewSet(viewsets.ModelViewSet):
     queryset = ClothesDonation.objects.all()

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Shirt, 
   Search, 
@@ -13,55 +13,216 @@ import {
   Package, 
   Trash2, 
   X,
-  FileText
+  FileText,
+  UserCheck,
+  Edit,
+  Sparkles,
+  Image,
+  Quote,
+  ShieldCheck,
+  Building2,
+  Send
 } from 'lucide-react';
 import { 
   ClothesDonationRequest, 
-  ClothesAssistanceRequest, 
+  ClothesDonor, 
   Language 
 } from '../../types';
-import { apiUpdateClothesStatus } from '../../services/api';
+import { SAMPLE_CLOTHES_DONORS } from '../../data/mockData';
+import { 
+  apiUpdateClothesStatus, 
+  apiGetClothesDonors, 
+  apiCreateClothesDonor, 
+  apiUpdateClothesDonor, 
+  apiDeleteClothesDonor 
+} from '../../services/api';
 
 interface AdminClothesTabProps {
   language: Language;
   clothesDonations: ClothesDonationRequest[];
   onSaveClothesDonations: (updated: ClothesDonationRequest[]) => void;
-  clothesAssistance: ClothesAssistanceRequest[];
-  onSaveClothesAssistance: (updated: ClothesAssistanceRequest[]) => void;
 }
 
 export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
   language,
   clothesDonations,
   onSaveClothesDonations,
-  clothesAssistance,
-  onSaveClothesAssistance
 }) => {
   const isNp = language === 'np';
-  const [activeSubTab, setActiveSubTab] = useState<'donations' | 'assistance'>('donations');
+  const [activeSubTab, setActiveSubTab] = useState<'donors' | 'donations'>('donors');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterMode, setFilterMode] = useState<string>('all');
 
-  // Manual Add Modal
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newDonation, setNewDonation] = useState<Partial<ClothesDonationRequest>>({
-    donorName: '',
-    phone: '',
-    email: '',
-    province: 'Bagmati Province',
-    district: 'Kathmandu',
-    city: 'Kathmandu',
-    address: '',
-    clothesType: 'winter',
-    approxItemsCount: 20,
-    donationMode: 'doorstep_pickup',
-    pickupDate: new Date().toISOString().split('T')[0],
-    notes: '',
-    status: 'Pending'
+  // Clothes Donors List State
+  const [donors, setDonors] = useState<ClothesDonor[]>(() => {
+    const cached = localStorage.getItem('genzicon_clothes_donors');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) {
+        console.warn('Error parsing cached donors in admin', e);
+      }
+    }
+    return SAMPLE_CLOTHES_DONORS;
   });
 
-  const handleUpdateStatus = (id: string, newStatus: ClothesDonationRequest['status']) => {
+  // Fetch live donors from backend
+  useEffect(() => {
+    apiGetClothesDonors().then(liveDonors => {
+      if (liveDonors && liveDonors.length > 0) {
+        setDonors(liveDonors);
+        localStorage.setItem('genzicon_clothes_donors', JSON.stringify(liveDonors));
+      }
+    });
+  }, []);
+
+  const saveDonors = (updated: ClothesDonor[]) => {
+    setDonors(updated);
+    localStorage.setItem('genzicon_clothes_donors', JSON.stringify(updated));
+  };
+
+  // Donor Modal State (Add or Edit)
+  const [showDonorModal, setShowDonorModal] = useState(false);
+  const [editingDonorId, setEditingDonorId] = useState<string | null>(null);
+  const [donorForm, setDonorForm] = useState<Partial<ClothesDonor>>({
+    name: '',
+    nameNp: '',
+    location: 'Kathmandu',
+    locationNp: 'काठमाडौँ',
+    itemsCount: 30,
+    clothesType: 'Winter Jackets & Sweaters',
+    clothesTypeNp: 'जाडोको न्यानो ज्याकेट र स्विटर',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    note: '',
+    noteNp: '',
+    date: new Date().toISOString().split('T')[0],
+    isVerified: true,
+    isFeatured: true
+  });
+
+  const handleOpenAddDonor = () => {
+    setEditingDonorId(null);
+    setDonorForm({
+      name: '',
+      nameNp: '',
+      location: 'Kathmandu',
+      locationNp: 'काठमाडौँ',
+      itemsCount: 30,
+      clothesType: 'Winter Jackets & Sweaters',
+      clothesTypeNp: 'जाडोको न्यानो ज्याकेट र स्विटर',
+      imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      note: '',
+      noteNp: '',
+      date: new Date().toISOString().split('T')[0],
+      isVerified: true,
+      isFeatured: true
+    });
+    setShowDonorModal(true);
+  };
+
+  const handleOpenEditDonor = (donor: ClothesDonor) => {
+    setEditingDonorId(donor.id);
+    setDonorForm({
+      name: donor.name,
+      nameNp: donor.nameNp || '',
+      location: donor.location,
+      locationNp: donor.locationNp || '',
+      itemsCount: donor.itemsCount,
+      clothesType: donor.clothesType,
+      clothesTypeNp: donor.clothesTypeNp || '',
+      imageUrl: donor.imageUrl || '',
+      note: donor.note || '',
+      noteNp: donor.noteNp || '',
+      date: donor.date || new Date().toISOString().split('T')[0],
+      isVerified: donor.isVerified ?? true,
+      isFeatured: donor.isFeatured ?? true
+    });
+    setShowDonorModal(true);
+  };
+
+  const handleSaveDonorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!donorForm.name?.trim() || !donorForm.location?.trim()) {
+      alert(isNp ? 'कृपया नाम र ठेगाना भर्नुहोस्।' : 'Please enter donor name and location.');
+      return;
+    }
+
+    if (editingDonorId) {
+      // Update existing donor
+      const updatedList = donors.map(d => {
+        if (d.id === editingDonorId) {
+          return {
+            ...d,
+            name: donorForm.name!,
+            nameNp: donorForm.nameNp,
+            location: donorForm.location!,
+            locationNp: donorForm.locationNp,
+            itemsCount: Number(donorForm.itemsCount) || 1,
+            clothesType: donorForm.clothesType || 'Winter Wear',
+            clothesTypeNp: donorForm.clothesTypeNp,
+            imageUrl: donorForm.imageUrl || '',
+            note: donorForm.note,
+            noteNp: donorForm.noteNp,
+            date: donorForm.date,
+            isVerified: donorForm.isVerified,
+            isFeatured: donorForm.isFeatured
+          };
+        }
+        return d;
+      });
+      saveDonors(updatedList);
+      apiUpdateClothesDonor(editingDonorId, donorForm).catch(console.warn);
+    } else {
+      // Create new donor
+      const newId = `c-donor-${Date.now()}`;
+      const newDonorEntry: ClothesDonor = {
+        id: newId,
+        name: donorForm.name!,
+        nameNp: donorForm.nameNp,
+        location: donorForm.location!,
+        locationNp: donorForm.locationNp,
+        itemsCount: Number(donorForm.itemsCount) || 1,
+        clothesType: donorForm.clothesType || 'Winter Wear',
+        clothesTypeNp: donorForm.clothesTypeNp,
+        imageUrl: donorForm.imageUrl || '',
+        note: donorForm.note,
+        noteNp: donorForm.noteNp,
+        date: donorForm.date || new Date().toISOString().split('T')[0],
+        isVerified: donorForm.isVerified ?? true,
+        isFeatured: donorForm.isFeatured ?? true
+      };
+      saveDonors([newDonorEntry, ...donors]);
+      apiCreateClothesDonor({
+        name: donorForm.name!,
+        nameNp: donorForm.nameNp,
+        location: donorForm.location!,
+        locationNp: donorForm.locationNp,
+        itemsCount: Number(donorForm.itemsCount) || 1,
+        clothesType: donorForm.clothesType || 'Winter Wear',
+        clothesTypeNp: donorForm.clothesTypeNp,
+        imageUrl: donorForm.imageUrl || '',
+        note: donorForm.note,
+        noteNp: donorForm.noteNp,
+        date: donorForm.date,
+        isVerified: donorForm.isVerified,
+        isFeatured: donorForm.isFeatured
+      }).catch(console.warn);
+    }
+
+    setShowDonorModal(false);
+  };
+
+  const handleDeleteDonor = (id: string) => {
+    if (confirm(isNp ? 'के तपाईं यो दातालाई सूचीबाट हटाउन निश्चित हुनुहुन्छ?' : 'Are you sure you want to remove this donor from the Wall?')) {
+      const filtered = donors.filter(d => d.id !== id);
+      saveDonors(filtered);
+      apiDeleteClothesDonor(id).catch(console.warn);
+    }
+  };
+
+  // Submissions Handling
+  const handleUpdateDonationStatus = (id: string, newStatus: ClothesDonationRequest['status']) => {
     const updated = clothesDonations.map(item => {
       if (item.id === id) {
         return { ...item, status: newStatus };
@@ -72,63 +233,65 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
     apiUpdateClothesStatus(id, newStatus).catch(console.warn);
   };
 
-  const handleUpdateAssistanceStatus = (id: string, newStatus: ClothesAssistanceRequest['status']) => {
-    const updated = clothesAssistance.map(item => {
-      if (item.id === id) {
-        return { ...item, status: newStatus };
-      }
-      return item;
-    });
-    onSaveClothesAssistance(updated);
-  };
-
   const handleDeleteDonation = (id: string) => {
-    if (confirm('Delete this clothes donation entry?')) {
+    if (confirm(isNp ? 'के तपाईं यो कपडा दर्ता रेकर्ड मेटाउन चाहनुहुन्छ?' : 'Delete this clothes dispatch record?')) {
       onSaveClothesDonations(clothesDonations.filter(item => item.id !== id));
     }
   };
 
-  const handleDeleteAssistance = (id: string) => {
-    if (confirm('Delete this clothes assistance request?')) {
-      onSaveClothesAssistance(clothesAssistance.filter(item => item.id !== id));
-    }
+  // Convert submission to honored donor
+  const handleApproveAndAddDonor = (submission: ClothesDonationRequest) => {
+    setEditingDonorId(null);
+    setDonorForm({
+      name: submission.donorName,
+      nameNp: '',
+      location: `${submission.city || submission.district}, ${submission.province.replace(' Province', '')}`,
+      locationNp: '',
+      itemsCount: submission.approxItemsCount || 20,
+      clothesType: submission.clothesType === 'winter' ? 'Winter Jackets & Sweaters' : (submission.clothesType === 'blankets' ? 'Blankets & Quilts' : 'Family Clothes Set'),
+      clothesTypeNp: '',
+      imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      note: submission.notes || 'Glad to contribute clean clothes for community warmth.',
+      noteNp: '',
+      date: submission.date || new Date().toISOString().split('T')[0],
+      isVerified: true,
+      isFeatured: true
+    });
+    setShowDonorModal(true);
   };
 
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const entry: ClothesDonationRequest = {
-      id: `CBN-MANUAL-${Math.floor(1000 + Math.random() * 9000)}`,
-      donorName: newDonation.donorName || 'Anonymous Donor',
-      phone: newDonation.phone || '9800000000',
-      email: newDonation.email || '',
-      province: newDonation.province || 'Bagmati Province',
-      district: newDonation.district || 'Kathmandu',
-      city: newDonation.city || 'Kathmandu',
-      address: newDonation.address || 'Drop-off center',
-      clothesType: newDonation.clothesType || 'winter',
-      approxItemsCount: Number(newDonation.approxItemsCount) || 15,
-      donationMode: newDonation.donationMode || 'doorstep_pickup',
-      pickupDate: newDonation.pickupDate || new Date().toISOString().split('T')[0],
-      notes: newDonation.notes || 'Recorded by admin',
-      date: new Date().toISOString().split('T')[0],
-      status: (newDonation.status as any) || 'Pending'
-    };
+  // Filtered Donors
+  const filteredDonors = donors.filter(d => {
+    const matchesSearch = !searchTerm || 
+      d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (d.nameNp && d.nameNp.includes(searchTerm)) ||
+      d.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.clothesType.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
 
-    onSaveClothesDonations([entry, ...clothesDonations]);
-    setShowAddModal(false);
-  };
+  // Filtered Submissions
+  const filteredDonations = clothesDonations.filter(c => {
+    const matchesSearch = !searchTerm || 
+      c.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.phone.includes(searchTerm) ||
+      c.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (c.address && c.address.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = filterStatus === 'all' || c.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const handleExportCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
-    if (activeSubTab === 'donations') {
-      csvContent += "ID,Donor Name,Phone,Email,Province,District,City,Address,Clothes Type,Pieces,Mode,Pickup Date,Status,Date\n";
-      clothesDonations.forEach(c => {
-        csvContent += `"${c.id}","${c.donorName}","${c.phone}","${c.email || ''}","${c.province}","${c.district}","${c.city}","${c.address.replace(/"/g, '""')}","${c.clothesType}",${c.approxItemsCount},"${c.donationMode}","${c.pickupDate || ''}","${c.status}","${c.date}"\n`;
+    if (activeSubTab === 'donors') {
+      csvContent += "ID,Name,Name (Nepali),Location,Pieces,Clothes Type,Date,Verified,Featured,Note\n";
+      donors.forEach(d => {
+        csvContent += `"${d.id}","${d.name}","${d.nameNp || ''}","${d.location}",${d.itemsCount},"${d.clothesType}","${d.date}",${d.isVerified},${d.isFeatured},"${(d.note || '').replace(/"/g, '""')}"\n`;
       });
     } else {
-      csvContent += "ID,Applicant Name,Organization,Phone,Province,District,Beneficiary Count,Urgency,Status,Date\n";
-      clothesAssistance.forEach(a => {
-        csvContent += `"${a.id}","${a.applicantName}","${a.organization || ''}","${a.phone}","${a.province}","${a.district}",${a.beneficiaryCount},"${a.urgencyReason}","${a.status}","${a.date}"\n`;
+      csvContent += "ID,Donor Name,Phone,Email,Province,District,City,Address,Clothes Type,Pieces,Mode,Date,Status,Notes\n";
+      clothesDonations.forEach(c => {
+        csvContent += `"${c.id}","${c.donorName}","${c.phone}","${c.email || ''}","${c.province}","${c.district}","${c.city}","${c.address.replace(/"/g, '""')}","${c.clothesType}",${c.approxItemsCount},"${c.donationMode}","${c.date}","${c.status}","${(c.notes || '').replace(/"/g, '""')}"\n`;
       });
     }
 
@@ -138,554 +301,600 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
     link.setAttribute("download", `genzicon_clothes_${activeSubTab}_export.csv`);
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
   };
 
-  // Filtered lists
-  const filteredDonations = clothesDonations.filter(c => {
-    const matchesSearch = c.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm) ||
-      c.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || c.status.toLowerCase() === filterStatus.toLowerCase();
-    const matchesMode = filterMode === 'all' || c.donationMode === filterMode;
-    return matchesSearch && matchesStatus && matchesMode;
-  });
-
-  const totalPieces = clothesDonations.reduce((a, b) => a + (b.approxItemsCount || 0), 0);
-  const pendingCount = clothesDonations.filter(c => c.status === 'Pending').length;
-  const scheduledCount = clothesDonations.filter(c => c.status === 'Scheduled').length;
-  const collectedCount = clothesDonations.filter(c => c.status === 'Collected' || c.status === 'Distributed').length;
+  const totalDonorPieces = donors.reduce((sum, d) => sum + (d.itemsCount || 0), 0);
 
   return (
-    <div className="space-y-4">
-      {/* Top Banner & KPI metrics */}
-      <div className="bg-white p-3.5 sm:p-4 border border-[#d8e3fb] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-        <div className="flex items-center gap-2">
-          <Shirt className="w-4 h-4 text-[#003c90]" />
-          <div>
-            <h2 className="text-sm font-bold text-[#111c2d]">
-              Clothes Bank Management
-            </h2>
-            <p className="text-[11px] text-[#737784]">
-              Track pickups, drop-offs, and community assistance requests
-            </p>
+    <div className="space-y-6">
+      {/* Top Header with Stats */}
+      <div className="bg-white p-5 border border-[#d8e3fb] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="p-2 bg-[#e7eeff] text-[#003c90]">
+              <Shirt className="w-5 h-5" />
+            </span>
+            <div>
+              <h2 className="text-base font-black text-[#111c2d] font-heading">
+                {isNp ? 'कपडा बैंक नेपाल व्यवस्थापन' : 'Clothes Bank Nepal Management'}
+              </h2>
+              <p className="text-xs text-[#737784]">
+                {isNp 
+                  ? 'दाताहरूको प्रोफाइल, तस्बिर, स्थान तथा प्राप्त कपडा पार्सलहरूको व्यवस्थापन गर्नुहोस्।' 
+                  : 'Manage the public Donors Showcase Wall, donor photos, locations, and track incoming clothes dispatches.'}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Stats */}
+        <div className="flex items-center gap-4 text-xs">
+          <div className="p-2.5 bg-[#f0f4fc] border border-[#d8e3fb]">
+            <span className="text-[10px] uppercase font-bold text-[#737784] block">{isNp ? 'दाता संख्या' : 'Honored Donors'}</span>
+            <span className="text-base font-black text-[#003c90] font-heading">{donors.length}</span>
+          </div>
+          <div className="p-2.5 bg-emerald-50 border border-emerald-200">
+            <span className="text-[10px] uppercase font-bold text-emerald-800 block">{isNp ? 'कुल कपडा थान' : 'Total Garments'}</span>
+            <span className="text-base font-black text-[#00743a] font-heading">{totalDonorPieces.toLocaleString()}</span>
+          </div>
+          <div className="p-2.5 bg-amber-50 border border-amber-200">
+            <span className="text-[10px] uppercase font-bold text-amber-800 block">{isNp ? 'नयाँ अनुरोध' : 'Pending Dispatches'}</span>
+            <span className="text-base font-black text-amber-800 font-heading">
+              {clothesDonations.filter(c => c.status === 'Pending').length}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Sub Tabs: Donors Wall vs Dispatches */}
+      <div className="flex items-center justify-between border-b border-[#d8e3fb] bg-white p-1">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              setActiveSubTab('donors');
+              setSearchTerm('');
+            }}
+            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
+              activeSubTab === 'donors'
+                ? 'bg-[#003c90] text-white'
+                : 'text-[#434653] hover:bg-[#f0f3ff]'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span>{isNp ? '१. कपडा दाताहरूको सूची (Donors Wall)' : '1. Honored Clothes Donors Wall'}</span>
+            <span className="px-1.5 py-0.2 bg-white/20 text-[10px]">{donors.length}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveSubTab('donations');
+              setSearchTerm('');
+            }}
+            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
+              activeSubTab === 'donations'
+                ? 'bg-[#003c90] text-white'
+                : 'text-[#434653] hover:bg-[#f0f3ff]'
+            }`}
+          >
+            <Truck className="w-4 h-4" />
+            <span>{isNp ? '२. आएका संकलन / पार्सल विवरण' : '2. Incoming Dispatches'}</span>
+            <span className="px-1.5 py-0.2 bg-white/20 text-[10px]">{clothesDonations.length}</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 pr-2">
+          {activeSubTab === 'donors' && (
+            <button
+              onClick={handleOpenAddDonor}
+              className="px-3 py-1.5 bg-[#00743a] hover:bg-[#00542a] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isNp ? 'नयाँ दाता थप्नुहोस्' : 'Add Clothes Donor'}</span>
+            </button>
+          )}
+
           <button
             onClick={handleExportCSV}
-            className="px-2.5 py-1.5 bg-[#f0f3ff] hover:bg-[#e0e8ff] text-[#003c90] text-xs font-semibold border border-blue-100 flex items-center gap-1"
+            className="px-3 py-1.5 bg-white border border-[#d8e3fb] hover:bg-[#f0f3ff] text-[#003c90] text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
-            <Download className="w-3 h-3" />
-            <span>CSV</span>
-          </button>
-
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-3 py-1.5 bg-[#00743a] hover:bg-[#005227] text-white text-xs font-semibold flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>+ Log Batch</span>
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">CSV Export</span>
           </button>
         </div>
       </div>
 
-      {/* Mini KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div className="p-2.5 bg-white border border-[#d8e3fb]">
-          <span className="text-[9px] uppercase font-bold text-[#737784] block">Total Logged</span>
-          <span className="text-base font-bold text-[#003c90] font-mono">{totalPieces.toLocaleString()} pcs</span>
-        </div>
-        <div className="p-2.5 bg-white border border-[#d8e3fb]">
-          <span className="text-[9px] uppercase font-bold text-[#737784] block">Pending</span>
-          <span className="text-base font-bold text-amber-700 font-mono">{pendingCount}</span>
-        </div>
-        <div className="p-2.5 bg-white border border-[#d8e3fb]">
-          <span className="text-[9px] uppercase font-bold text-[#737784] block">Scheduled</span>
-          <span className="text-base font-bold text-blue-700 font-mono">{scheduledCount}</span>
-        </div>
-        <div className="p-2.5 bg-white border border-[#d8e3fb]">
-          <span className="text-[9px] uppercase font-bold text-[#737784] block">Completed</span>
-          <span className="text-base font-bold text-emerald-700 font-mono">{collectedCount}</span>
-        </div>
-      </div>
-
-      {/* Subtabs Switcher */}
-      <div className="flex items-center gap-2 border-b border-[#d8e3fb] pb-0.5">
-        <button
-          onClick={() => setActiveSubTab('donations')}
-          className={`px-3 py-1.5 text-xs font-semibold transition-colors border-b-2 ${
-            activeSubTab === 'donations'
-              ? 'border-[#003c90] text-[#003c90] bg-white'
-              : 'border-transparent text-[#737784] hover:text-[#111c2d]'
-          }`}
-        >
-          Donor Pickups ({clothesDonations.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('assistance')}
-          className={`px-3 py-1.5 text-xs font-semibold transition-colors border-b-2 ${
-            activeSubTab === 'assistance'
-              ? 'border-[#003c90] text-[#003c90] bg-white'
-              : 'border-transparent text-[#737784] hover:text-[#111c2d]'
-          }`}
-        >
-          Assistance Requests ({clothesAssistance.length})
-        </button>
-      </div>
-
-      {/* Search & Filters */}
-      <div className="bg-white p-3 border border-[#d8e3fb] shadow-xs flex flex-col sm:flex-row items-center gap-2">
-        <div className="relative flex-1 w-full">
-          <Search className="w-3.5 h-3.5 text-[#737784] absolute left-2.5 top-1/2 -translate-y-1/2" />
+      {/* Filter and Search Bar */}
+      <div className="bg-white p-3 border border-[#d8e3fb] flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[240px]">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#737784]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name, phone, city, or ID..."
-            className="w-full pl-8 pr-3 py-1.5 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+            placeholder={
+              activeSubTab === 'donors'
+                ? (isNp ? 'दाताको नाम, स्थान वा कपडा प्रकार खोज्नुहोस्...' : 'Search by donor name, location, or clothes category...')
+                : (isNp ? 'दाताको नाम, फोन वा जिल्ला खोज्नुहोस्...' : 'Search dispatches by donor, phone, address...')
+            }
+            className="w-full pl-9 pr-3 py-1.5 text-xs border border-[#d8e3fb] bg-[#f9f9ff] text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-2.5 py-1.5 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
-          >
-            <option value="all">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="collected">Collected</option>
-            <option value="distributed">Distributed</option>
-          </select>
-
-          {activeSubTab === 'donations' && (
+        {activeSubTab === 'donations' && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#737784] uppercase font-bold">{isNp ? 'स्थिति:' : 'Status:'}</span>
             <select
-              value={filterMode}
-              onChange={(e) => setFilterMode(e.target.value)}
-              className="px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-1.5 text-xs border border-[#d8e3fb] bg-[#f9f9ff] text-[#111c2d] focus:outline-none"
             >
-              <option value="all">All Modes</option>
-              <option value="doorstep_pickup">Doorstep Pickup</option>
-              <option value="dropoff_center">Dropoff Hub</option>
+              <option value="all">{isNp ? 'सबै' : 'All Statuses'}</option>
+              <option value="Pending">Pending (प्रतीक्षारत)</option>
+              <option value="Approved">Approved (स्वीकृत)</option>
+              <option value="In Transit">In Transit (ढुवानीमा)</option>
+              <option value="Received">Received (प्राप्त भयो)</option>
+              <option value="Distributed">Distributed (वितरण सम्पन्न)</option>
             </select>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
-      {/* Table & Mobile Cards Section */}
-      {activeSubTab === 'donations' ? (
-        <div>
-          {/* Mobile Card List (Visible on mobile screens) */}
-          <div className="block md:hidden space-y-3">
-            {filteredDonations.map((item) => (
-              <div key={item.id} className="bg-white p-4 border border-[#d8e3fb] shadow-xs space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-mono font-bold text-[#003c90] text-xs block">{item.id}</span>
-                    <span className="font-bold text-[#111c2d] text-sm">{item.donorName}</span>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteDonation(item.id)}
-                    className="p-1.5 text-red-600 hover:bg-red-50"
-                    title="Delete record"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs py-1.5 border-y border-[#f0f3ff]">
-                  <div>
-                    <span className="text-[10px] text-[#737784] uppercase font-bold block">Phone:</span>
-                    <a href={`tel:${item.phone}`} className="font-mono font-bold text-[#00743a] hover:underline">
-                      {item.phone}
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#737784] uppercase font-bold block">Volume:</span>
-                    <span className="font-bold text-[#111c2d]">~{item.approxItemsCount} pcs ({item.clothesType})</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#737784] uppercase font-bold block">Mode:</span>
-                    <span className="font-semibold text-[#003c90]">
-                      {item.donationMode === 'doorstep_pickup' ? '🚐 Doorstep' : '🏢 Hub Drop'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#737784] uppercase font-bold block">Pickup Date:</span>
-                    <span className="font-semibold text-[#111c2d]">{item.pickupDate || item.date}</span>
-                  </div>
-                </div>
-
-                <div className="text-xs">
-                  <span className="text-[10px] text-[#737784] uppercase font-bold block">Address:</span>
-                  <span className="text-[#434653]">{item.address}, {item.city || item.district}</span>
-                </div>
-
-                <div className="pt-2 flex items-center justify-between gap-2">
-                  <span className="text-[10px] uppercase font-bold text-[#737784]">Workflow:</span>
-                  <select
-                    value={item.status}
-                    onChange={(e) => handleUpdateStatus(item.id, e.target.value as any)}
-                    className={`flex-1 px-2.5 py-2 text-xs font-bold border min-h-[40px] ${
-                      item.status === 'Pending' ? 'bg-amber-50 text-amber-900 border-amber-300' :
-                      item.status === 'Scheduled' ? 'bg-blue-50 text-blue-900 border-blue-300' :
-                      item.status === 'Collected' ? 'bg-purple-50 text-purple-900 border-purple-300' :
-                      'bg-emerald-50 text-emerald-900 border-emerald-300'
-                    }`}
-                  >
-                    <option value="Pending">⏳ Pending</option>
-                    <option value="Scheduled">🚐 Scheduled (Van Assigned)</option>
-                    <option value="Collected">📦 Collected (In Warehouse)</option>
-                    <option value="Distributed">✅ Distributed</option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop Table View */}
-          <div className="hidden md:block bg-white border border-[#d8e3fb] shadow-xs overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#f0f4ff] text-[#003c90] uppercase font-bold border-b border-[#d8e3fb] text-[10px] tracking-wider">
+      {/* SUB-TAB 1: DONORS WALL MANAGEMENT */}
+      {activeSubTab === 'donors' && (
+        <div className="bg-white border border-[#d8e3fb] overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-[#111c2d]">
+              <thead className="bg-[#f0f4fc] border-b border-[#d8e3fb] text-[11px] font-bold text-[#003c90] uppercase tracking-wider">
                 <tr>
-                  <th className="p-3">Ref ID & Date</th>
-                  <th className="p-3">Donor Name & Contact</th>
-                  <th className="p-3">Location & Address</th>
-                  <th className="p-3">Clothes Type & Volume</th>
-                  <th className="p-3">Mode & Pickup Date</th>
-                  <th className="p-3">Workflow Status</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="py-3 px-4">Donor Profile / Avatar</th>
+                  <th className="py-3 px-4">Location / Place</th>
+                  <th className="py-3 px-4">Items / Category</th>
+                  <th className="py-3 px-4">Heartfelt Message / Note</th>
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f0f3ff]">
-                {filteredDonations.map((item) => (
-                  <tr key={item.id} className="hover:bg-[#fcfdff] transition-colors">
-                    <td className="p-3 align-top">
-                      <span className="font-mono font-bold text-[#003c90] block">{item.id}</span>
-                      <span className="text-[10px] text-[#737784]">{item.date}</span>
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <span className="font-bold text-[#111c2d] block">{item.donorName}</span>
-                      <span className="font-mono text-[11px] text-[#434653] block">{item.phone}</span>
-                      {item.email && <span className="text-[10px] text-[#737784]">{item.email}</span>}
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <span className="font-semibold text-[#111c2d] block">{item.city || item.district}</span>
-                      <span className="text-[11px] text-[#434653] block max-w-xs">{item.address}</span>
-                      <span className="text-[10px] text-[#737784]">{item.province}</span>
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <span className="font-bold text-[#003c90] uppercase text-[11px] block">
-                        {item.clothesType}
-                      </span>
-                      <span className="font-bold text-[#111c2d] block font-mono">
-                        ~{item.approxItemsCount} pieces
-                      </span>
-                      {item.notes && (
-                        <span className="text-[10px] text-[#737784] italic block max-w-xs line-clamp-2">
-                          "{item.notes}"
-                        </span>
-                      )}
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <span className={`px-2 py-0.5 text-[9px] font-bold uppercase inline-block mb-1 ${
-                        item.donationMode === 'doorstep_pickup' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                      }`}>
-                        {item.donationMode === 'doorstep_pickup' ? '🚐 Doorstep Pickup' : '🏢 Drop-off Center'}
-                      </span>
-                      {item.pickupDate && (
-                        <span className="text-[11px] text-[#111c2d] block font-semibold flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-[#737784]" />
-                          {item.pickupDate}
-                        </span>
-                      )}
-                      {item.dropoffHub && (
-                        <span className="text-[10px] text-[#737784] block">{item.dropoffHub}</span>
-                      )}
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <select
-                        value={item.status}
-                        onChange={(e) => handleUpdateStatus(item.id, e.target.value as any)}
-                        className={`px-2 py-1 text-[11px] font-bold border ${
-                          item.status === 'Pending' ? 'bg-amber-50 text-amber-900 border-amber-300' :
-                          item.status === 'Scheduled' ? 'bg-blue-50 text-blue-900 border-blue-300' :
-                          item.status === 'Collected' ? 'bg-purple-50 text-purple-900 border-purple-300' :
-                          'bg-emerald-50 text-emerald-900 border-emerald-300'
-                        }`}
-                      >
-                        <option value="Pending">⏳ Pending</option>
-                        <option value="Scheduled">🚐 Scheduled (Van Assigned)</option>
-                        <option value="Collected">📦 Collected (In Warehouse)</option>
-                        <option value="Distributed">✅ Distributed (Delivered)</option>
-                      </select>
-                    </td>
-
-                    <td className="p-3 align-top text-right">
-                      <button
-                        onClick={() => handleDeleteDonation(item.id)}
-                        className="p-1 text-red-600 hover:bg-red-50 transition-colors"
-                        title="Delete record"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                {filteredDonors.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-xs text-[#737784]">
+                      {isNp ? 'कुनै दाता फेला परेन।' : 'No clothes donors found.'}
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : (
-        /* Assistance Requests Table */
-        <div>
-          {/* Mobile Card List for Assistance */}
-          <div className="block md:hidden space-y-3">
-            {clothesAssistance.map((item) => (
-              <div key={item.id} className="bg-white p-4 border border-[#d8e3fb] shadow-xs space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-mono font-bold text-[#003c90] text-xs block">{item.id}</span>
-                    <span className="font-bold text-[#111c2d] text-sm">{item.applicantName}</span>
-                    {item.organization && <span className="text-xs text-[#003c90] font-semibold block">{item.organization}</span>}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteAssistance(item.id)}
-                    className="p-1.5 text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                ) : (
+                  filteredDonors.map((donor, idx) => (
+                    <tr key={donor.id || idx} className="hover:bg-[#f9faff] transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={donor.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.name)}&background=003c90&color=fff`}
+                            alt={donor.name}
+                            className="w-10 h-10 rounded-full object-cover border border-[#d8e3fb]"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.name)}&background=003c90&color=fff`;
+                            }}
+                          />
+                          <div>
+                            <span className="font-bold text-[#111c2d] block text-xs">
+                              {donor.name}
+                            </span>
+                            {donor.nameNp && (
+                              <span className="text-[11px] text-[#737784] block font-medium">
+                                {donor.nameNp}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
 
-                <div className="grid grid-cols-2 gap-2 text-xs py-1.5 border-y border-[#f0f3ff]">
-                  <div>
-                    <span className="text-[10px] text-[#737784] uppercase font-bold block">Phone:</span>
-                    <a href={`tel:${item.phone}`} className="font-mono font-bold text-[#00743a]">
-                      {item.phone}
-                    </a>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#737784] uppercase font-bold block">Beneficiaries:</span>
-                    <span className="font-bold text-[#111c2d] font-mono">{item.beneficiaryCount} people</span>
-                  </div>
-                </div>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1.5 text-xs text-[#434653]">
+                          <MapPin className="w-3.5 h-3.5 text-[#00743a] shrink-0" />
+                          <span>{donor.location}</span>
+                        </div>
+                        {donor.locationNp && (
+                          <span className="text-[10px] text-[#737784] block pl-5">
+                            {donor.locationNp}
+                          </span>
+                        )}
+                      </td>
 
-                <div className="text-xs">
-                  <span className="text-[10px] text-[#737784] uppercase font-bold block">Location:</span>
-                  <span className="text-[#434653]">{item.locationDetails}, {item.district}</span>
-                </div>
+                      <td className="py-3 px-4">
+                        <span className="inline-block px-2 py-0.5 bg-[#e7eeff] text-[#003c90] font-black text-xs">
+                          {donor.itemsCount} Pieces
+                        </span>
+                        <span className="block text-[11px] text-[#434653] font-medium mt-0.5">
+                          {donor.clothesType}
+                        </span>
+                      </td>
 
-                <div className="pt-2 flex items-center justify-between gap-2">
-                  <span className="text-[10px] uppercase font-bold text-[#737784]">Status:</span>
-                  <select
-                    value={item.status}
-                    onChange={(e) => handleUpdateAssistanceStatus(item.id, e.target.value as any)}
-                    className="flex-1 px-2.5 py-2 text-xs font-bold border border-[#d8e3fb] bg-white min-h-[40px]"
-                  >
-                    <option value="Pending">Pending Review</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Dispatched">Dispatched</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
+                      <td className="py-3 px-4 max-w-xs">
+                        <p className="text-xs text-[#434653] line-clamp-2 italic">
+                          "{donor.note || 'Contributed warm clothing for community relief.'}"
+                        </p>
+                      </td>
 
-          {/* Desktop View */}
-          <div className="hidden md:block bg-white border border-[#d8e3fb] shadow-xs overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#f0f4ff] text-[#003c90] uppercase font-bold border-b border-[#d8e3fb] text-[10px] tracking-wider">
-                <tr>
-                  <th className="p-3">Request ID & Date</th>
-                  <th className="p-3">Applicant / Organization</th>
-                  <th className="p-3">Location Details</th>
-                  <th className="p-3">Beneficiaries</th>
-                  <th className="p-3">Urgency Reason</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f0f3ff]">
-                {clothesAssistance.map((item) => (
-                  <tr key={item.id} className="hover:bg-[#fcfdff]">
-                    <td className="p-3 align-top font-mono font-bold text-[#003c90]">
-                      {item.id}
-                      <span className="text-[10px] text-[#737784] block font-sans font-normal">{item.date}</span>
-                    </td>
+                      <td className="py-3 px-4 text-[11px] text-[#737784] font-mono">
+                        {donor.date}
+                      </td>
 
-                    <td className="p-3 align-top">
-                      <span className="font-bold text-[#111c2d] block">{item.applicantName}</span>
-                      {item.organization && <span className="text-[11px] text-[#003c90] block">{item.organization}</span>}
-                      <span className="font-mono text-[11px] text-[#434653] block">{item.phone}</span>
-                    </td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Verified
+                        </span>
+                      </td>
 
-                    <td className="p-3 align-top">
-                      <span className="font-semibold text-[#111c2d] block">{item.district}, {item.province}</span>
-                      <span className="text-[11px] text-[#434653] block max-w-xs">{item.locationDetails}</span>
-                    </td>
-
-                    <td className="p-3 align-top font-bold text-[#111c2d] font-mono">
-                      {item.beneficiaryCount} people
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <span className="px-2 py-0.5 bg-red-100 text-red-800 text-[10px] font-bold uppercase inline-block mb-1">
-                        {item.urgencyReason.replace('_', ' ')}
-                      </span>
-                      {item.notes && <p className="text-[11px] text-[#737784] italic line-clamp-2">"{item.notes}"</p>}
-                    </td>
-
-                    <td className="p-3 align-top">
-                      <select
-                        value={item.status}
-                        onChange={(e) => handleUpdateAssistanceStatus(item.id, e.target.value as any)}
-                        className="px-2 py-1 text-[11px] font-bold border border-[#d8e3fb] bg-white"
-                      >
-                        <option value="Pending">Pending Review</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Dispatched">Dispatched</option>
-                        <option value="Completed">Completed</option>
-                      </select>
-                    </td>
-
-                    <td className="p-3 align-top text-right">
-                      <button
-                        onClick={() => handleDeleteAssistance(item.id)}
-                        className="p-1 text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditDonor(donor)}
+                            title="Edit Donor"
+                            className="p-1.5 bg-[#f0f4ff] hover:bg-[#003c90] hover:text-white text-[#003c90] transition-colors"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDonor(donor.id)}
+                            title="Delete Donor"
+                            className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Log Manual Batch Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white max-w-lg w-full p-6 border border-[#d8e3fb] shadow-xl">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#d8e3fb]">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[#111c2d] font-heading">
-                Log New Clothes Batch / Phone Booking
-              </h3>
-              <button onClick={() => setShowAddModal(false)}>
-                <X className="w-4 h-4 text-[#737784]" />
-              </button>
+      {/* SUB-TAB 2: CLOTHES DONATIONS DISPATCHES */}
+      {activeSubTab === 'donations' && (
+        <div className="bg-white border border-[#d8e3fb] overflow-hidden shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs text-[#111c2d]">
+              <thead className="bg-[#f0f4fc] border-b border-[#d8e3fb] text-[11px] font-bold text-[#003c90] uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">Ref ID / Donor</th>
+                  <th className="py-3 px-4">Contact</th>
+                  <th className="py-3 px-4">Origin / Address</th>
+                  <th className="py-3 px-4">Clothes Details</th>
+                  <th className="py-3 px-4">Delivery Mode</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#f0f3ff]">
+                {filteredDonations.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-8 text-center text-xs text-[#737784]">
+                      {isNp ? 'कुनै कपडा संकलन विवरण फेला परेन।' : 'No clothes donation dispatches found.'}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDonations.map((item) => (
+                    <tr key={item.id} className="hover:bg-[#f9faff] transition-colors">
+                      <td className="py-3 px-4">
+                        <span className="font-mono text-[10px] text-[#003c90] font-bold block">
+                          #{item.id}
+                        </span>
+                        <span className="font-bold text-xs text-[#111c2d]">
+                          {item.donorName}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-1 font-mono text-xs text-[#111c2d]">
+                          <Phone className="w-3 h-3 text-[#00743a]" />
+                          <span>{item.phone}</span>
+                        </div>
+                        {item.email && (
+                          <span className="text-[10px] text-[#737784] block truncate max-w-[140px]">
+                            {item.email}
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <div className="text-xs text-[#434653]">
+                          <strong>{item.district}</strong>, {item.province.replace(' Province', '')}
+                        </div>
+                        <div className="text-[10px] text-[#737784] truncate max-w-xs">
+                          {item.address}
+                        </div>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="font-bold text-xs text-[#003c90]">
+                          {item.approxItemsCount} Pieces
+                        </span>
+                        <span className="text-[11px] text-[#434653] block">
+                          {item.clothesType}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#f0f4fc] text-[#003c90] text-[10px] font-bold">
+                          {item.donationMode}
+                        </span>
+                      </td>
+
+                      <td className="py-3 px-4">
+                        <select
+                          value={item.status}
+                          onChange={(e) => handleUpdateDonationStatus(item.id, e.target.value as any)}
+                          className={`text-[11px] font-bold px-2 py-1 border rounded-none focus:outline-none ${
+                            item.status === 'Received' || item.status === 'Distributed'
+                              ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                              : item.status === 'In Transit' || item.status === 'Approved'
+                              ? 'bg-blue-50 border-blue-300 text-[#003c90]'
+                              : 'bg-amber-50 border-amber-300 text-amber-800'
+                          }`}
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Approved">Approved</option>
+                          <option value="In Transit">In Transit</option>
+                          <option value="Received">Received</option>
+                          <option value="Distributed">Distributed</option>
+                        </select>
+                      </td>
+
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => handleApproveAndAddDonor(item)}
+                            title="Honor as Verified Donor on Wall"
+                            className="px-2 py-1 bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-800 text-[10px] font-bold transition-colors flex items-center gap-1"
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            <span>Honor on Wall</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDonation(item.id)}
+                            title="Delete"
+                            className="p-1.5 bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ADD / EDIT DONOR MODAL */}
+      {showDonorModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-[#d8e3fb] shadow-2xl max-w-xl w-full p-5 sm:p-6 relative my-8 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              onClick={() => setShowDonorModal(false)}
+              className="absolute right-4 top-4 text-[#737784] hover:text-[#111c2d]"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-4 border-b border-[#f0f3ff] pb-3">
+              <Sparkles className="w-5 h-5 text-[#003c90]" />
+              <div>
+                <h3 className="text-base font-bold text-[#111c2d] font-heading">
+                  {editingDonorId 
+                    ? (isNp ? 'दाता विवरण सम्पादन गर्नुहोस्' : 'Edit Clothes Donor Profile')
+                    : (isNp ? 'नयाँ कपडा दाता सूचीमा थप्नुहोस्' : 'Add Honored Clothes Donor to Wall')}
+                </h3>
+                <p className="text-xs text-[#737784]">
+                  {isNp ? 'यो दाता सार्वजनिक कपडा बैंक स्लाइडरमा देखिनेछ।' : 'This donor will be highlighted on the public Sliding Donors Wall.'}
+                </p>
+              </div>
             </div>
 
-            <form onSubmit={handleAddSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-[#111c2d] uppercase mb-1">Donor Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={newDonation.donorName}
-                  onChange={(e) => setNewDonation({ ...newDonation, donorName: e.target.value })}
-                  placeholder="e.g. Saroj Adhikari"
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
+            <form onSubmit={handleSaveDonorSubmit} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#111c2d] uppercase mb-1">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={newDonation.phone}
-                    onChange={(e) => setNewDonation({ ...newDonation, phone: e.target.value })}
-                    placeholder="98XXXXXXXX"
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-[#111c2d] uppercase mb-1">City / Tole *</label>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'दाताको नाम (English) *' : 'Donor Full Name (English) *'}
+                  </label>
                   <input
                     type="text"
                     required
-                    value={newDonation.city}
-                    onChange={(e) => setNewDonation({ ...newDonation, city: e.target.value })}
-                    placeholder="e.g. Kathmandu"
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
+                    value={donorForm.name}
+                    onChange={(e) => setDonorForm({ ...donorForm, name: e.target.value })}
+                    placeholder="e.g. Suman Thapa"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'दाताको नाम (नेपाली)' : 'Donor Name (Nepali)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={donorForm.nameNp}
+                    onChange={(e) => setDonorForm({ ...donorForm, nameNp: e.target.value })}
+                    placeholder="जस्तै: सुमन थापा"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-[#111c2d] uppercase mb-1">Detailed Street Address</label>
-                <input
-                  type="text"
-                  value={newDonation.address}
-                  onChange={(e) => setNewDonation({ ...newDonation, address: e.target.value })}
-                  placeholder="Ward No., Landmark, House No."
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'स्थान / ठेगाना (English) *' : 'Location / City (English) *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={donorForm.location}
+                    onChange={(e) => setDonorForm({ ...donorForm, location: e.target.value })}
+                    placeholder="e.g. Baneshwor, Kathmandu"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'स्थान (नेपाली)' : 'Location (Nepali)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={donorForm.locationNp}
+                    onChange={(e) => setDonorForm({ ...donorForm, locationNp: e.target.value })}
+                    placeholder="जस्तै: बानेश्वर, काठमाडौँ"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#111c2d] uppercase mb-1">Clothes Category</label>
-                  <select
-                    value={newDonation.clothesType}
-                    onChange={(e) => setNewDonation({ ...newDonation, clothesType: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
-                  >
-                    <option value="winter">Winter Warm Wear</option>
-                    <option value="blankets">Blankets & Quilts</option>
-                    <option value="kids">Kids & Uniforms</option>
-                    <option value="summer">Summer Wear</option>
-                    <option value="mixed">Mixed Lot</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-[#111c2d] uppercase mb-1">Piece Count</label>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'कपडाको संख्या (थान) *' : 'Garments Count (Pieces) *'}
+                  </label>
                   <input
                     type="number"
-                    value={newDonation.approxItemsCount}
-                    onChange={(e) => setNewDonation({ ...newDonation, approxItemsCount: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
+                    min="1"
+                    required
+                    value={donorForm.itemsCount}
+                    onChange={(e) => setDonorForm({ ...donorForm, itemsCount: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'मिति' : 'Date'}
+                  </label>
+                  <input
+                    type="date"
+                    value={donorForm.date}
+                    onChange={(e) => setDonorForm({ ...donorForm, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'कपडा प्रकार (English)' : 'Clothes Category (English)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={donorForm.clothesType}
+                    onChange={(e) => setDonorForm({ ...donorForm, clothesType: e.target.value })}
+                    placeholder="e.g. Winter Jackets & Sweaters"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                    {isNp ? 'कपडा प्रकार (नेपाली)' : 'Clothes Category (Nepali)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={donorForm.clothesTypeNp}
+                    onChange={(e) => setDonorForm({ ...donorForm, clothesTypeNp: e.target.value })}
+                    placeholder="जस्तै: जाडोको न्यानो ज्याकेट र स्विटर"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-[#111c2d] uppercase mb-1">Pickup Date</label>
-                <input
-                  type="date"
-                  value={newDonation.pickupDate}
-                  onChange={(e) => setNewDonation({ ...newDonation, pickupDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff]"
+                <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                  {isNp ? 'दाताको तस्बिर / फोटो URL' : 'Donor Photo / Avatar URL'}
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={donorForm.imageUrl}
+                    onChange={(e) => setDonorForm({ ...donorForm, imageUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                  {donorForm.imageUrl && (
+                    <img
+                      src={donorForm.imageUrl}
+                      alt="Preview"
+                      className="w-8 h-8 rounded-full object-cover border border-[#d8e3fb] shrink-0"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                  {isNp ? 'दाताको भनाइ / सन्देश (English)' : 'Donor Quote / Note (English)'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={donorForm.note}
+                  onChange={(e) => setDonorForm({ ...donorForm, note: e.target.value })}
+                  placeholder="e.g. Glad to contribute 45 warm jackets for winter relief."
+                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-[#d8e3fb] flex justify-end gap-2">
+              <div>
+                <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                  {isNp ? 'दाताको सन्देश (नेपाली)' : 'Donor Quote / Note (Nepali)'}
+                </label>
+                <textarea
+                  rows={2}
+                  value={donorForm.noteNp}
+                  onChange={(e) => setDonorForm({ ...donorForm, noteNp: e.target.value })}
+                  placeholder="जस्तै: शीतलहर पीडित परिवारलाई न्यानो कपडा सहयोग गर्न पाउँदा खुसी लागेको छ।"
+                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                />
+              </div>
+
+              <div className="flex items-center gap-4 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={donorForm.isVerified}
+                    onChange={(e) => setDonorForm({ ...donorForm, isVerified: e.target.checked })}
+                    className="accent-[#00743a]"
+                  />
+                  <span className="font-bold text-[#111c2d]">{isNp ? 'प्रमाणित दाता (Verified)' : 'Verified Contributor Badge'}</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={donorForm.isFeatured}
+                    onChange={(e) => setDonorForm({ ...donorForm, isFeatured: e.target.checked })}
+                    className="accent-[#003c90]"
+                  />
+                  <span className="font-bold text-[#111c2d]">{isNp ? 'विशेष स्थान दिने (Featured on Slider)' : 'Featured on Wall Slider'}</span>
+                </label>
+              </div>
+
+              <div className="pt-3 border-t border-[#f0f3ff] flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-[#434653] font-bold"
+                  onClick={() => setShowDonorModal(false)}
+                  className="px-4 py-2 border border-[#d8e3fb] hover:bg-[#f0f4fc] text-[#434653] font-bold"
                 >
-                  Cancel
+                  {isNp ? 'रद्द गर्नुहोस्' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#00743a] text-white font-bold uppercase"
+                  className="px-5 py-2 bg-[#00743a] hover:bg-[#00542a] text-white font-bold uppercase tracking-wider"
                 >
-                  Save Entry
+                  {editingDonorId ? (isNp ? 'अपडेट गर्नुहोस्' : 'Save Changes') : (isNp ? 'दाता थप्नुहोस्' : 'Publish Donor to Wall')}
                 </button>
               </div>
             </form>

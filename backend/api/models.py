@@ -111,32 +111,65 @@ class Project(models.Model):
     def __str__(self):
         return f"{self.title} [{self.district}] (रू {self.raised_amount} / रू {self.target_amount})"
 
+class ClothesDonor(models.Model):
+    """Dynamic Clothes Bank Donors for Gratitude Wall / Showcase"""
+    name = models.CharField(max_length=150, verbose_name="Donor Name")
+    name_np = models.CharField(max_length=150, blank=True, null=True, verbose_name="Donor Name (Nepali)")
+    location = models.CharField(max_length=150, default="Kathmandu", verbose_name="Location / City")
+    location_np = models.CharField(max_length=150, blank=True, null=True, verbose_name="Location (Nepali)")
+    items_count = models.PositiveIntegerField(default=25, verbose_name="Garments Donated Count")
+    clothes_type = models.CharField(max_length=150, default="Winter Wear & Jackets", verbose_name="Clothes Category")
+    clothes_type_np = models.CharField(max_length=150, blank=True, null=True, verbose_name="Clothes Category (Nepali)")
+    image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Donor Photo / Avatar URL")
+    donor_image = models.ImageField(upload_to='clothes_donors/', blank=True, null=True, verbose_name="Upload Donor Photo")
+    note = models.TextField(blank=True, null=True, verbose_name="Donor Quote / Note")
+    note_np = models.TextField(blank=True, null=True, verbose_name="Donor Quote (Nepali)")
+    date = models.DateField(default=timezone.now, verbose_name="Donation Date")
+    is_verified = models.BooleanField(default=True, verbose_name="Verified Donation")
+    is_featured = models.BooleanField(default=True, verbose_name="Featured on Sliding Wall")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        verbose_name = "Clothes Donor"
+        verbose_name_plural = "Clothes Donors"
+
+    @property
+    def final_image_url(self):
+        if self.donor_image:
+            return self.donor_image.url
+        return self.image_url or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400"
+
+    def __str__(self):
+        return f"{self.name} ({self.location}) - {self.items_count} pcs"
+
 class ClothesDonation(models.Model):
-    """Clothes Bank Donor Pickup & Dropoff Pipeline"""
+    """Clothes Bank Donor Dropoff & Parcel Pipeline"""
     STATUS_CHOICES = [
-        ('Pending', 'Pending Review'),
-        ('Scheduled', 'Pickup Scheduled'),
-        ('Collected', 'Collected in Hub'),
+        ('Pending', 'Pending / In Transit'),
+        ('Received', 'Received at Central Hub'),
+        ('Sanitized', 'Sanitized & Sorted'),
         ('Distributed', 'Distributed to Community'),
     ]
     MODE_CHOICES = [
-        ('doorstep_pickup', 'Doorstep Van Pickup'),
-        ('dropoff_center', 'Drop-off at Local Hub'),
+        ('dropoff_hub', 'Self Drop-off at Genzicon Hub'),
+        ('courier_parcel', 'Courier / Pathao / Bus Parcel'),
+        ('doorstep_pickup', 'Doorstep Van Pickup (Legacy)'),
     ]
 
     ref_id = models.CharField(max_length=30, unique=True, default=generate_reference_id)
     donor_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=30)
     email = models.EmailField(blank=True, null=True)
-    province = models.CharField(max_length=100)
-    district = models.CharField(max_length=100)
+    province = models.CharField(max_length=100, default="Bagmati Province")
+    district = models.CharField(max_length=100, default="Kathmandu")
     city = models.CharField(max_length=100, blank=True, null=True)
-    address = models.TextField()
-    clothes_type = models.CharField(max_length=100)
+    address = models.TextField(blank=True, null=True)
+    clothes_type = models.CharField(max_length=100, default="winter")
     approx_items_count = models.PositiveIntegerField(default=10)
-    donation_mode = models.CharField(max_length=50, choices=MODE_CHOICES, default='doorstep_pickup')
+    donation_mode = models.CharField(max_length=50, choices=MODE_CHOICES, default='dropoff_hub')
     pickup_date = models.DateField(blank=True, null=True)
-    dropoff_hub = models.CharField(max_length=150, blank=True, null=True)
+    dropoff_hub = models.CharField(max_length=150, blank=True, null=True, default="Genzicon Central Hub, Tinkune, Kathmandu")
     notes = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)

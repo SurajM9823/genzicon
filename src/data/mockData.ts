@@ -4,6 +4,7 @@ import {
   TeamMember, 
   PillarData,
   DropoffHub,
+  ClothesDonor,
   ClothesDonationRequest,
   ClothesAssistanceRequest,
   DonationRecord, 
@@ -562,6 +563,105 @@ export const INITIAL_DONATION_RECORDS: DonationRecord[] = [
     date: '2024-08-20',
     receiptNumber: 'REC-GZ-2025-4817',
     status: 'Verified'
+  }
+];
+
+export const SAMPLE_CLOTHES_DONORS: ClothesDonor[] = [
+  {
+    id: 'c-donor-01',
+    name: 'Suman Thapa',
+    nameNp: 'सुमन थापा',
+    location: 'Baneshwor, Kathmandu',
+    locationNp: 'बानेश्वर, काठमाडौँ',
+    itemsCount: 45,
+    clothesType: 'Winter Jackets & Sweaters',
+    clothesTypeNp: 'जाडोको न्यानो ज्याकेट र स्विटर',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    note: 'Glad to contribute 45 warm jackets and woolen blankets for the winter relief drive.',
+    noteNp: 'शीतलहर पीडित दाजुभाइ तथा दिदीबहिनीका लागि ४५ थान न्यानो ज्याकेट सहयोग गर्न पाउँदा खुसी लागेको छ।',
+    date: '2024-08-25',
+    isVerified: true,
+    isFeatured: true
+  },
+  {
+    id: 'c-donor-02',
+    name: 'Anjali Shrestha',
+    nameNp: 'अञ्जली श्रेष्ठ',
+    location: 'Kupondole, Lalitpur',
+    locationNp: 'कुपण्डोल, ललितपुर',
+    itemsCount: 32,
+    clothesType: 'Kids Wear & School Uniforms',
+    clothesTypeNp: 'बालबालिकाका कपडा र विद्यालय पोशाक',
+    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    note: 'Happy to support children in remote mountain schools with warm school wear.',
+    noteNp: 'हिमाली विद्यालयका साना बालबालिकालाई न्यानो पोशाक पुगोस् भन्ने कामना गर्दछु।',
+    date: '2024-08-24',
+    isVerified: true,
+    isFeatured: true
+  },
+  {
+    id: 'c-donor-03',
+    name: 'Prabin Adhikari',
+    nameNp: 'प्रबिन अधिकारी',
+    location: 'Lakeside, Pokhara',
+    locationNp: 'लेकसाइड, पोखरा',
+    itemsCount: 55,
+    clothesType: 'Blankets & Quilts',
+    clothesTypeNp: 'कम्बल तथा बाक्लो सिरक',
+    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    note: 'Sent 55 warm blankets to protect vulnerable families from the Terai cold wave.',
+    noteNp: 'तराईको शीतलहरबाट विपन्न मुसहर बस्तीलाई जोगाउन ५५ थान कम्बल पठाएका छौँ।',
+    date: '2024-08-22',
+    isVerified: true,
+    isFeatured: true
+  },
+  {
+    id: 'c-donor-04',
+    name: 'Bina Maharjan',
+    nameNp: 'बिना महर्जन',
+    location: 'Suryabinayak, Bhaktapur',
+    locationNp: 'सूर्यविनायक, भक्तपुर',
+    itemsCount: 28,
+    clothesType: 'Sweaters & Woolen Caps',
+    clothesTypeNp: 'ऊनको स्विटर र टोपी',
+    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    note: 'Warm wishes for our sisters and brothers in need across Nepal.',
+    noteNp: 'जेन्जिकन कपडा बैंकको यो पवित्र अभियानलाई निरन्तर साथ रहनेछ।',
+    date: '2024-08-20',
+    isVerified: true,
+    isFeatured: true
+  },
+  {
+    id: 'c-donor-05',
+    name: 'Roshan Khadka',
+    nameNp: 'रोशन खड्का',
+    location: 'Bharatpur, Chitwan',
+    locationNp: 'भरतपुर, चितवन',
+    itemsCount: 40,
+    clothesType: 'Mixed Family Clothing Pack',
+    clothesTypeNp: 'मिश्रित पारिवारिक कपडा सेट',
+    imageUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=400&q=80',
+    note: 'Honored to be part of Genzicon Clothes Bank Nepal movement.',
+    noteNp: 'घरमा रहेका सफा र उपयोगी कपडाहरू सही हातमा पुगेकोमा पूर्ण सन्तुष्ट छु।',
+    date: '2024-08-18',
+    isVerified: true,
+    isFeatured: true
+  },
+  {
+    id: 'c-donor-06',
+    name: 'Sunita Chaudhary',
+    nameNp: 'सुनिता चौधरी',
+    location: 'Ramanand Chowk, Janakpurdham',
+    locationNp: 'रामानन्द चोक, जनकपुरधाम',
+    itemsCount: 35,
+    clothesType: 'Winter Shawls & Jackets',
+    clothesTypeNp: 'न्यानो सल तथा ज्याकेट',
+    imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+    note: 'Directly dropped off warm shawls and clothes at the central hub.',
+    noteNp: 'केन्द्रमै पुगेर कपडा हस्तान्तरण गरेँ, स्वयंसेवकहरूको सेवाभाव अतुलनीय छ।',
+    date: '2024-08-15',
+    isVerified: true,
+    isFeatured: true
   }
 ];
 

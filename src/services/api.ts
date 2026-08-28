@@ -385,8 +385,140 @@ export async function apiDeleteProject(id: string | number) {
 }
 
 // --------------------------------------------------------------------------
-// 5. Clothes Bank Donations
+// 5. Clothes Bank Nepal: Donors Showcase & Donation Submissions
 // --------------------------------------------------------------------------
+export async function apiGetClothesDonors() {
+  try {
+    const res = await fetch(`${API_BASE}/clothes-donors/`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const results = Array.isArray(data) ? data : data.results || [];
+      return results.map((d: any) => ({
+        id: String(d.id),
+        name: d.name,
+        nameNp: d.name_np || '',
+        location: d.location || 'Kathmandu',
+        locationNp: d.location_np || '',
+        itemsCount: d.items_count || 0,
+        clothesType: d.clothes_type || 'Winter Wear',
+        clothesTypeNp: d.clothes_type_np || '',
+        imageUrl: d.final_image_url || d.donor_image || d.image_url || '',
+        note: d.note || '',
+        noteNp: d.note_np || '',
+        date: d.date || (d.created_at ? d.created_at.split('T')[0] : new Date().toISOString().split('T')[0]),
+        isVerified: d.is_verified ?? true,
+        isFeatured: d.is_featured ?? true,
+      }));
+    }
+  } catch (e) {
+    console.warn('Could not fetch clothes donors from backend:', e);
+  }
+  return null;
+}
+
+export async function apiCreateClothesDonor(data: {
+  name: string;
+  nameNp?: string;
+  location: string;
+  locationNp?: string;
+  itemsCount: number;
+  clothesType: string;
+  clothesTypeNp?: string;
+  imageUrl?: string;
+  note?: string;
+  noteNp?: string;
+  date?: string;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+}) {
+  try {
+    const payload = {
+      name: data.name,
+      name_np: data.nameNp || '',
+      location: data.location,
+      location_np: data.locationNp || '',
+      items_count: data.itemsCount,
+      clothes_type: data.clothesType,
+      clothes_type_np: data.clothesTypeNp || '',
+      image_url: data.imageUrl || '',
+      note: data.note || '',
+      note_np: data.noteNp || '',
+      date: data.date || new Date().toISOString().split('T')[0],
+      is_verified: data.isVerified ?? true,
+      is_featured: data.isFeatured ?? true,
+    };
+    const res = await fetch(`${API_BASE}/clothes-donors/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn('Could not create clothes donor on backend:', e);
+  }
+  return null;
+}
+
+export async function apiUpdateClothesDonor(id: string | number, data: Partial<{
+  name: string;
+  nameNp: string;
+  location: string;
+  locationNp: string;
+  itemsCount: number;
+  clothesType: string;
+  clothesTypeNp: string;
+  imageUrl: string;
+  note: string;
+  noteNp: string;
+  date: string;
+  isVerified: boolean;
+  isFeatured: boolean;
+}>) {
+  try {
+    const payload: any = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.nameNp !== undefined) payload.name_np = data.nameNp;
+    if (data.location !== undefined) payload.location = data.location;
+    if (data.locationNp !== undefined) payload.location_np = data.locationNp;
+    if (data.itemsCount !== undefined) payload.items_count = data.itemsCount;
+    if (data.clothesType !== undefined) payload.clothes_type = data.clothesType;
+    if (data.clothesTypeNp !== undefined) payload.clothes_type_np = data.clothesTypeNp;
+    if (data.imageUrl !== undefined) payload.image_url = data.imageUrl;
+    if (data.note !== undefined) payload.note = data.note;
+    if (data.noteNp !== undefined) payload.note_np = data.noteNp;
+    if (data.date !== undefined) payload.date = data.date;
+    if (data.isVerified !== undefined) payload.is_verified = data.isVerified;
+    if (data.isFeatured !== undefined) payload.is_featured = data.isFeatured;
+
+    const res = await fetch(`${API_BASE}/clothes-donors/${id}/`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Could not update clothes donor on backend:', e);
+    return false;
+  }
+}
+
+export async function apiDeleteClothesDonor(id: string | number) {
+  try {
+    const res = await fetch(`${API_BASE}/clothes-donors/${id}/`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Could not delete clothes donor on backend:', e);
+    return false;
+  }
+}
+
 export async function apiSubmitClothesDonation(data: {
   donorName: string;
   phone: string;

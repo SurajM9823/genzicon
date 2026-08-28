@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import (
-    SiteContent, ImpactStat, Project, 
+    SiteContent, ImpactStat, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry
 )
 
@@ -35,6 +35,21 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.target_amount > 0:
             return round(min((float(obj.raised_amount) / float(obj.target_amount)) * 100, 100), 1)
         return 0
+
+class ClothesDonorSerializer(serializers.ModelSerializer):
+    final_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ClothesDonor
+        fields = '__all__'
+
+    def get_final_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.donor_image:
+            if request is not None:
+                return request.build_absolute_uri(obj.donor_image.url)
+            return obj.donor_image.url
+        return obj.image_url or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400"
 
 class ClothesDonationSerializer(serializers.ModelSerializer):
     class Meta:
