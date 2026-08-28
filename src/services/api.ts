@@ -73,6 +73,18 @@ export async function apiGetSiteContent() {
     });
     if (res.ok) {
       const data = await res.json();
+      const impactStats = Array.isArray(data.impact_stats) && data.impact_stats.length > 0
+        ? data.impact_stats.map((s: any) => ({
+            id: s.id || s.stat_id,
+            number: s.number,
+            label: s.label,
+            labelNp: s.labelNp || s.label_np || '',
+            description: s.description || '',
+            descriptionNp: s.descriptionNp || s.description_np || '',
+            color: s.color || 'primary',
+          }))
+        : undefined;
+
       return {
         heroTitle: data.hero_title || '',
         heroTitleNp: data.hero_title_np || '',
@@ -83,6 +95,7 @@ export async function apiGetSiteContent() {
         heroSlides: Array.isArray(data.hero_slides) ? data.hero_slides : undefined,
         heroBannerTag: data.hero_banner_tag || '',
         heroBannerTagNp: data.hero_banner_tag_np || '',
+        impactStats,
       };
     } else {
       // Fallback: try listing /site-content/
@@ -145,6 +158,62 @@ export async function apiUpdateSiteContent(id: number = 1, content: any) {
     }
   } catch (e) {
     console.warn('Could not update site content:', e);
+  }
+  return null;
+}
+
+export async function apiGetImpactStats() {
+  try {
+    const res = await fetch(`${API_BASE}/impact-stats/`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : (data.results || []);
+      if (items.length > 0) {
+        return items.map((s: any) => ({
+          id: s.stat_id || s.id,
+          number: s.number,
+          label: s.label,
+          labelNp: s.label_np || s.labelNp || '',
+          description: s.description || '',
+          descriptionNp: s.description_np || s.descriptionNp || '',
+          color: s.color || 'primary',
+          order: s.order || 0,
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn('Could not fetch impact stats:', e);
+  }
+  return null;
+}
+
+export async function apiSaveImpactStats(stats: any[]) {
+  try {
+    const payload = {
+      stats: stats.map((s, idx) => ({
+        id: s.id,
+        stat_id: s.id,
+        number: s.number,
+        label: s.label,
+        label_np: s.labelNp || s.label_np || '',
+        description: s.description || '',
+        description_np: s.descriptionNp || s.description_np || '',
+        color: s.color || 'primary',
+        order: idx + 1,
+      })),
+    };
+    const res = await fetch(`${API_BASE}/impact-stats/bulk_save/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn('Could not save impact stats to backend:', e);
   }
   return null;
 }

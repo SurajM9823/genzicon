@@ -35,6 +35,7 @@ import {
   apiAdminLogout,
   apiGetSiteContent,
   apiUpdateSiteContent,
+  apiSaveImpactStats,
   apiGetProjects,
   apiCreateProject,
   apiGetClothesDonations,
@@ -195,10 +196,17 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     loadBackendData();
   }, [isAuthenticated]);
 
-  const handleSaveSiteContent = (newContent: SiteContentConfig) => {
+  const handleSaveSiteContent = async (newContent: SiteContentConfig) => {
     setSiteContent(newContent);
     localStorage.setItem('genzicon_site_content', JSON.stringify(newContent));
-    apiUpdateSiteContent(1, newContent).catch(console.warn);
+    try {
+      await apiUpdateSiteContent(1, newContent);
+      if (newContent.impactStats && newContent.impactStats.length > 0) {
+        await apiSaveImpactStats(newContent.impactStats);
+      }
+    } catch (e) {
+      console.warn('Backend sync in handleSaveSiteContent:', e);
+    }
     // Trigger custom window event so other open pages can re-render if active
     window.dispatchEvent(new Event('genzicon_content_updated'));
   };

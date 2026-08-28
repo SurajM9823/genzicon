@@ -89,14 +89,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           apiGetProjects(),
         ]);
         if (liveContent) {
-          setSiteContent({
+          const mergedStats = (liveContent.impactStats && liveContent.impactStats.length > 0) 
+            ? liveContent.impactStats 
+            : DEFAULT_SITE_CONTENT.impactStats;
+
+          const mergedContent = {
             ...DEFAULT_SITE_CONTENT,
             ...liveContent,
             heroSlides: liveContent.heroSlides,
             heroImages: liveContent.heroImages,
-          });
+            impactStats: mergedStats,
+          };
+
+          setSiteContent(mergedContent);
           try {
-            localStorage.setItem('genzicon_site_content', JSON.stringify(liveContent));
+            localStorage.setItem('genzicon_site_content', JSON.stringify(mergedContent));
           } catch {}
         }
         if (liveProjects && liveProjects.length > 0) {

@@ -46,20 +46,23 @@ class SiteContent(models.Model):
         return f"Slide #{self.order}: {self.hero_title[:40]} [{status}]"
 
 class ImpactStat(models.Model):
-    """Live Statistical Counters shown on homepage"""
-    stat_id = models.CharField(max_length=50, unique=True)
-    number = models.CharField(max_length=50)
-    label = models.CharField(max_length=100)
-    label_np = models.CharField(max_length=100)
-    order = models.PositiveIntegerField(default=0)
+    """Live Statistical Counters shown on homepage (4 Static Impact Cards)"""
+    stat_id = models.CharField(max_length=50, unique=True, verbose_name="Unique Key (e.g. clothes, green, skills, volunteers)")
+    number = models.CharField(max_length=50, default="142,500+", verbose_name="Display Number (e.g. 142,500+)")
+    label = models.CharField(max_length=100, default="Garments Distributed", verbose_name="Label (English)")
+    label_np = models.CharField(max_length=100, blank=True, default="संकलित तथा वितरित कपडा", verbose_name="Label (Nepali)")
+    description = models.TextField(blank=True, default="Wearable clothes collected, sorted, cleaned, and handed over to families in need across Nepal.", verbose_name="Description (English)")
+    description_np = models.TextField(blank=True, default="नेपालभरिका विपन्न परिवार, बालबालिका तथा वृद्धवृद्धालाई निःशुल्क वितरित उपयोगी कपडा।", verbose_name="Description (Nepali)")
+    color = models.CharField(max_length=20, default='primary', choices=[('primary', 'Primary (Blue)'), ('secondary', 'Secondary (Green)')], verbose_name="Accent Color")
+    order = models.PositiveIntegerField(default=0, verbose_name="Display Order")
 
     class Meta:
-        ordering = ['order']
+        ordering = ['order', 'id']
         verbose_name = "Impact Statistic"
         verbose_name_plural = "Impact Statistics"
 
     def __str__(self):
-        return f"{self.number} - {self.label}"
+        return f"#{self.order} {self.number} - {self.label} [{self.stat_id}]"
 
 class Project(models.Model):
     """Field Programs & Grassroots Projects"""

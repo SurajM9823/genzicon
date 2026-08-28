@@ -38,8 +38,21 @@ class SiteContentAdmin(admin.ModelAdmin):
 
 @admin.register(ImpactStat)
 class ImpactStatAdmin(admin.ModelAdmin):
-    list_display = ('number', 'label', 'label_np', 'order')
-    list_editable = ('order',)
+    list_display = ('order', 'stat_id', 'number', 'label', 'label_np', 'color')
+    list_display_links = ('number', 'label')
+    list_editable = ('order', 'color')
+    search_fields = ('stat_id', 'number', 'label', 'label_np', 'description')
+    fieldsets = (
+        ('Identification & Position', {
+            'fields': ('stat_id', 'order', 'color')
+        }),
+        ('Metric & Labels', {
+            'fields': ('number', 'label', 'label_np')
+        }),
+        ('Detailed Descriptions', {
+            'fields': ('description', 'description_np')
+        }),
+    )
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):

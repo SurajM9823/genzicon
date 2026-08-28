@@ -398,20 +398,31 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
       <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
         <div className="border-b border-[#f0f3ff] pb-2">
           <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
-            3. Verified Impact Counters & Statistics (4 Core Stats)
+            3. Verified Impact Counters & Statistics (4 Core Cards Below Carousel)
           </h3>
           <p className="text-[11px] text-[#737784]">
-            Update verified numbers (e.g. 142,500+ Garments, 86,000+ Trees) and supporting explanation text.
+            Update verified counter numbers (e.g. 142,500+ Garments, 86,000+ Trees), bilingual titles, and descriptions.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {(formData.impactStats || []).map((stat, index) => (
-            <div key={stat.id} className="p-4 bg-[#f9f9ff] border border-[#d8e3fb] space-y-2.5">
-              <div className="flex items-center justify-between pb-1 border-b border-[#e7eeff]">
+            <div key={stat.id} className="p-4 bg-[#f9f9ff] border border-[#d8e3fb] space-y-3">
+              <div className="flex items-center justify-between pb-1.5 border-b border-[#e7eeff]">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#003c90]">
-                  Pillar Metric #{index + 1} ({stat.id})
+                  Card #{index + 1}: {stat.id.toUpperCase()}
                 </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold text-[#737784]">Theme:</span>
+                  <select
+                    value={stat.color || 'primary'}
+                    onChange={(e) => handleStatChange(index, 'color', e.target.value as 'primary' | 'secondary')}
+                    className="text-[10px] font-bold px-2 py-0.5 border border-[#d8e3fb] bg-white text-[#111c2d] focus:outline-none"
+                  >
+                    <option value="primary">Blue (Primary)</option>
+                    <option value="secondary">Green (Secondary)</option>
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -424,19 +435,21 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
                     required
                     value={stat.number}
                     onChange={(e) => handleStatChange(index, 'number', e.target.value)}
+                    placeholder="e.g. 142,500+"
                     className="w-full px-2.5 py-1.5 border border-[#d8e3fb] bg-white text-xs font-bold text-[#003c90] font-mono focus:outline-none focus:border-[#003c90]"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-bold text-[#737784] uppercase mb-0.5">
-                    Metric Label (English)
+                    Label (English)
                   </label>
                   <input
                     type="text"
                     required
                     value={stat.label}
                     onChange={(e) => handleStatChange(index, 'label', e.target.value)}
+                    placeholder="e.g. Garments Distributed"
                     className="w-full px-2.5 py-1.5 border border-[#d8e3fb] bg-white text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   />
                 </div>
@@ -444,26 +457,43 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
 
               <div>
                 <label className="block text-[10px] font-bold text-[#737784] uppercase mb-0.5">
-                  Metric Label (नेपाली)
+                  Label in Nepali (नेपाली शीर्षक)
                 </label>
                 <input
                   type="text"
                   value={stat.labelNp || ''}
                   onChange={(e) => handleStatChange(index, 'labelNp', e.target.value)}
+                  placeholder="e.g. संकलित तथा वितरित कपडा"
                   className="w-full px-2.5 py-1.5 border border-[#d8e3fb] bg-white text-xs font-semibold text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                 />
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-[#737784] uppercase mb-0.5">
-                  Short Description
-                </label>
-                <textarea
-                  rows={2}
-                  value={stat.description || ''}
-                  onChange={(e) => handleStatChange(index, 'description', e.target.value)}
-                  className="w-full px-2.5 py-1.5 border border-[#d8e3fb] bg-white text-[11px] text-[#434653] focus:outline-none focus:border-[#003c90]"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#737784] uppercase mb-0.5">
+                    Description (English)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={stat.description || ''}
+                    onChange={(e) => handleStatChange(index, 'description', e.target.value)}
+                    placeholder="e.g. Wearable clothes collected, sorted, cleaned, and handed over to families in need across Nepal."
+                    className="w-full px-2.5 py-1.5 border border-[#d8e3fb] bg-white text-[11px] text-[#434653] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-[#737784] uppercase mb-0.5">
+                    Description (नेपाली विवरण)
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={stat.descriptionNp || ''}
+                    onChange={(e) => handleStatChange(index, 'descriptionNp', e.target.value)}
+                    placeholder="e.g. नेपालभरिका विपन्न परिवार, बालबालिका तथा वृद्धवृद्धालाई निःशुल्क वितरित उपयोगी कपडा।"
+                    className="w-full px-2.5 py-1.5 border border-[#d8e3fb] bg-white text-[11px] text-[#434653] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
               </div>
             </div>
           ))}
