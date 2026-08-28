@@ -536,36 +536,56 @@ export async function apiSubmitClothesDonation(data: {
 }) {
   const fallbackRefId = `CBN-${Math.floor(10000 + Math.random() * 90000)}`;
   try {
-    const payload = {
+    // Map frontend donation modes to Django model choices
+    let backendMode = 'dropoff_hub';
+    if (data.donationMode === 'self_dropoff' || data.donationMode === 'dropoff_hub') {
+      backendMode = 'dropoff_hub';
+    } else if (data.donationMode === 'courier_parcel' || data.donationMode === 'pathao_rider') {
+      backendMode = 'courier_parcel';
+    } else if (data.donationMode === 'doorstep_pickup') {
+      backendMode = 'doorstep_pickup';
+    }
+
+    const payload: Record<string, any> = {
       donor_name: data.donorName,
       phone: data.phone,
-      email: data.email || '',
       province: data.province,
       district: data.district,
       city: data.city || '',
       address: data.address,
       clothes_type: data.clothesType,
-      approx_items_count: data.approxItemsCount,
-      donation_mode: data.donationMode,
-      pickup_date: data.pickupDate || null,
-      dropoff_hub: data.dropoffHub || '',
+      approx_items_count: Number(data.approxItemsCount) || 10,
+      donation_mode: backendMode,
+      dropoff_hub: data.dropoffHub || 'Genzicon Central Hub, Tinkune, Kathmandu',
       notes: data.notes || '',
     };
+
+    if (data.email && data.email.trim()) {
+      payload.email = data.email.trim();
+    }
+    if (data.pickupDate && data.pickupDate.trim()) {
+      payload.pickup_date = data.pickupDate.trim();
+    }
+
     const res = await fetch(`${API_BASE}/clothes/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+
     if (res.ok) {
       const contentType = res.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
         const json = await res.json();
         return {
-          id: json.id ? String(json.id) : fallbackRefId,
+          id: json.ref_id || (json.id ? String(json.id) : fallbackRefId),
           ref_id: json.ref_id || fallbackRefId,
           ...json
         };
       }
+    } else {
+      const errText = await res.text();
+      console.warn('Backend rejected clothes donation:', res.status, errText);
     }
   } catch (e) {
     console.warn('Failed to submit clothes donation to live API (using local persistence):', e);

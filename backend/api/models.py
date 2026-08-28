@@ -153,8 +153,10 @@ class ClothesDonation(models.Model):
     ]
     MODE_CHOICES = [
         ('dropoff_hub', 'Self Drop-off at Genzicon Hub'),
-        ('courier_parcel', 'Courier / Pathao / Bus Parcel'),
-        ('doorstep_pickup', 'Doorstep Van Pickup (Legacy)'),
+        ('self_dropoff', 'Self Drop-off at Hub'),
+        ('courier_parcel', 'Courier / Cargo / Bus Parcel'),
+        ('pathao_rider', 'Pathao / InDrive Rider Parcel'),
+        ('doorstep_pickup', 'Doorstep Van Pickup / Bulk Pickup'),
     ]
 
     ref_id = models.CharField(max_length=30, unique=True, default=generate_reference_id)
