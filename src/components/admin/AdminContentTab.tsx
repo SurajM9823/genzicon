@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Save, 
   Image as ImageIcon, 
@@ -25,9 +25,24 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
   onSaveContent
 }) => {
   const isNp = language === 'np';
-  const [formData, setFormData] = useState<SiteContentConfig>(siteContent);
+  const [formData, setFormData] = useState<SiteContentConfig>(() => ({
+    ...DEFAULT_SITE_CONTENT,
+    ...siteContent,
+    heroCarouselImages: siteContent.heroCarouselImages || siteContent.heroImages || DEFAULT_SITE_CONTENT.heroCarouselImages || [],
+    impactStats: siteContent.impactStats || DEFAULT_SITE_CONTENT.impactStats || [],
+  }));
   const [customImageUrl, setCustomImageUrl] = useState('');
   const [saveToast, setSaveToast] = useState(false);
+
+  useEffect(() => {
+    setFormData(prev => ({
+      ...DEFAULT_SITE_CONTENT,
+      ...prev,
+      ...siteContent,
+      heroCarouselImages: siteContent.heroCarouselImages || siteContent.heroImages || prev.heroCarouselImages || DEFAULT_SITE_CONTENT.heroCarouselImages || [],
+      impactStats: siteContent.impactStats || prev.impactStats || DEFAULT_SITE_CONTENT.impactStats || [],
+    }));
+  }, [siteContent]);
 
   // Curated Nepali NGO imagery presets
   const presetImages = [
@@ -192,7 +207,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
             Carousel Image Pool (Click any image to set as Active Banner)
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {formData.heroCarouselImages.map((imgUrl, index) => {
+            {(formData.heroCarouselImages || []).map((imgUrl, index) => {
               const isSelected = formData.heroImageUrl === imgUrl;
               return (
                 <div 
@@ -215,7 +230,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
                     >
                       {isSelected ? '✓ Active Hero' : 'Select Hero'}
                     </button>
-                    {formData.heroCarouselImages.length > 1 && (
+                    {(formData.heroCarouselImages || []).length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleRemoveCarouselImage(index)}
@@ -391,7 +406,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {formData.impactStats.map((stat, index) => (
+          {(formData.impactStats || []).map((stat, index) => (
             <div key={stat.id} className="p-4 bg-[#f9f9ff] border border-[#d8e3fb] space-y-2.5">
               <div className="flex items-center justify-between pb-1 border-b border-[#e7eeff]">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#003c90]">

@@ -291,7 +291,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Streamlined Impact Counters: Sleek, Modern 3D Cards */}
       <section className="py-10 bg-white px-4 sm:px-6 border-b border-[#d8e3fb] [perspective:1000px]">
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {siteContent.impactStats.map((stat, index) => {
+          {(siteContent.impactStats || IMPACT_STATS).map((stat, index) => {
             const getIcon = () => {
               switch (stat.id) {
                 case 'clothes':
