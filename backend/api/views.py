@@ -107,7 +107,11 @@ class SiteContentViewSet(viewsets.ModelViewSet):
         for slide in active_slides:
             img_url = slide.hero_image.url if slide.hero_image else (slide.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600")
             if img_url.startswith('/'):
-                img_url = request.build_absolute_uri(img_url)
+                built_uri = request.build_absolute_uri(img_url)
+                proto = request.META.get('HTTP_X_FORWARDED_PROTO', '')
+                if proto == 'https' and built_uri.startswith('http://'):
+                    built_uri = 'https://' + built_uri[7:]
+                img_url = built_uri
             hero_images.append(img_url)
             serialized_slides.append({
                 'id': f"slide-{slide.id}",

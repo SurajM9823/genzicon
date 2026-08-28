@@ -89,7 +89,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           apiGetProjects(),
         ]);
         if (liveContent) {
-          setSiteContent(prev => ({ ...prev, ...liveContent }));
+          setSiteContent({
+            ...DEFAULT_SITE_CONTENT,
+            ...liveContent,
+            heroSlides: liveContent.heroSlides,
+            heroImages: liveContent.heroImages,
+          });
+          try {
+            localStorage.setItem('genzicon_site_content', JSON.stringify(liveContent));
+          } catch {}
         }
         if (liveProjects && liveProjects.length > 0) {
           setProjectsList(liveProjects);

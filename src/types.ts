@@ -265,16 +265,29 @@ export interface ContactMessage {
   status: 'New' | 'Replied' | 'Resolved';
 }
 
+export interface HeroSlideItem {
+  id: string;
+  title: string;
+  titleNp?: string;
+  subtitle: string;
+  subtitleNp?: string;
+  tag?: string;
+  tagNp?: string;
+  imageUrl: string;
+}
+
 export interface SiteContentConfig {
   heroImageUrl: string;
-  heroCarouselImages: string[];
+  heroCarouselImages?: string[];
+  heroImages?: string[];
+  heroSlides?: HeroSlideItem[];
   heroTitle: string;
   heroTitleNp: string;
   heroSubtitle: string;
   heroSubtitleNp: string;
   heroBannerTag: string;
   heroBannerTagNp: string;
-  impactStats: StatMetric[];
+  impactStats?: StatMetric[];
 }
 
 export interface BankAndQrConfig {
