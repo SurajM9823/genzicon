@@ -162,7 +162,57 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
 
   // Synchronize state changes to localStorage and backend API
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // Listen for real-time clothes donations, volunteer registrations, and other updates
+    const handleSyncFromLocalStorage = () => {
+      try {
+        const savedClothes = localStorage.getItem('genzicon_clothes_donations');
+        if (savedClothes) {
+          const parsed = JSON.parse(savedClothes);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setClothesDonations(parsed);
+          }
+        }
+
+        const savedVolunteers = localStorage.getItem('genzicon_admin_volunteers');
+        if (savedVolunteers) {
+          const parsed = JSON.parse(savedVolunteers);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setVolunteers(parsed);
+          }
+        }
+
+        const savedDonations = localStorage.getItem('genzicon_admin_donations');
+        if (savedDonations) {
+          const parsed = JSON.parse(savedDonations);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setDonations(parsed);
+          }
+        }
+
+        const savedContacts = localStorage.getItem('genzicon_contacts');
+        if (savedContacts) {
+          const parsed = JSON.parse(savedContacts);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setContacts(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading updated data in Admin event listener:', e);
+      }
+    };
+
+    window.addEventListener('genzicon_clothes_updated', handleSyncFromLocalStorage);
+    window.addEventListener('storage', handleSyncFromLocalStorage);
+
+    // Initial check on mount
+    handleSyncFromLocalStorage();
+
+    if (!isAuthenticated) {
+      return () => {
+        window.removeEventListener('genzicon_clothes_updated', handleSyncFromLocalStorage);
+        window.removeEventListener('storage', handleSyncFromLocalStorage);
+      };
+    }
 
     const loadBackendData = async () => {
       try {
@@ -184,7 +234,19 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
 
         if (liveContent) setSiteContent(prev => ({ ...prev, ...liveContent }));
         if (liveProjects && liveProjects.length > 0) setProjects(liveProjects);
-        if (liveClothes && liveClothes.length > 0) setClothesDonations(liveClothes);
+        if (liveClothes && liveClothes.length > 0) {
+          // Merge live clothes with any locally saved ones so user submissions are never lost
+          const localSaved = localStorage.getItem('genzicon_clothes_donations');
+          const localParsed: ClothesDonationRequest[] = localSaved ? JSON.parse(localSaved) : [];
+          const merged = [...localParsed];
+          liveClothes.forEach((item: ClothesDonationRequest) => {
+            if (!merged.some(m => m.id === item.id)) {
+              merged.push(item);
+            }
+          });
+          setClothesDonations(merged);
+          localStorage.setItem('genzicon_clothes_donations', JSON.stringify(merged));
+        }
         if (liveVolunteers && liveVolunteers.length > 0) setVolunteers(liveVolunteers);
         if (liveDonations && liveDonations.length > 0) setDonations(liveDonations);
         if (liveContacts && liveContacts.length > 0) setContacts(liveContacts);
@@ -194,6 +256,11 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     };
 
     loadBackendData();
+
+    return () => {
+      window.removeEventListener('genzicon_clothes_updated', handleSyncFromLocalStorage);
+      window.removeEventListener('storage', handleSyncFromLocalStorage);
+    };
   }, [isAuthenticated]);
 
   const handleSaveSiteContent = async (newContent: SiteContentConfig) => {

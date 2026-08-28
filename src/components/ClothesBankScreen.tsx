@@ -23,6 +23,7 @@ import {
   Info
 } from 'lucide-react';
 import { Language, ClothesDonationRequest } from '../types';
+import { SAMPLE_CLOTHES_DONATION_REQUESTS } from '../data/mockData';
 import { apiSubmitClothesDonation } from '../services/api';
 import { ClothesDonorSlider } from './ClothesDonorSlider';
 
@@ -83,13 +84,25 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
         notes: courierName ? `[Delivery via: ${courierName}] ${notes}` : notes,
       });
 
-      const assignedId = res?.ref_id || fallbackId;
+      const assignedId = res?.ref_id || res?.id || fallbackId;
       setDonationSuccessId(assignedId);
 
-      // Also persist to local storage list
-      const currentList: ClothesDonationRequest[] = JSON.parse(localStorage.getItem('genzicon_clothes_donations') || '[]');
+      // Load existing list or fallback to SAMPLE_CLOTHES_DONATION_REQUESTS
+      const stored = localStorage.getItem('genzicon_clothes_donations');
+      let currentList: ClothesDonationRequest[] = [];
+      if (stored) {
+        try {
+          currentList = JSON.parse(stored);
+          if (!Array.isArray(currentList)) currentList = SAMPLE_CLOTHES_DONATION_REQUESTS;
+        } catch {
+          currentList = SAMPLE_CLOTHES_DONATION_REQUESTS;
+        }
+      } else {
+        currentList = SAMPLE_CLOTHES_DONATION_REQUESTS;
+      }
+
       const newEntry: ClothesDonationRequest = {
-        id: String(res?.id || fallbackId),
+        id: assignedId,
         donorName,
         phone,
         email,
@@ -106,7 +119,13 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
         date: new Date().toISOString().split('T')[0],
         status: 'Pending',
       };
-      localStorage.setItem('genzicon_clothes_donations', JSON.stringify([newEntry, ...currentList]));
+
+      const updatedList = [newEntry, ...currentList.filter(c => c.id !== assignedId)];
+      localStorage.setItem('genzicon_clothes_donations', JSON.stringify(updatedList));
+
+      // Trigger custom events so AdminScreen and other listeners update in real-time
+      window.dispatchEvent(new Event('genzicon_clothes_updated'));
+      window.dispatchEvent(new Event('storage'));
     } catch (err) {
       console.warn('Error submitting to API:', err);
       setDonationSuccessId(fallbackId);

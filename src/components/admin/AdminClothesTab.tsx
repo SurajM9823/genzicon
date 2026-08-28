@@ -272,11 +272,14 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
 
   // Filtered Submissions
   const filteredDonations = clothesDonations.filter(c => {
-    const matchesSearch = !searchTerm || 
-      c.donorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.phone.includes(searchTerm) ||
-      c.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (c.address && c.address.toLowerCase().includes(searchTerm.toLowerCase()));
+    const term = searchTerm.toLowerCase().trim();
+    const matchesSearch = !term || 
+      (c.id && c.id.toLowerCase().includes(term)) ||
+      (c.donorName && c.donorName.toLowerCase().includes(term)) ||
+      (c.phone && c.phone.includes(term)) ||
+      (c.district && c.district.toLowerCase().includes(term)) ||
+      (c.address && c.address.toLowerCase().includes(term)) ||
+      (c.notes && c.notes.toLowerCase().includes(term));
     const matchesStatus = filterStatus === 'all' || c.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
