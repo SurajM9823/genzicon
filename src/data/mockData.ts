@@ -7,8 +7,12 @@ import {
   ClothesDonationRequest,
   ClothesAssistanceRequest,
   DonationRecord, 
-  VolunteerRecord 
+  VolunteerRecord,
+  SiteContentConfig,
+  BankAndQrConfig,
+  ContactMessage
 } from '../types';
+
 
 export const PILLARS_DATA: PillarData[] = [
   {
@@ -791,3 +795,70 @@ export const GALLERY_ITEMS_DATA = [
     date: 'July 2024'
   }
 ];
+
+export const DEFAULT_SITE_CONTENT: SiteContentConfig = {
+  heroImageUrl: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80',
+  heroCarouselImages: [
+    'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80',
+    'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=80',
+    'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80',
+    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80'
+  ],
+  heroTitle: 'Empowering Communities Across Nepal',
+  heroTitleNp: 'जनसेवा, हरित अभियान र सीप विकास',
+  heroSubtitle: 'Grassroots clothes banking, native reforestation, and vocational skill training across Nepal.',
+  heroSubtitleNp: 'कपडा बैंक नेपालमार्फत कपडा वितरण, चुरे तथा नदी हरित अभियान, र विपन्न परिवारका लागि स्वरोजगार सीप।',
+  heroBannerTag: 'Grassroots Community Action Nepal',
+  heroBannerTagNp: 'नेपालव्यापी जनसेवा अभियान',
+  impactStats: IMPACT_STATS
+};
+
+export const DEFAULT_BANK_QR_CONFIG: BankAndQrConfig = {
+  bankName: 'Global IME Bank Ltd.',
+  accountName: 'GENZICON FOUNDATION NEPAL',
+  accountNumber: '01201010009823',
+  branch: 'Putalisadak Central Branch, Kathmandu',
+  swiftCode: 'GLBBNPKA',
+  fonepayMerchantName: 'GENZICON FOUNDATION NEPAL',
+  fonepayQrImage: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021226500010np.fonepay01180120101000982302069823005204000053035245802NP5925GENZICON+FOUNDATION+NEP6009Kathmandu',
+  esewaId: '9823000000 / genzicon.esewa',
+  esewaQrImage: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=esewa://transfer?id=9823000000&name=GenziconFoundation',
+  khaltiId: '9823000000',
+  khaltiQrImage: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=khalti://pay?id=9823000000',
+  hotlinePhone: '+977 1-4240000 / 9823000000',
+  hotlineEmail: 'donate@genzicon.org'
+};
+
+export const INITIAL_CONTACT_MESSAGES: ContactMessage[] = [
+  {
+    id: 'msg-01',
+    name: 'Sushil Rijal',
+    email: 'sushil.rijal@gmail.com',
+    phone: '9841223344',
+    subject: 'Partnership for Clothes Drop-off Box in Baneshwor',
+    message: 'Namaste. We run a youth club in Old Baneshwor and would love to install a permanent Clothes Bank collection box at our community center.',
+    date: '2024-08-25',
+    status: 'New'
+  },
+  {
+    id: 'msg-02',
+    name: 'Anjali Tamang',
+    email: 'anjali.t@yahoo.com',
+    phone: '9803112233',
+    subject: 'Inquiry about Sewing Machine Training Cohort 13',
+    message: 'Hello Genzicon Team, when will the next batch of free tailoring training start in Kathmandu? I want to recommend 3 women from our neighborhood.',
+    date: '2024-08-23',
+    status: 'Replied'
+  },
+  {
+    id: 'msg-03',
+    name: 'Dr. Binod Karki',
+    email: 'binod.karki@kuh.edu.np',
+    phone: '9851009988',
+    subject: 'Tree Plantation Collaboration in Kavrepalanchok',
+    message: 'We have 5 acres of community hillside land in Dhulikhel and would like to join hands for the Clean Nepal Green Nepal native tree plantation.',
+    date: '2024-08-20',
+    status: 'Resolved'
+  }
+];
+

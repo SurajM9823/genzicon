@@ -262,5 +262,34 @@ export interface ContactMessage {
   subject: string;
   message: string;
   date: string;
-  status: 'New' | 'Replied';
+  status: 'New' | 'Replied' | 'Resolved';
 }
+
+export interface SiteContentConfig {
+  heroImageUrl: string;
+  heroCarouselImages: string[];
+  heroTitle: string;
+  heroTitleNp: string;
+  heroSubtitle: string;
+  heroSubtitleNp: string;
+  heroBannerTag: string;
+  heroBannerTagNp: string;
+  impactStats: StatMetric[];
+}
+
+export interface BankAndQrConfig {
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  branch: string;
+  swiftCode: string;
+  fonepayMerchantName: string;
+  fonepayQrImage: string;
+  esewaId: string;
+  esewaQrImage: string;
+  khaltiId: string;
+  khaltiQrImage: string;
+  hotlinePhone: string;
+  hotlineEmail: string;
+}
+

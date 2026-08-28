@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shirt, 
   Heart, 
@@ -16,7 +17,10 @@ import {
   AlertCircle,
   Share2,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Box,
+  Plus,
+  RotateCcw
 } from 'lucide-react';
 import { Language, ClothesDonationRequest, ClothesAssistanceRequest, DropoffHub } from '../types';
 import { DROPOFF_HUBS_DATA, SAMPLE_CLOTHES_DONATION_REQUESTS, SAMPLE_CLOTHES_ASSISTANCE_REQUESTS } from '../data/mockData';
@@ -93,90 +97,316 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
     ? DROPOFF_HUBS_DATA 
     : DROPOFF_HUBS_DATA.filter(h => h.city.toLowerCase().includes(selectedHubCity.toLowerCase()));
 
+  // Interactive 3D Donation Parcel Simulator state
+  const [simulatorItems, setSimulatorItems] = useState<{ [key: string]: number }>({
+    jackets: 2,
+    blankets: 1,
+    kids: 3,
+    sweaters: 2
+  });
+
+  const totalSimulatorItems = Object.values(simulatorItems).reduce((a: number, b: number) => a + b, 0);
+
+  const toggleSimulatorItem = (key: string) => {
+    setSimulatorItems(prev => ({
+      ...prev,
+      [key]: (prev[key] || 0) + 1
+    }));
+  };
+
+  const resetSimulator = () => {
+    setSimulatorItems({
+      jackets: 1,
+      blankets: 1,
+      kids: 2,
+      sweaters: 1
+    });
+  };
+
   return (
     <div id="clothes-bank-screen" className="w-full pt-16 pb-16 bg-[#f9f9ff] min-h-screen">
-      {/* Hero Header */}
-      <div className="bg-[#003c90] text-white border-b border-[#002660]">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-10 sm:py-12">
-          <div className="max-w-3xl">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 font-heading">
-              {isNp ? 'कपडा बैंक नेपाल' : 'Clothes Bank Nepal'}
-            </h1>
+      {/* Real Photography Hero Header with 3D Depth */}
+      <div className="relative bg-[#001838] text-white border-b border-[#002660] overflow-hidden">
+        {/* Authentic Background Image of Clothes Relief Drive */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80"
+            alt="Clothes Bank Nepal Volunteers and Warmth Distribution"
+            className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity scale-105 transition-transform duration-1000"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#001c44] via-[#002b66]/90 to-[#001530]/95" />
+          <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/30 to-black/60" />
+        </div>
 
-            <p className="text-xs sm:text-sm text-blue-100 font-normal leading-relaxed mb-6">
-              {isNp
-                ? 'तपाईंको प्रयोगमा नआएका तर राम्रा र सफा कपडाहरू हामी संकलन गर्छौँ। गुणस्तर जाँच र सफाइपछि तराईका शीतलहर प्रभावित, हिमाली विकट बस्ती तथा विपन्न परिवारलाई निःशुल्क र सम्मानपूर्वक वितरण गर्दछौँ।'
-                : 'Connecting generous citizens with underprivileged families across Nepal. We collect wearable, pre-loved clothes, sanitize and sort them, and deliver them directly to cold-wave victims, remote schools, and marginalized communities.'}
-            </p>
+        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left Header Description */}
+            <motion.div 
+              className="lg:col-span-7"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-white text-[11px] font-bold uppercase tracking-wider mb-3">
+                <Shirt className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isNp ? 'कपडा बैंक नेपाल • निःशुल्क सेवा' : 'Clothes Bank Nepal • Free Community Initiative'}</span>
+              </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-white/15">
-              <div className="bg-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-white">142,500+</span>
-                <span className="text-[11px] text-blue-100 font-medium">{isNp ? 'वितरित कपडा' : 'Garments Donated'}</span>
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 font-heading text-white">
+                {isNp ? 'कपडा बैंक नेपाल' : 'Clothes Bank Nepal'}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-blue-100/90 font-normal leading-relaxed mb-6 max-w-xl">
+                {isNp
+                  ? 'तपाईंको प्रयोगमा नआएका तर सफा कपडाहरू हामी संकलन गर्छौँ। गुणस्तर जाँच, सरसफाइ र मर्मतपछि तराईका शीतलहर प्रभावित, हिमाली विकट बस्ती तथा विपन्न परिवारलाई निःशुल्क र सम्मानपूर्वक वितरण गर्दछौँ।'
+                  : 'Connecting generous citizens with underprivileged families across Nepal. We collect wearable pre-loved clothes from households and offices, sanitize and pack them, and deliver them directly to cold-wave victims, remote schools, and marginalized communities.'}
+              </p>
+
+              {/* 3D Impact Counter Badges */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2 border-t border-white/15 [perspective:800px]">
+                <motion.div 
+                  whileHover={{ y: -3, rotateX: 5 }}
+                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-3 transform-gpu"
+                >
+                  <span className="block text-lg sm:text-2xl font-black text-white font-heading">142,500+</span>
+                  <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'वितरित कपडा' : 'Garments Donated'}</span>
+                </motion.div>
+                <motion.div 
+                  whileHover={{ y: -3, rotateX: 5 }}
+                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-3 transform-gpu"
+                >
+                  <span className="block text-lg sm:text-2xl font-black text-white font-heading">28,400+</span>
+                  <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'लाभान्वित परिवार' : 'Families Clothed'}</span>
+                </motion.div>
+                <motion.div 
+                  whileHover={{ y: -3, rotateX: 5 }}
+                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-3 transform-gpu"
+                >
+                  <span className="block text-lg sm:text-2xl font-black text-white font-heading">34 Hubs</span>
+                  <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'संकलन केन्द्रहरू' : 'Collection Hubs'}</span>
+                </motion.div>
+                <motion.div 
+                  whileHover={{ y: -3, rotateX: 5 }}
+                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-3 transform-gpu"
+                >
+                  <span className="block text-lg sm:text-2xl font-black text-emerald-400 font-heading">100% Free</span>
+                  <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'निःशुल्क सेवा' : 'Non-Profit Relief'}</span>
+                </motion.div>
               </div>
-              <div className="bg-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-white">28,400+</span>
-                <span className="text-[11px] text-blue-100 font-medium">{isNp ? 'लाभान्वित परिवार' : 'Families Clothed'}</span>
-              </div>
-              <div className="bg-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-white">34 Hubs</span>
-                <span className="text-[11px] text-blue-100 font-medium">{isNp ? 'संकलन केन्द्रहरू' : 'Collection Hubs'}</span>
-              </div>
-              <div className="bg-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-[#00e676]">100% Free</span>
-                <span className="text-[11px] text-blue-100 font-medium">{isNp ? 'निःशुल्क सेवा' : 'Non-Profit Relief'}</span>
-              </div>
-            </div>
+            </motion.div>
+
+            {/* Right: Special 3D Interactive Clothes Donation Box Simulator */}
+            <motion.div 
+              className="lg:col-span-5 [perspective:1200px]"
+              initial={{ opacity: 0, y: 30, rotateX: 15 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <motion.div 
+                whileHover={{ 
+                  rotateY: -3, 
+                  rotateX: 4, 
+                  y: -5,
+                  boxShadow: "0 25px 40px -15px rgba(0, 0, 0, 0.5)"
+                }}
+                className="bg-white text-[#111c2d] p-5 border-2 border-white/30 shadow-2xl transform-gpu relative transition-all duration-300"
+              >
+                {/* 3D Box Header */}
+                <div className="flex items-center justify-between mb-3 border-b border-[#d8e3fb] pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-[#e7eeff] text-[#003c90] flex items-center justify-center">
+                      <Box className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#003c90]">
+                        {isNp ? '३D कपडा दान प्याक सिमुलेटर' : '3D Clothes Donation Pack'}
+                      </h3>
+                      <span className="text-[10px] text-[#737784]">
+                        {isNp ? 'दान गर्ने कपडा थिचेर बक्समा हाल्नुहोस्' : 'Click garments to fill your donation bag'}
+                      </span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={resetSimulator}
+                    title="Reset Simulator"
+                    className="text-[#737784] hover:text-[#003c90] p-1 transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* 3D Garment Buttons */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <motion.button
+                    type="button"
+                    onClick={() => toggleSimulatorItem('jackets')}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="p-2.5 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-[#003c90] text-left flex items-center justify-between transition-all group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Shirt className="w-3.5 h-3.5 text-[#003c90]" />
+                      <span className="text-[11px] font-bold text-[#111c2d]">
+                        {isNp ? 'जाडोको ज्याकेट' : 'Warm Jacket'}
+                      </span>
+                    </div>
+                    <span className="px-1.5 py-0.5 bg-[#e7eeff] text-[#003c90] text-[10px] font-extrabold group-hover:bg-[#003c90] group-hover:text-white transition-colors">
+                      +{simulatorItems.jackets || 0}
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => toggleSimulatorItem('blankets')}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="p-2.5 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-[#00743a] text-left flex items-center justify-between transition-all group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#00743a]" />
+                      <span className="text-[11px] font-bold text-[#111c2d]">
+                        {isNp ? 'कम्बल / सिरक' : 'Blanket / Quilt'}
+                      </span>
+                    </div>
+                    <span className="px-1.5 py-0.5 bg-emerald-100 text-[#00743a] text-[10px] font-extrabold group-hover:bg-[#00743a] group-hover:text-white transition-colors">
+                      +{simulatorItems.blankets || 0}
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => toggleSimulatorItem('kids')}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="p-2.5 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-amber-600 text-left flex items-center justify-between transition-all group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Heart className="w-3.5 h-3.5 text-amber-600" />
+                      <span className="text-[11px] font-bold text-[#111c2d]">
+                        {isNp ? 'बच्चाको कपडा' : 'Kids / School'}
+                      </span>
+                    </div>
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-extrabold group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                      +{simulatorItems.kids || 0}
+                    </span>
+                  </motion.button>
+
+                  <motion.button
+                    type="button"
+                    onClick={() => toggleSimulatorItem('sweaters')}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="p-2.5 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-blue-600 text-left flex items-center justify-between transition-all group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-blue-600" />
+                      <span className="text-[11px] font-bold text-[#111c2d]">
+                        {isNp ? 'स्वेटर / इनर' : 'Sweater / Wear'}
+                      </span>
+                    </div>
+                    <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-extrabold group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      +{simulatorItems.sweaters || 0}
+                    </span>
+                  </motion.button>
+                </div>
+
+                {/* Total Box Summary & Direct CTA */}
+                <div className="p-3 bg-[#e7eeff] border border-[#b9cffb] flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#003c90] block">
+                      {isNp ? 'तपाईंको दान बक्स स्थिति' : 'Ready Donation Parcel'}
+                    </span>
+                    <span className="text-xs font-black text-[#111c2d]">
+                      {totalSimulatorItems} {isNp ? 'वटा कपडाहरू प्याक गरियो' : 'Garments Selected'}
+                    </span>
+                  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#00743a] text-white text-[10px] font-bold uppercase tracking-wider">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Free Pickup</span>
+                  </span>
+                </div>
+
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('donate');
+                    const formElement = document.getElementById('clothes-bank-form-area');
+                    if (formElement) {
+                      formElement.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-2.5 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5 shadow-md"
+                >
+                  <Shirt className="w-4 h-4 text-emerald-400" />
+                  <span>{isNp ? 'यो कपडा दान दर्ता गर्नुहोस्' : 'Schedule Pickup For This Bag'}</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </motion.button>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* 4-Step How It Works Bar */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 -mt-4">
-        <div className="bg-white p-4 sm:p-6 border border-[#d8e3fb] shadow-xs">
+      {/* 4-Step How It Works Bar with 3D Perspective Cards */}
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 -mt-5 relative z-20 [perspective:1000px]">
+        <div className="bg-white p-5 sm:p-6 border border-[#d8e3fb] shadow-md">
           <div className="text-xs font-bold text-[#003c90] uppercase tracking-wider mb-4 flex items-center gap-1.5">
             <Layers className="w-4 h-4" />
             <span>{isNp ? 'कपडा बैंक कार्यप्रणाली (४ सरल चरण)' : 'How Clothes Bank Nepal Works (4-Step Cycle)'}</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-3 bg-[#f9f9ff] border-l-2 border-[#003c90]">
-              <span className="text-[10px] font-black text-[#003c90] uppercase">01. {isNp ? 'संकलन' : 'Collection'}</span>
+            <motion.div 
+              whileHover={{ y: -5, rotateX: 4, rotateY: -2, boxShadow: "0 12px 20px -8px rgba(0, 60, 144, 0.15)" }}
+              className="p-3.5 bg-[#f9f9ff] border-l-3 border-[#003c90] border-t border-r border-b border-[#d8e3fb] transition-all transform-gpu"
+            >
+              <span className="text-[10px] font-black text-[#003c90] uppercase tracking-wider">01. {isNp ? 'संकलन' : 'Collection'}</span>
               <h4 className="text-xs font-bold text-[#111c2d] mt-1">{isNp ? 'घरमै पिकअप वा ड्रप-अफ' : 'Pickup or Drop-off'}</h4>
-              <p className="text-[11px] text-[#737784] mt-1">
+              <p className="text-[11px] text-[#737784] mt-1 leading-relaxed">
                 {isNp ? 'घरमै निःशुल्क गाडी पठाएर वा नजिकको केन्द्रमा कपडा बुझाउनुहोस्।' : 'Schedule a doorstep collection or drop off at one of our 34 verified centers.'}
               </p>
-            </div>
+            </motion.div>
 
-            <div className="p-3 bg-[#f9f9ff] border-l-2 border-[#00743a]">
-              <span className="text-[10px] font-black text-[#00743a] uppercase">02. {isNp ? 'सफाइ र छनोट' : 'Quality Check'}</span>
+            <motion.div 
+              whileHover={{ y: -5, rotateX: 4, rotateY: -1, boxShadow: "0 12px 20px -8px rgba(0, 116, 58, 0.15)" }}
+              className="p-3.5 bg-[#f9f9ff] border-l-3 border-[#00743a] border-t border-r border-b border-[#d8e3fb] transition-all transform-gpu"
+            >
+              <span className="text-[10px] font-black text-[#00743a] uppercase tracking-wider">02. {isNp ? 'सफाइ र छनोट' : 'Quality Check'}</span>
               <h4 className="text-xs font-bold text-[#111c2d] mt-1">{isNp ? 'गुणस्तर जाँच र मर्मत' : 'Sanitization & Repair'}</h4>
-              <p className="text-[11px] text-[#737784] mt-1">
+              <p className="text-[11px] text-[#737784] mt-1 leading-relaxed">
                 {isNp ? 'हाम्रा स्वयंसेवकले कपडाको सरसफाइ, सामान्य सिलाई र वर्गीकरण गर्छन्।' : 'Every garment is inspected, hygienically washed, repaired, and ironed.'}
               </p>
-            </div>
+            </motion.div>
 
-            <div className="p-3 bg-[#f9f9ff] border-l-2 border-[#003c90]">
-              <span className="text-[10px] font-black text-[#003c90] uppercase">03. {isNp ? 'प्याकिङ' : 'Categorization'}</span>
+            <motion.div 
+              whileHover={{ y: -5, rotateX: 4, rotateY: 1, boxShadow: "0 12px 20px -8px rgba(0, 60, 144, 0.15)" }}
+              className="p-3.5 bg-[#f9f9ff] border-l-3 border-[#003c90] border-t border-r border-b border-[#d8e3fb] transition-all transform-gpu"
+            >
+              <span className="text-[10px] font-black text-[#003c90] uppercase tracking-wider">03. {isNp ? 'प्याकिङ' : 'Categorization'}</span>
               <h4 className="text-xs font-bold text-[#111c2d] mt-1">{isNp ? 'मौसम र उमेर अनुसार बक्सिङ' : 'Sorted by Size & Season'}</h4>
-              <p className="text-[11px] text-[#737784] mt-1">
+              <p className="text-[11px] text-[#737784] mt-1 leading-relaxed">
                 {isNp ? 'जाडो, गर्मी, बालबालिका, महिला, पुरुष र कम्बलको अलग-अलग बक्स।' : 'Packaged systematically into winter jackets, baby wear, blankets, and adult wear.'}
               </p>
-            </div>
+            </motion.div>
 
-            <div className="p-3 bg-[#f9f9ff] border-l-2 border-[#00743a]">
-              <span className="text-[10px] font-black text-[#00743a] uppercase">04. {isNp ? 'प्रत्यक्ष वितरण' : 'Direct Giving'}</span>
+            <motion.div 
+              whileHover={{ y: -5, rotateX: 4, rotateY: 2, boxShadow: "0 12px 20px -8px rgba(0, 116, 58, 0.15)" }}
+              className="p-3.5 bg-[#f9f9ff] border-l-3 border-[#00743a] border-t border-r border-b border-[#d8e3fb] transition-all transform-gpu"
+            >
+              <span className="text-[10px] font-black text-[#00743a] uppercase tracking-wider">04. {isNp ? 'प्रत्यक्ष वितरण' : 'Direct Giving'}</span>
               <h4 className="text-xs font-bold text-[#111c2d] mt-1">{isNp ? 'सम्मानपूर्वक हस्तान्तरण' : 'Dignified Free Distribution'}</h4>
-              <p className="text-[11px] text-[#737784] mt-1">
+              <p className="text-[11px] text-[#737784] mt-1 leading-relaxed">
                 {isNp ? 'शीतलहर, बाढी प्रभावित र विकट हिमाली विद्यालयमा निःशुल्क पुर्याइन्छ।' : 'Delivered directly to Terai Musahar bastis, Karnali schools, and relief shelters.'}
               </p>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Main Content Area with Navigation Tabs */}
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 mt-8">
+      <div id="clothes-bank-form-area" className="max-w-[1280px] mx-auto px-4 sm:px-6 mt-8">
         {/* Sub Navigation Bar */}
         <div className="flex flex-wrap items-center gap-1 border-b border-[#d8e3fb] mb-6 bg-white p-1">
           <button

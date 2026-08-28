@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Heart, 
   ShieldCheck, 
@@ -7,10 +7,12 @@ import {
   Building2, 
   QrCode, 
   Copy, 
-  Smartphone
+  Smartphone,
+  Phone,
+  Mail
 } from 'lucide-react';
-import { FINANCIAL_ALLOCATION_DATA } from '../data/mockData';
-import { Project, DonationSubmission, Language, Currency } from '../types';
+import { FINANCIAL_ALLOCATION_DATA, DEFAULT_BANK_QR_CONFIG } from '../data/mockData';
+import { Project, DonationSubmission, Language, Currency, BankAndQrConfig } from '../types';
 
 interface DonateScreenProps {
   language: Language;
@@ -24,6 +26,34 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
   onDonateComplete
 }) => {
   const isNp = language === 'np';
+
+  // Bank and QR configuration loaded dynamically from Admin CMS
+  const [bankConfig, setBankConfig] = useState<BankAndQrConfig>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_bank_qr_config');
+      return saved ? JSON.parse(saved) : DEFAULT_BANK_QR_CONFIG;
+    } catch {
+      return DEFAULT_BANK_QR_CONFIG;
+    }
+  });
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      try {
+        const saved = localStorage.getItem('genzicon_bank_qr_config');
+        if (saved) setBankConfig(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    window.addEventListener('genzicon_bank_qr_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('genzicon_bank_qr_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
+
   const [currency, setCurrency] = useState<Currency>('NPR');
   const [frequency, setFrequency] = useState<'one-time' | 'monthly'>('one-time');
   const [selectedAmount, setSelectedAmount] = useState<number>(1500);
@@ -35,6 +65,7 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
   const [donorEmail, setDonorEmail] = useState<string>('');
   const [donorPhone, setDonorPhone] = useState<string>('');
   const [copiedBank, setCopiedBank] = useState<string | null>(null);
+
 
   const nprAmounts = [500, 1500, 5000, 10000];
   const usdAmounts = [15, 50, 100, 250];
@@ -305,22 +336,12 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                 {paymentMethod === 'fonepay' && (
                   <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                     <div className="p-2.5 bg-white rounded-none border border-[#d8e3fb] shadow-xs shrink-0">
-                      <div className="w-32 h-32 bg-[#111c2d] rounded-none flex flex-col items-center justify-center text-white p-2 relative overflow-hidden">
-                        <div className="grid grid-cols-6 gap-1 w-full h-full p-1 bg-white rounded-none">
-                          {Array.from({ length: 36 }).map((_, i) => (
-                            <div
-                              key={i}
-                              className={`rounded-none ${
-                                (i % 2 === 0 || i % 7 === 0 || i < 6 || i > 30) ? 'bg-[#111c2d]' : 'bg-white'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="px-1.5 py-0.5 bg-[#00743a] text-white text-[9px] font-bold">
-                            fonepay
-                          </span>
-                        </div>
+                      <div className="w-32 h-32 bg-white rounded-none flex flex-col items-center justify-center p-1 relative overflow-hidden border border-[#d8e3fb]">
+                        <img
+                          src={bankConfig.fonepayQrImage}
+                          alt="Fonepay QR Code"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <div className="text-[9px] text-center font-bold text-[#737784] mt-1">
                         ALL NEPAL MOBILE BANKING APPS
@@ -334,11 +355,11 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                       <p className="text-[11px]">
                         {isNp
                           ? 'Global IME, Nabil, NIC Asia, Prabhu, eSewa वा Khalti बाट सिधै भुक्तानी गर्नुहोस्।'
-                          : 'Compatible with all Nepali banking apps and digital wallets.'}
+                          : 'Compatible with all 50+ Nepali mobile banking apps and digital wallets.'}
                       </p>
                       <div className="pt-1">
                         <span className="text-[10px] font-bold text-[#003c90] bg-[#e7eeff] px-2.5 py-1 rounded-none inline-block">
-                          Account: GENZICON FOUNDATION NEPAL
+                          Account: {bankConfig.accountName}
                         </span>
                       </div>
                     </div>
@@ -355,11 +376,11 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                     <div className="p-3 bg-white rounded-none border border-[#d8e3fb] flex items-center justify-between">
                       <div>
                         <span className="text-[10px] text-[#737784] block">eSewa ID / Registered Mobile:</span>
-                        <span className="text-xs font-bold text-[#111c2d]">9823000000 / genzicon.esewa</span>
+                        <span className="text-xs font-bold text-[#111c2d]">{bankConfig.esewaId || '9823000000 / genzicon.esewa'}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopy('9823000000', 'esewa')}
+                        onClick={() => handleCopy(bankConfig.esewaId || '9823000000', 'esewa')}
                         className="px-2.5 py-1 text-[#003c90] hover:bg-[#f0f3ff] rounded-none border border-[#d8e3fb] transition-colors flex items-center gap-1 text-[11px] font-bold"
                       >
                         <Copy className="w-3 h-3" />
@@ -379,11 +400,11 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                     <div className="p-3 bg-white rounded-none border border-[#d8e3fb] flex items-center justify-between">
                       <div>
                         <span className="text-[10px] text-[#737784] block">Khalti ID:</span>
-                        <span className="text-xs font-bold text-[#111c2d]">9801234567</span>
+                        <span className="text-xs font-bold text-[#111c2d]">{bankConfig.khaltiId || '9801234567'}</span>
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleCopy('9801234567', 'khalti')}
+                        onClick={() => handleCopy(bankConfig.khaltiId || '9801234567', 'khalti')}
                         className="px-2.5 py-1 text-[#003c90] hover:bg-[#f0f3ff] rounded-none border border-[#d8e3fb] transition-colors flex items-center gap-1 text-[11px] font-bold"
                       >
                         <Copy className="w-3 h-3" />
@@ -400,13 +421,13 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                       {isNp ? 'आधिकारिक बैंक खाता' : 'Official Bank Accounts in Nepal'}
                     </h4>
 
-                    {/* Bank 1 */}
+                    {/* Bank Details from Admin */}
                     <div className="p-3 bg-white rounded-none border border-[#d8e3fb] space-y-1.5">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-[#003c90] text-xs">Global IME Bank Limited</span>
+                        <span className="font-bold text-[#003c90] text-xs">{bankConfig.bankName}</span>
                         <button
                           type="button"
-                          onClick={() => handleCopy('01010100234567', 'global')}
+                          onClick={() => handleCopy(bankConfig.accountNumber, 'global')}
                           className="text-[10px] text-[#003c90] font-bold flex items-center gap-1"
                         >
                           <Copy className="w-3 h-3" />
@@ -414,10 +435,10 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                         </button>
                       </div>
                       <div className="grid grid-cols-2 gap-1 text-[11px] text-[#434653]">
-                        <div>Account Name: <strong>GENZICON FOUNDATION</strong></div>
-                        <div>A/C Number: <strong>01010100234567</strong></div>
-                        <div>Branch: <strong>Putalisadak, Kathmandu</strong></div>
-                        <div>SWIFT: <strong>GLBLNPKA</strong></div>
+                        <div>Account Name: <strong>{bankConfig.accountName}</strong></div>
+                        <div>A/C Number: <strong>{bankConfig.accountNumber}</strong></div>
+                        <div>Branch: <strong>{bankConfig.branch}</strong></div>
+                        <div>SWIFT: <strong>{bankConfig.swiftCode || 'GLBBNPKA'}</strong></div>
                       </div>
                     </div>
                   </div>

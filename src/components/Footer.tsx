@@ -7,7 +7,8 @@ import {
   MapPin, 
   Shirt,
   Trees,
-  Briefcase
+  Briefcase,
+  Lock
 } from 'lucide-react';
 import { NavTab, Language } from '../types';
 
@@ -116,7 +117,7 @@ export const Footer: React.FC<FooterProps> = ({ language, onSelectTab }) => {
               <ul className="space-y-2 text-xs text-white/70">
                 <li>
                   <button onClick={() => { onSelectTab('clothes-bank'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">
-                    {isNp ? 'कपडा दान / माग' : 'Clothes Bank Portal'}
+                    {isNp ? 'कपडा बैंक नेपाल' : 'Clothes Bank Portal'}
                   </button>
                 </li>
                 <li>
@@ -165,7 +166,7 @@ export const Footer: React.FC<FooterProps> = ({ language, onSelectTab }) => {
               © {new Date().getFullYear()} Genzicon Foundation Nepal. Non-Profit Grassroots NGO.
             </div>
 
-            <div className="flex items-center gap-4 text-[10px]">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px]">
               <button
                 onClick={() => handleLinkClick('privacy')}
                 className="hover:text-white transition-colors"
@@ -185,6 +186,20 @@ export const Footer: React.FC<FooterProps> = ({ language, onSelectTab }) => {
                 className="hover:text-white transition-colors"
               >
                 {isNp ? 'सम्पर्क' : 'Contact'}
+              </button>
+              <span>•</span>
+              <button
+                id="footer-admin-portal-link"
+                onClick={() => { 
+                  onSelectTab('admin'); 
+                  window.location.hash = 'admin';
+                  window.scrollTo({ top: 0, behavior: 'smooth' }); 
+                }}
+                className="text-white/40 hover:text-emerald-400 transition-colors flex items-center gap-1 font-mono tracking-tight"
+                title="Staff & Volunteer Management Portal"
+              >
+                <Lock className="w-3 h-3 text-white/40" />
+                <span>{isNp ? 'प्रशासक पोर्टल (Admin Portal)' : 'Admin Portal'}</span>
               </button>
             </div>
           </div>

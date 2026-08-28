@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring } from 'motion/react';
+import React, { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'motion/react';
 import { 
   Shirt, 
   Trees, 
@@ -8,10 +8,11 @@ import {
   ShieldCheck, 
   MapPin, 
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft
 } from 'lucide-react';
-import { IMPACT_STATS, PROJECTS_DATA } from '../data/mockData';
-import { Project, NavTab, Language } from '../types';
+import { IMPACT_STATS, PROJECTS_DATA, DEFAULT_SITE_CONTENT } from '../data/mockData';
+import { Project, NavTab, Language, SiteContentConfig } from '../types';
 
 interface HomeScreenProps {
   language: Language;
@@ -27,7 +28,62 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onQuickDonateProject
 }) => {
   const isNp = language === 'np';
-  const featuredProjects = PROJECTS_DATA.slice(0, 3);
+
+  // Dynamic Site Content & Projects from Admin CMS
+  const [siteContent, setSiteContent] = useState<SiteContentConfig>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_site_content');
+      return saved ? JSON.parse(saved) : DEFAULT_SITE_CONTENT;
+    } catch {
+      return DEFAULT_SITE_CONTENT;
+    }
+  });
+
+  const [projectsList, setProjectsList] = useState<Project[]>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_admin_projects');
+      return saved ? JSON.parse(saved) : PROJECTS_DATA;
+    } catch {
+      return PROJECTS_DATA;
+    }
+  });
+
+  // Carousel Image Index
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const carouselImages = siteContent.heroCarouselImages && siteContent.heroCarouselImages.length > 0
+    ? siteContent.heroCarouselImages
+    : [siteContent.heroImageUrl];
+
+  useEffect(() => {
+    const handleContentUpdate = () => {
+      try {
+        const saved = localStorage.getItem('genzicon_site_content');
+        if (saved) setSiteContent(JSON.parse(saved));
+        const savedProj = localStorage.getItem('genzicon_admin_projects');
+        if (savedProj) setProjectsList(JSON.parse(savedProj));
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    window.addEventListener('genzicon_content_updated', handleContentUpdate);
+    window.addEventListener('storage', handleContentUpdate);
+    return () => {
+      window.removeEventListener('genzicon_content_updated', handleContentUpdate);
+      window.removeEventListener('storage', handleContentUpdate);
+    };
+  }, []);
+
+  // Automatic Carousel rotation if multiple images exist
+  useEffect(() => {
+    if (carouselImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveSlideIndex(prev => (prev + 1) % carouselImages.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [carouselImages.length]);
+
+  const featuredProjects = projectsList.slice(0, 3);
   
   // Hero Parallax Scroll Effect
   const heroRef = useRef<HTMLDivElement>(null);
@@ -43,6 +99,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const heroY = useTransform(smoothProgress, [0, 0.8], [0, 60]);
   const heroRotateX = useTransform(smoothProgress, [0, 0.8], [0, 12]);
 
+  const activeHeroImg = carouselImages[activeSlideIndex] || siteContent.heroImageUrl;
+
   return (
     <div id="home-screen" className="w-full bg-[#f9f9ff] overflow-x-hidden">
       {/* Hero Section with 3D Parallax & Depth */}
@@ -50,18 +108,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         ref={heroRef}
         className="relative h-[72vh] min-h-[440px] max-h-[660px] w-full flex items-center justify-center overflow-hidden border-b border-[#d8e3fb] [perspective:1200px]"
       >
-        {/* Parallax Background Image with 3D Depth */}
+        {/* Parallax Background Image with 3D Depth & Carousel Transition */}
         <motion.div 
           className="absolute inset-0 z-0 will-change-transform"
           style={{ scale: bgScale, y: bgY }}
         >
           <img
-            src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80"
+            key={activeHeroImg}
+            src={activeHeroImg}
             alt="Genzicon Foundation Community Work Nepal"
-            className="w-full h-full object-cover object-center"
+            className="w-full h-full object-cover object-center transition-all duration-1000 ease-in-out"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/60" />
         </motion.div>
+
+        {/* Carousel Indicators & Controls if multiple images */}
+        {carouselImages.length > 1 && (
+          <div className="absolute bottom-4 z-20 flex items-center gap-1.5">
+            {carouselImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveSlideIndex(idx)}
+                aria-label={`Slide ${idx + 1}`}
+                className={`h-1.5 transition-all duration-300 ${
+                  activeSlideIndex === idx ? 'w-6 bg-emerald-400' : 'w-2 bg-white/50 hover:bg-white'
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Hero Content - Clean, Minimal & Direct Action */}
         <motion.div 
@@ -82,7 +157,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.7 }}
           >
-            {isNp ? 'जनसेवा, हरित अभियान र सीप विकास' : 'Empowering Communities Across Nepal'}
+            {isNp ? (siteContent.heroTitleNp || siteContent.heroTitle) : siteContent.heroTitle}
           </motion.h1>
 
           <motion.p 
@@ -92,8 +167,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             transition={{ delay: 0.3, duration: 0.7 }}
           >
             {isNp
-              ? 'कपडा बैंक नेपालमार्फत कपडा वितरण, चुरे तथा नदी हरित अभियान, र विपन्न परिवारका लागि स्वरोजगार सीप।'
-              : 'Grassroots clothes banking, native reforestation, and vocational skill training across Nepal.'}
+              ? (siteContent.heroSubtitleNp || siteContent.heroSubtitle)
+              : siteContent.heroSubtitle}
           </motion.p>
 
           {/* Action CTAs with subtle 3D lift */}
@@ -142,7 +217,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Streamlined Impact Counters: Sleek, Modern 3D Cards */}
       <section className="py-10 bg-white px-4 sm:px-6 border-b border-[#d8e3fb] [perspective:1000px]">
         <div className="max-w-[1280px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-          {IMPACT_STATS.map((stat, index) => {
+          {siteContent.impactStats.map((stat, index) => {
             const getIcon = () => {
               switch (stat.id) {
                 case 'clothes':
@@ -165,7 +240,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 case 'skills':
                   return 'bg-amber-50 border-amber-200';
                 default:
-                  return 'bg-[#e7eeff] border-blue-200';
+                  return 'bg-indigo-50 border-indigo-200';
               }
             };
 
