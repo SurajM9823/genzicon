@@ -20,6 +20,7 @@ import {
   ClothesAssistanceRequest, 
   Language 
 } from '../../types';
+import { apiUpdateClothesStatus } from '../../services/api';
 
 interface AdminClothesTabProps {
   language: Language;
@@ -68,6 +69,7 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
       return item;
     });
     onSaveClothesDonations(updated);
+    apiUpdateClothesStatus(id, newStatus).catch(console.warn);
   };
 
   const handleUpdateAssistanceStatus = (id: string, newStatus: ClothesAssistanceRequest['status']) => {

@@ -30,6 +30,18 @@ import {
   SAMPLE_CLOTHES_ASSISTANCE_REQUESTS,
   INITIAL_CONTACT_MESSAGES
 } from '../data/mockData';
+import {
+  apiAdminLogin,
+  apiAdminLogout,
+  apiGetSiteContent,
+  apiUpdateSiteContent,
+  apiGetProjects,
+  apiCreateProject,
+  apiGetClothesDonations,
+  apiGetVolunteers,
+  apiGetDonations,
+  apiGetContacts
+} from '../services/api';
 import { AdminHeader, AdminTabType } from './admin/AdminHeader';
 import { AdminOverviewTab } from './admin/AdminOverviewTab';
 import { AdminContentTab } from './admin/AdminContentTab';
@@ -147,10 +159,46 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     }
   });
 
-  // Synchronize state changes to localStorage
+  // Synchronize state changes to localStorage and backend API
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadBackendData = async () => {
+      try {
+        const [
+          liveContent,
+          liveProjects,
+          liveClothes,
+          liveVolunteers,
+          liveDonations,
+          liveContacts
+        ] = await Promise.all([
+          apiGetSiteContent(),
+          apiGetProjects(),
+          apiGetClothesDonations(),
+          apiGetVolunteers(),
+          apiGetDonations(),
+          apiGetContacts(),
+        ]);
+
+        if (liveContent) setSiteContent(prev => ({ ...prev, ...liveContent }));
+        if (liveProjects && liveProjects.length > 0) setProjects(liveProjects);
+        if (liveClothes && liveClothes.length > 0) setClothesDonations(liveClothes);
+        if (liveVolunteers && liveVolunteers.length > 0) setVolunteers(liveVolunteers);
+        if (liveDonations && liveDonations.length > 0) setDonations(liveDonations);
+        if (liveContacts && liveContacts.length > 0) setContacts(liveContacts);
+      } catch (err) {
+        console.warn('Backend sync in Admin:', err);
+      }
+    };
+
+    loadBackendData();
+  }, [isAuthenticated]);
+
   const handleSaveSiteContent = (newContent: SiteContentConfig) => {
     setSiteContent(newContent);
     localStorage.setItem('genzicon_site_content', JSON.stringify(newContent));
+    apiUpdateSiteContent(1, newContent).catch(console.warn);
     // Trigger custom window event so other open pages can re-render if active
     window.dispatchEvent(new Event('genzicon_content_updated'));
   };
@@ -192,8 +240,20 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
   };
 
   // Auth Handling
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError('');
+
+    try {
+      // 1. Attempt DRF backend login
+      await apiAdminLogin(loginEmail, loginPassword);
+      setIsAuthenticated(true);
+      return;
+    } catch (err: any) {
+      console.warn('DRF live login attempt:', err.message);
+    }
+
+    // 2. Fallback to local administrative credentials
     if (
       (loginEmail.trim().toLowerCase() === 'admin@genzicon.org' || loginEmail.trim().toLowerCase() === 'admin' || loginEmail.trim().toLowerCase() === 'admin@genzicon.com') &&
       loginPassword === 'admin123'
@@ -207,8 +267,8 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
   };
 
   const handleLogout = () => {
+    apiAdminLogout();
     setIsAuthenticated(false);
-    localStorage.removeItem('genzicon_admin_auth');
   };
 
   // Pending counts for badges

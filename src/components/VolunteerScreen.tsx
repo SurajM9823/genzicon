@@ -10,7 +10,8 @@ import {
   Briefcase,
   MapPin
 } from 'lucide-react';
-import { Language, VolunteerFormData } from '../types';
+import { Language, VolunteerFormData, VolunteerRecord } from '../types';
+import { apiSubmitVolunteer } from '../services/api';
 
 interface VolunteerScreenProps {
   language: Language;
@@ -58,14 +59,38 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
     'Logistics, Warehousing & Vehicle Transportation'
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      const res = await apiSubmitVolunteer({
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        province: formData.province,
+        district: formData.district,
+        interest: formData.interest,
+        availability: formData.availability,
+        skills: `${formData.reason} | ${formData.experience || ''}`,
+      });
+
+      // Save to local cache as well
+      const existing: VolunteerRecord[] = JSON.parse(localStorage.getItem('genzicon_admin_volunteers') || '[]');
+      const newRec: VolunteerRecord = {
+        ...formData,
+        id: String(res?.id || `VOL-${Date.now()}`),
+        volunteerId: res?.volunteer_id || `VOL-${Math.floor(1000 + Math.random() * 9000)}`,
+        submittedAt: new Date().toISOString().split('T')[0],
+        status: 'Pending'
+      };
+      localStorage.setItem('genzicon_admin_volunteers', JSON.stringify([newRec, ...existing]));
+    } catch (err) {
+      console.warn('Volunteer API submit fallback:', err);
+    } finally {
       setLoading(false);
       onSuccess(formData);
-    }, 400);
+    }
   };
 
   return (

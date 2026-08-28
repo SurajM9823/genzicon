@@ -14,6 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 import { VolunteerRecord, Language } from '../../types';
+import { apiUpdateVolunteerStatus } from '../../services/api';
 
 interface AdminVolunteersTabProps {
   language: Language;
@@ -35,6 +36,7 @@ export const AdminVolunteersTab: React.FC<AdminVolunteersTabProps> = ({
   const handleUpdateStatus = (id: string, newStatus: VolunteerRecord['status']) => {
     const updated = volunteers.map(v => v.id === id ? { ...v, status: newStatus } : v);
     onSaveVolunteers(updated);
+    apiUpdateVolunteerStatus(id, newStatus).catch(console.warn);
     if (selectedVolunteer && selectedVolunteer.id === id) {
       setSelectedVolunteer({ ...selectedVolunteer, status: newStatus });
     }

@@ -12,7 +12,8 @@ import {
   Mail
 } from 'lucide-react';
 import { FINANCIAL_ALLOCATION_DATA, DEFAULT_BANK_QR_CONFIG } from '../data/mockData';
-import { Project, DonationSubmission, Language, Currency, BankAndQrConfig } from '../types';
+import { Project, DonationSubmission, Language, Currency, BankAndQrConfig, DonationRecord } from '../types';
+import { apiSubmitDonation } from '../services/api';
 
 interface DonateScreenProps {
   language: Language;
@@ -90,11 +91,52 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
     setTimeout(() => setCopiedBank(null), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (effectiveAmount <= 0) return;
 
-    const receiptNumber = `REC-GZ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const fallbackReceiptNumber = `REC-GZ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const finalDonorName = donorName || (isNp ? 'शुभचिन्तक दाता' : 'Generous Donor');
+    const finalProjectName = selectedProject ? selectedProject.title : (isNp ? 'सामान्य कोष (जहाँ सबैभन्दा आवश्यक छ)' : 'General Fund (Highest Impact Need)');
+
+    let assignedReceipt = fallbackReceiptNumber;
+
+    try {
+      const res = await apiSubmitDonation({
+        donorName: finalDonorName,
+        donorEmail: donorEmail || '',
+        donorPhone: donorPhone || '',
+        amount: effectiveAmount,
+        currency: currency,
+        projectName: finalProjectName,
+        paymentMethod: paymentMethod,
+        frequency: frequency,
+      });
+
+      if (res?.receipt_number) {
+        assignedReceipt = res.receipt_number;
+      }
+
+      // Sync to local admin donations cache
+      const existing: DonationRecord[] = JSON.parse(localStorage.getItem('genzicon_admin_donations') || '[]');
+      const newRec: DonationRecord = {
+        id: String(res?.id || `don-${Date.now()}`),
+        receiptNumber: assignedReceipt,
+        donorName: finalDonorName,
+        donorEmail: donorEmail || 'donor@genzicon.org',
+        donorPhone: donorPhone,
+        amount: effectiveAmount,
+        currency: currency,
+        frequency: frequency,
+        paymentMethod: paymentMethod,
+        projectName: finalProjectName,
+        date: new Date().toISOString().split('T')[0],
+        status: 'Verified',
+      };
+      localStorage.setItem('genzicon_admin_donations', JSON.stringify([newRec, ...existing]));
+    } catch (err) {
+      console.warn('Donation API fallback:', err);
+    }
 
     const submission: DonationSubmission = {
       amount: effectiveAmount,
@@ -102,11 +144,11 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
       customAmount: customAmount,
       frequency: frequency,
       paymentMethod: paymentMethod,
-      donorName: donorName || (isNp ? 'शुभचिन्तक दाता' : 'Generous Donor'),
+      donorName: finalDonorName,
       donorEmail: donorEmail || 'donor@genzicon.org',
       donorPhone: donorPhone,
-      projectName: selectedProject ? selectedProject.title : (isNp ? 'सामान्य कोष (जहाँ सबैभन्दा आवश्यक छ)' : 'General Fund (Highest Impact Need)'),
-      receiptNumber: receiptNumber,
+      projectName: finalProjectName,
+      receiptNumber: assignedReceipt,
       date: new Date().toISOString().split('T')[0]
     };
 

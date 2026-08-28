@@ -15,6 +15,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { DonationRecord, Language } from '../../types';
+import { apiUpdateDonationStatus } from '../../services/api';
 
 interface AdminDonationsTabProps {
   language: Language;
@@ -49,6 +50,7 @@ export const AdminDonationsTab: React.FC<AdminDonationsTabProps> = ({
   const handleUpdateStatus = (id: string, newStatus: DonationRecord['status']) => {
     const updated = donations.map(d => d.id === id ? { ...d, status: newStatus } : d);
     onSaveDonations(updated);
+    apiUpdateDonationStatus(id, newStatus).catch(console.warn);
   };
 
   const handleDelete = (id: string) => {

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { IMPACT_STATS, PROJECTS_DATA, DEFAULT_SITE_CONTENT } from '../data/mockData';
 import { Project, NavTab, Language, SiteContentConfig } from '../types';
+import { apiGetSiteContent, apiGetProjects } from '../services/api';
 
 interface HomeScreenProps {
   language: Language;
@@ -55,6 +56,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     : [siteContent.heroImageUrl];
 
   useEffect(() => {
+    // Initial fetch from live backend API
+    const loadFromApi = async () => {
+      try {
+        const [liveContent, liveProjects] = await Promise.all([
+          apiGetSiteContent(),
+          apiGetProjects(),
+        ]);
+        if (liveContent) {
+          setSiteContent(prev => ({ ...prev, ...liveContent }));
+        }
+        if (liveProjects && liveProjects.length > 0) {
+          setProjectsList(liveProjects);
+        }
+      } catch (e) {
+        console.warn('API fetch fallback in HomeScreen:', e);
+      }
+    };
+
+    loadFromApi();
+
     const handleContentUpdate = () => {
       try {
         const saved = localStorage.getItem('genzicon_site_content');

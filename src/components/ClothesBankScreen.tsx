@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Language, ClothesDonationRequest, ClothesAssistanceRequest, DropoffHub } from '../types';
 import { DROPOFF_HUBS_DATA, SAMPLE_CLOTHES_DONATION_REQUESTS, SAMPLE_CLOTHES_ASSISTANCE_REQUESTS } from '../data/mockData';
+import { apiSubmitClothesDonation } from '../services/api';
 
 interface ClothesBankScreenProps {
   language: Language;
@@ -71,15 +72,60 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
   // Filter Hubs State
   const [selectedHubCity, setSelectedHubCity] = useState<string>('all');
 
-  const handleClothesDonationSubmit = (e: React.FormEvent) => {
+  const handleClothesDonationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!donorName.trim() || !phone.trim() || !address.trim()) {
       alert(isNp ? 'कृपया आफ्नो नाम, फोन नम्बर र ठेगाना भर्नुहोस्।' : 'Please fill in your name, phone number, and address.');
       return;
     }
 
-    const generatedId = `CBN-${Math.floor(10000 + Math.random() * 90000)}`;
-    setDonationSuccessId(generatedId);
+    const fallbackId = `CBN-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    try {
+      const res = await apiSubmitClothesDonation({
+        donorName,
+        phone,
+        email,
+        province,
+        district,
+        city,
+        address,
+        clothesType,
+        approxItemsCount,
+        donationMode,
+        pickupDate,
+        dropoffHub: donationMode === 'dropoff_center' ? dropoffHub : undefined,
+        notes,
+      });
+
+      const assignedId = res?.ref_id || fallbackId;
+      setDonationSuccessId(assignedId);
+
+      // Also persist to local list for seamless fallback
+      const currentList: ClothesDonationRequest[] = JSON.parse(localStorage.getItem('genzicon_clothes_donations') || '[]');
+      const newEntry: ClothesDonationRequest = {
+        id: String(res?.id || fallbackId),
+        donorName,
+        phone,
+        email,
+        province,
+        district,
+        city,
+        address,
+        clothesType,
+        approxItemsCount,
+        donationMode,
+        dropoffHub: donationMode === 'dropoff_center' ? dropoffHub : undefined,
+        pickupDate,
+        notes,
+        date: new Date().toISOString().split('T')[0],
+        status: 'Pending',
+      };
+      localStorage.setItem('genzicon_clothes_donations', JSON.stringify([newEntry, ...currentList]));
+    } catch (err) {
+      console.warn('Error submitting to API:', err);
+      setDonationSuccessId(fallbackId);
+    }
   };
 
   const handleClothesAssistanceSubmit = (e: React.FormEvent) => {

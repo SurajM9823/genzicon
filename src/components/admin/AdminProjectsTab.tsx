@@ -14,6 +14,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { Project, Language } from '../../types';
+import { apiCreateProject, apiDeleteProject } from '../../services/api';
 
 interface AdminProjectsTabProps {
   language: Language;
@@ -102,10 +103,11 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
     if (confirm('Are you sure you want to delete this program?')) {
       const updated = projects.filter(p => p.id !== id);
       onSaveProjects(updated);
+      apiDeleteProject(id).catch(console.warn);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const goalNpr = Number(formData.goalAmountNpr) || 100000;
     const raisedNpr = Number(formData.raisedAmountNpr) || 0;
@@ -151,6 +153,16 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
         imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80',
         imageAlt: formData.title || 'Project photo'
       };
+
+      try {
+        const created = await apiCreateProject(newProj);
+        if (created?.id) {
+          newProj.id = String(created.id);
+        }
+      } catch (err) {
+        console.warn('API create project error:', err);
+      }
+
       onSaveProjects([newProj, ...projects]);
     }
     handleCloseModal();

@@ -11,6 +11,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { ContactMessage, Language } from '../../types';
+import { apiUpdateContactStatus } from '../../services/api';
 
 interface AdminContactsTabProps {
   language: Language;
@@ -31,6 +32,7 @@ export const AdminContactsTab: React.FC<AdminContactsTabProps> = ({
   const handleUpdateStatus = (id: string, newStatus: ContactMessage['status']) => {
     const updated = contacts.map(c => c.id === id ? { ...c, status: newStatus } : c);
     onSaveContacts(updated);
+    apiUpdateContactStatus(id, newStatus).catch(console.warn);
     if (selectedMessage && selectedMessage.id === id) {
       setSelectedMessage({ ...selectedMessage, status: newStatus });
     }

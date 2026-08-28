@@ -10,6 +10,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { NavTab, Language, ContactMessage } from '../types';
+import { apiSubmitContact } from '../services/api';
 
 interface ContactScreenProps {
   language: Language;
@@ -30,16 +31,22 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
-      setSubmitted(true);
-      const existing = JSON.parse(localStorage.getItem('genzicon_contacts') || '[]');
+    try {
+      const res = await apiSubmitContact({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+      });
+
+      const existing: ContactMessage[] = JSON.parse(localStorage.getItem('genzicon_contacts') || '[]');
       const newMsg: ContactMessage = {
-        id: `msg-${Date.now()}`,
+        id: String(res?.id || `msg-${Date.now()}`),
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -49,7 +56,12 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
         status: 'New'
       };
       localStorage.setItem('genzicon_contacts', JSON.stringify([newMsg, ...existing]));
-    }, 400);
+    } catch (err) {
+      console.warn('Contact API submission fallback:', err);
+    } finally {
+      setLoading(false);
+      setSubmitted(true);
+    }
   };
 
   return (
