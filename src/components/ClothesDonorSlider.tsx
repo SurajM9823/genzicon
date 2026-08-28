@@ -105,26 +105,16 @@ export const ClothesDonorSlider: React.FC<ClothesDonorSliderProps> = ({
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Header bar */}
-      <div className="p-5 sm:p-6 bg-gradient-to-r from-[#f0f4fc] via-[#f7faff] to-[#eaf0fc] border-b border-[#d8e3fb] flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-[#003c90] text-white text-[11px] font-bold uppercase tracking-wider">
-              <Sparkles className="w-3 h-3 text-emerald-300" />
-              {isNp ? 'कपडा बैंक दाताहरूको सूची' : 'Honored Clothes Donors Wall'}
-            </span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-900 text-[11px] font-bold">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-              {donors.length} {isNp ? 'प्रमाणित दाताहरू' : 'Verified Contributors'}
-            </span>
-          </div>
-          <h3 className="text-base sm:text-xl font-black text-[#111c2d] font-heading tracking-tight">
-            {isNp ? 'सहृदयी कपडा दाताहरूको सम्मान तथा सूची' : 'Recent Generous Donors & Contributors'}
-          </h3>
-          <p className="text-xs text-[#434653] mt-0.5 max-w-2xl">
-            {isNp 
-              ? 'आफ्ना पुराना तथा उपयोगी कपडाहरू प्रदान गरी विपन्न समुदायको जीवनमा न्यानोपन ल्याउने हाम्रा आदरणीय दाताहरू।' 
-              : 'Appreciating generous citizens and organizations who sent clean, wearable garments to protect vulnerable families.'}
-          </p>
+      <div className="p-3 sm:p-4 bg-gradient-to-r from-[#f0f4fc] via-[#f7faff] to-[#eaf0fc] border-b border-[#d8e3fb] flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#003c90] text-white text-[11px] font-bold uppercase tracking-wider">
+            <Sparkles className="w-3 h-3 text-emerald-300" />
+            {isNp ? 'कपडा बैंक दाताहरूको सूची' : 'Honored Clothes Donors Wall'}
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-900 text-[11px] font-bold">
+            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+            {donors.length} {isNp ? 'प्रमाणित दाताहरू' : 'Verified Contributors'}
+          </span>
         </div>
 
         {/* Action and Navigation Controls */}

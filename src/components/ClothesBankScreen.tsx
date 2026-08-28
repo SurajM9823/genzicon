@@ -137,62 +137,14 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
 
         <div className="max-w-[1280px] mx-auto px-4 sm:px-6 relative z-10">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-blue-200 mb-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-blue-200 mb-3">
               <Shirt className="w-3.5 h-3.5 text-emerald-400" />
               <span>{isNp ? 'जेन्जिकन कपडा बैंक नेपाल' : 'Genzicon Clothes Bank Nepal'}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 font-heading text-white">
+            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight font-heading text-white">
               {isNp ? 'कपडा बैंक नेपाल: प्रयोगमा नआएका कपडाको सदुपयोग' : 'Clothes Bank Nepal — Dignified Clothing for Every Life'}
             </h1>
-
-            <p className="text-xs sm:text-sm text-blue-100/90 font-normal leading-relaxed mb-6 max-w-2xl">
-              {isNp
-                ? 'तपाईंको दराजमा प्रयोग नभई बसेका सफा कपडाहरू हाम्रो केन्द्रीय केन्द्रमा पठाउनुहोस्। गुणस्तर परीक्षण, सरसफाइ र मर्मतपछि तराईका शीतलहर प्रभावित मुसहर बस्ती, बाढी पीडित तथा विकट हिमाली विद्यालयमा निःशुल्क र सम्मानपूर्वक वितरण गरिन्छ।'
-                : 'Send your clean, pre-loved wearable clothes directly to our Kathmandu Central Hub. After thorough inspection, sanitization, and packaging, our volunteers deliver them to Terai cold-wave survivors, flood-hit families, and remote Himalayan schoolchildren.'}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                onClick={scrollToForm}
-                className="px-5 py-2.5 bg-[#00743a] hover:bg-[#00542a] text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-md"
-              >
-                <Shirt className="w-4 h-4" />
-                <span>{isNp ? 'कपडा पठाउन विवरण भर्नुहोस्' : 'Send Clothes to Our Hub'}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-
-              <a
-                href="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal"
-                target="_blank"
-                rel="noreferrer"
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 border border-white/25 text-white text-xs font-bold tracking-wider transition-colors flex items-center gap-2"
-              >
-                <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{isNp ? 'हाम्रो नक्सा ठेगाना हेर्नुहोस्' : 'View Hub Map Location'}</span>
-                <ExternalLink className="w-3 h-3 text-blue-200" />
-              </a>
-            </div>
-
-            {/* Impact Metric Counters */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-6 mt-6 border-t border-white/15">
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-white font-heading">142,500+</span>
-                <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'वितरित कपडा' : 'Garments Delivered'}</span>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-white font-heading">28,400+</span>
-                <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'लाभान्वित परिवार' : 'Families Clothed'}</span>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-emerald-400 font-heading">Central Hub</span>
-                <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'काठमाडौँ मुख्य केन्द्र' : 'Kathmandu Drop Station'}</span>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm border border-white/10 p-3">
-                <span className="block text-lg sm:text-2xl font-black text-white font-heading">100% Free</span>
-                <span className="text-[11px] text-blue-200 font-medium">{isNp ? 'निःशुल्क सेवा' : 'Non-Profit Relief'}</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -255,42 +207,25 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
               </div>
             ) : (
               <form onSubmit={handleClothesDonationSubmit} className="space-y-4">
-                <div className="border-b border-[#f0f3ff] pb-3">
-                  <div className="inline-block px-2 py-0.5 bg-[#e7eeff] text-[#003c90] text-[10px] font-bold uppercase tracking-wider mb-1">
-                    {isNp ? 'प्रत्यक्ष संकलन फारम' : 'Central Hub Dispatch Form'}
-                  </div>
-                  <h3 className="text-base sm:text-lg font-bold text-[#111c2d] font-heading">
-                    {isNp ? 'हाम्रो केन्द्रमा कपडा पठाउने वा बुझाउने फारम' : 'Schedule or Register Your Clothes Handover'}
-                  </h3>
-                  <p className="text-xs text-[#737784] mt-0.5">
-                    {isNp 
-                      ? 'तपाईं आफै आएर, कुरियर/पार्सलबाट वा राइडरमार्फत हाम्रो काठमाडौँ केन्द्रमा कपडा पठाउन सक्नुहुन्छ।' 
-                      : 'You can deliver directly in person, send via courier/cargo from any district, or book a delivery rider to our Kathmandu Hub.'}
-                  </p>
-                </div>
-
-                {/* Delivery Mode Selector */}
+                {/* 4 Delivery Mode Selector in Same Line Small */}
                 <div>
-                  <label className="block text-xs font-bold text-[#111c2d] uppercase tracking-wider mb-2">
-                    {isNp ? 'तपाईं कसरी कपडा पठाउँदै हुनुहुन्छ? *' : 'How will you send the clothes to our hub? *'}
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       type="button"
                       onClick={() => setDonationMode('self_dropoff')}
-                      className={`p-3 text-left border transition-all flex items-start gap-2.5 ${
+                      className={`p-2.5 text-left border transition-all flex items-center gap-2 ${
                         donationMode === 'self_dropoff'
                           ? 'bg-[#e7eeff] border-[#003c90] text-[#003c90] font-bold shadow-xs'
-                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653]'
+                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653] hover:bg-[#f0f4fc]'
                       }`}
                     >
-                      <Building2 className="w-4 h-4 mt-0.5 shrink-0 text-[#003c90]" />
-                      <div>
-                        <span className="block text-xs">
-                          {isNp ? '१. आफै केन्द्रमा आएर बुझाउने' : '1. Self Drop-off at Hub'}
+                      <Building2 className="w-4 h-4 shrink-0 text-[#003c90]" />
+                      <div className="min-w-0">
+                        <span className="block text-xs truncate">
+                          {isNp ? '१. आफै बुझाउने' : '1. Self Drop-off'}
                         </span>
-                        <span className="text-[10px] text-[#737784] font-normal block mt-0.5">
-                          {isNp ? 'तीनकुने/बानेश्वर केन्द्रमा सिधै' : 'Direct visit to Tinkune Kathmandu'}
+                        <span className="text-[10px] text-[#737784] font-normal block truncate">
+                          {isNp ? 'तीनकुने केन्द्र' : 'Tinkune Hub'}
                         </span>
                       </div>
                     </button>
@@ -298,19 +233,19 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                     <button
                       type="button"
                       onClick={() => setDonationMode('courier_parcel')}
-                      className={`p-3 text-left border transition-all flex items-start gap-2.5 ${
+                      className={`p-2.5 text-left border transition-all flex items-center gap-2 ${
                         donationMode === 'courier_parcel'
                           ? 'bg-[#e7eeff] border-[#003c90] text-[#003c90] font-bold shadow-xs'
-                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653]'
+                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653] hover:bg-[#f0f4fc]'
                       }`}
                     >
-                      <Truck className="w-4 h-4 mt-0.5 shrink-0 text-[#00743a]" />
-                      <div>
-                        <span className="block text-xs">
-                          {isNp ? '२. कुरियर / पार्सल / बसमार्फत' : '2. Courier / Cargo / Bus'}
+                      <Truck className="w-4 h-4 shrink-0 text-[#00743a]" />
+                      <div className="min-w-0">
+                        <span className="block text-xs truncate">
+                          {isNp ? '२. कुरियर/पार्सल' : '2. Courier / Cargo'}
                         </span>
-                        <span className="text-[10px] text-[#737784] font-normal block mt-0.5">
-                          {isNp ? 'उपत्यका बाहिरबाट पठाउने' : 'Nepal Post, Sundar/Himal Cargo'}
+                        <span className="text-[10px] text-[#737784] font-normal block truncate">
+                          {isNp ? 'उपत्यका बाहिर' : 'Any District'}
                         </span>
                       </div>
                     </button>
@@ -318,19 +253,19 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                     <button
                       type="button"
                       onClick={() => setDonationMode('pathao_rider')}
-                      className={`p-3 text-left border transition-all flex items-start gap-2.5 ${
+                      className={`p-2.5 text-left border transition-all flex items-center gap-2 ${
                         donationMode === 'pathao_rider'
                           ? 'bg-[#e7eeff] border-[#003c90] text-[#003c90] font-bold shadow-xs'
-                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653]'
+                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653] hover:bg-[#f0f4fc]'
                       }`}
                     >
-                      <Send className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
-                      <div>
-                        <span className="block text-xs">
-                          {isNp ? '३. पठाओ / इनड्राइभ पार्सलमार्फत' : '3. Pathao / InDrive Parcel'}
+                      <Send className="w-4 h-4 shrink-0 text-amber-600" />
+                      <div className="min-w-0">
+                        <span className="block text-xs truncate">
+                          {isNp ? '३. पठाओ/राइडर' : '3. Rider Parcel'}
                         </span>
-                        <span className="text-[10px] text-[#737784] font-normal block mt-0.5">
-                          {isNp ? 'काठमाडौँ उपत्यकाभित्र राइडर' : 'Rider parcel delivery to hub'}
+                        <span className="text-[10px] text-[#737784] font-normal block truncate">
+                          {isNp ? 'उपत्यकाभित्र' : 'Kathmandu Valley'}
                         </span>
                       </div>
                     </button>
@@ -338,19 +273,19 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                     <button
                       type="button"
                       onClick={() => setDonationMode('doorstep_pickup')}
-                      className={`p-3 text-left border transition-all flex items-start gap-2.5 ${
+                      className={`p-2.5 text-left border transition-all flex items-center gap-2 ${
                         donationMode === 'doorstep_pickup'
                           ? 'bg-[#e7eeff] border-[#003c90] text-[#003c90] font-bold shadow-xs'
-                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653]'
+                          : 'bg-[#f9f9ff] border-[#d8e3fb] text-[#434653] hover:bg-[#f0f4fc]'
                       }`}
                     >
-                      <PackageOpen className="w-4 h-4 mt-0.5 shrink-0 text-indigo-600" />
-                      <div>
-                        <span className="block text-xs">
-                          {isNp ? '४. ठूलो परिमाण संकलन अनुरोध' : '4. Bulk Pickup Support'}
+                      <PackageOpen className="w-4 h-4 shrink-0 text-indigo-600" />
+                      <div className="min-w-0">
+                        <span className="block text-xs truncate">
+                          {isNp ? '४. ठूलो परिमाण' : '4. Bulk Pickup'}
                         </span>
-                        <span className="text-[10px] text-[#737784] font-normal block mt-0.5">
-                          {isNp ? 'कार्यालय वा कलेजबाट ५०+ थान' : '50+ items from offices/colleges'}
+                        <span className="text-[10px] text-[#737784] font-normal block truncate">
+                          {isNp ? '५०+ थान' : '50+ Garments'}
                         </span>
                       </div>
                     </button>
@@ -593,47 +528,6 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
-            </div>
-
-            {/* Quality & Dispatch Guidelines */}
-            <div className="bg-white p-5 border border-[#d8e3fb] shadow-sm">
-              <h4 className="text-xs font-bold text-[#003c90] uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-[#00743a]" />
-                <span>{isNp ? 'कपडा पठाउँदा ध्यान दिनुपर्ने कुरा' : 'Quality & Packaging Checklist'}</span>
-              </h4>
-              <ul className="space-y-2 text-xs text-[#434653]">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#00743a] shrink-0 mt-0.5" />
-                  <span><strong>{isNp ? 'सफा र धुइएका:' : 'Clean & Washed:'}</strong> {isNp ? 'कृपया धोएर सुकाइएका कपडा मात्र पठाउनुहोस्।' : 'Ensure garments are washed and in wearable condition.'}</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#00743a] shrink-0 mt-0.5" />
-                  <span><strong>{isNp ? 'उच्च प्राथमिकता:' : 'Winter Priority:'}</strong> {isNp ? 'जाडोका ज्याकेट, स्विटर, कम्बल र बालबालिकाको पोशाक।' : 'Winter jackets, sweaters, quilts, baby clothes & blankets.'}</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#00743a] shrink-0 mt-0.5" />
-                  <span><strong>{isNp ? 'सुरक्षित प्याकिङ:' : 'Sturdy Packaging:'}</strong> {isNp ? 'कार्टुन बक्स वा बलियो झोलामा प्याक गरी नाम टाँस्नुहोस्।' : 'Pack tightly in cartons or bags with your name & phone label.'}</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Support Logistics Fund */}
-            <div className="bg-[#eaf0fc] p-5 border border-[#b9cffb]">
-              <h4 className="text-xs font-bold text-[#003c90] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-                <span>{isNp ? 'ढुवानी र सरसफाइ कोष' : 'Support Transport & Sanitization'}</span>
-              </h4>
-              <p className="text-xs text-[#434653] mb-3 leading-relaxed">
-                {isNp 
-                  ? 'संकलित कपडा तराईका मुसहर बस्ती तथा कर्णालीका दुर्गम गाउँमा पुर्याउन प्रति बक्स रु. ५०० ढुवानी खर्च लाग्छ।' 
-                  : 'Every carton costs ~Rs 500 in hygiene sanitization, repair stitching, and mountain truck freight.'}
-              </p>
-              <button
-                onClick={onOpenDonateModal}
-                className="w-full py-2 bg-[#00743a] hover:bg-[#00542a] text-white text-xs font-bold uppercase tracking-wider transition-colors shadow-xs"
-              >
-                {isNp ? 'ढुवानी कोषमा रकम सहयोग गर्नुहोस्' : 'Contribute to Transport Fund'}
-              </button>
             </div>
           </div>
         </div>
