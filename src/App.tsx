@@ -14,18 +14,30 @@ import { DonationReceiptModal } from './components/DonationReceiptModal';
 import { VolunteerSuccessModal } from './components/VolunteerSuccessModal';
 import { NavTab, Project, DonationSubmission, VolunteerFormData, Language } from './types';
 
+// Helper to parse path from pathname or legacy hash
+function getTabFromUrl(): NavTab {
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (path === 'admin' || path === 'login') return 'admin';
+  if (path === 'donate') return 'donate';
+  if (path === 'volunteer') return 'volunteer';
+  if (path === 'clothes-bank' || path === 'clothes') return 'clothes-bank';
+  if (path === 'initiatives' || path === 'projects') return 'initiatives';
+  if (path === 'contact' || path === 'about') return 'contact';
+
+  // Fallback check for any legacy hash in URL
+  const hash = window.location.hash.replace('#', '').toLowerCase();
+  if (hash === 'admin' || hash === 'login') return 'admin';
+  if (hash === 'donate') return 'donate';
+  if (hash === 'volunteer') return 'volunteer';
+  if (hash === 'clothes-bank' || hash === 'clothes') return 'clothes-bank';
+  if (hash === 'initiatives' || hash === 'projects') return 'initiatives';
+  if (hash === 'contact' || hash === 'about') return 'contact';
+
+  return 'impact';
+}
+
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<NavTab>(() => {
-    // Check initial URL hash or query params
-    const hash = window.location.hash.replace('#', '').toLowerCase();
-    if (hash === 'admin' || hash === 'login') return 'admin';
-    if (hash === 'donate') return 'donate';
-    if (hash === 'volunteer') return 'volunteer';
-    if (hash === 'clothes-bank' || hash === 'clothes') return 'clothes-bank';
-    if (hash === 'initiatives' || hash === 'projects') return 'initiatives';
-    if (hash === 'contact' || hash === 'about') return 'contact';
-    return 'impact';
-  });
+  const [currentTab, setCurrentTab] = useState<NavTab>(getTabFromUrl);
 
   const [language, setLanguage] = useState<Language>('en');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -33,34 +45,26 @@ export default function App() {
   const [lastDonation, setLastDonation] = useState<DonationSubmission | null>(null);
   const [volunteerSuccessData, setVolunteerSuccessData] = useState<VolunteerFormData | null>(null);
 
-  // Sync with browser back/forward or manual hash updates (e.g. /#admin)
+  // Sync with browser back/forward buttons (popstate) and hash changes
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.replace('#', '').toLowerCase();
-      if (hash === 'admin' || hash === 'login') {
-        setCurrentTab('admin');
-      } else if (hash === 'donate') {
-        setCurrentTab('donate');
-      } else if (hash === 'volunteer') {
-        setCurrentTab('volunteer');
-      } else if (hash === 'clothes-bank' || hash === 'clothes') {
-        setCurrentTab('clothes-bank');
-      } else if (hash === 'initiatives' || hash === 'projects') {
-        setCurrentTab('initiatives');
-      } else if (hash === 'contact' || hash === 'about') {
-        setCurrentTab('contact');
-      } else if (hash === 'impact' || hash === 'home' || hash === '') {
-        setCurrentTab('impact');
-      }
+    const handleLocationChange = () => {
+      setCurrentTab(getTabFromUrl());
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleLocationChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.removeEventListener('hashchange', handleLocationChange);
+    };
   }, []);
 
   const handleSelectTab = (tab: NavTab) => {
     setCurrentTab(tab);
-    window.location.hash = tab === 'impact' ? '' : tab;
+    const targetPath = tab === 'impact' ? '/' : `/${tab}`;
+    if (window.location.pathname !== targetPath || window.location.hash) {
+      window.history.pushState(null, '', targetPath);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -70,8 +74,7 @@ export default function App() {
     } else {
       setSelectedProject(null);
     }
-    setCurrentTab('donate');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    handleSelectTab('donate');
   };
 
   const handleOpenProjectDetail = (project: Project) => {
