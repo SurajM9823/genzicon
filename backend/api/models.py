@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.crypto import get_random_string
+from django.utils import timezone
 
 def generate_reference_id(prefix='GZ'):
     return f"{prefix}-{get_random_string(6).upper()}"
@@ -26,7 +27,7 @@ class SiteContent(models.Model):
     
     order = models.PositiveIntegerField(default=0, verbose_name="Slide Display Order")
     is_active = models.BooleanField(default=True, verbose_name="Is Active Slide?")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
