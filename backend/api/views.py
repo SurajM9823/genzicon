@@ -81,11 +81,11 @@ class SiteContentViewSet(viewsets.ModelViewSet):
     serializer_class = SiteContentSerializer
 
     def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'current']:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def current(self, request):
         content = SiteContent.objects.first()
         if not content:
