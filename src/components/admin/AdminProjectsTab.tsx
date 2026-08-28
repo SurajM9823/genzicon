@@ -11,10 +11,14 @@ import {
   X, 
   DollarSign, 
   TrendingUp,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Heart,
+  Sparkles,
+  ExternalLink,
+  Sliders
 } from 'lucide-react';
 import { Project, Language } from '../../types';
-import { apiCreateProject, apiDeleteProject } from '../../services/api';
+import { apiCreateProject, apiUpdateProject, apiAdjustProjectDonations, apiDeleteProject } from '../../services/api';
 
 interface AdminProjectsTabProps {
   language: Language;
@@ -40,22 +44,32 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(showAddModalDirectly || false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
+  // Quick Donation Adjust Modal
+  const [adjustModalProject, setAdjustModalProject] = useState<Project | null>(null);
+  const [adjustAmountNpr, setAdjustAmountNpr] = useState<number>(50000);
+  const [adjustDonorsCount, setAdjustDonorsCount] = useState<number>(5);
+  const [adjustMode, setAdjustMode] = useState<'add' | 'set'>('add');
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
   // Form State
   const [formData, setFormData] = useState<Partial<Project>>({
     title: '',
     titleNp: '',
+    slug: '',
     category: 'Clothes Bank Nepal',
     categoryNp: 'कपडा बैंक नेपाल',
     categoryType: 'relief',
     description: '',
     descriptionNp: '',
     fullDescription: '',
+    fullDescriptionNp: '',
     location: 'Kathmandu & Terai Districts',
     locationNp: 'काठमाडौँ तथा मधेस प्रदेश',
     beneficiaries: '1,000 Families',
     beneficiariesNp: '१,००० परिवार',
     goalAmountNpr: 1000000,
     raisedAmountNpr: 250000,
+    donorCount: 45,
     goalAmountUsd: 7500,
     raisedAmountUsd: 1900,
     status: 'Active',
@@ -63,21 +77,29 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
     imageAlt: 'Genzicon field program Nepal'
   });
 
+  const showNotification = (msg: string) => {
+    setSaveSuccessMsg(msg);
+    setTimeout(() => setSaveSuccessMsg(null), 3500);
+  };
+
   const handleOpenAdd = () => {
     setEditingProject(null);
     setFormData({
       title: '',
       titleNp: '',
+      slug: '',
       category: 'Clothes Bank Nepal',
       categoryNp: 'कपडा बैंक नेपाल',
       categoryType: 'relief',
       description: '',
       descriptionNp: '',
       fullDescription: '',
+      fullDescriptionNp: '',
       location: 'Kathmandu & Terai',
       beneficiaries: '1,000 Citizens',
       goalAmountNpr: 1000000,
       raisedAmountNpr: 0,
+      donorCount: 0,
       goalAmountUsd: 7500,
       raisedAmountUsd: 0,
       status: 'Active',
@@ -99,11 +121,12 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
     if (onCloseAddModalDirectly) onCloseAddModalDirectly();
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this program?')) {
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this program from the live website?')) {
       const updated = projects.filter(p => p.id !== id);
       onSaveProjects(updated);
-      apiDeleteProject(id).catch(console.warn);
+      await apiDeleteProject(id);
+      showNotification('Program deleted successfully.');
     }
   };
 
@@ -111,10 +134,11 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
     e.preventDefault();
     const goalNpr = Number(formData.goalAmountNpr) || 100000;
     const raisedNpr = Number(formData.raisedAmountNpr) || 0;
+    const donorCount = Number(formData.donorCount) || 0;
     const fundedPct = Math.min(100, Math.round((raisedNpr / goalNpr) * 100));
 
     if (editingProject) {
-      // Update
+      // Update local state
       const updatedList = projects.map(p => {
         if (p.id === editingProject.id) {
           return {
@@ -122,33 +146,47 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             ...formData,
             goalAmountNpr: goalNpr,
             raisedAmountNpr: raisedNpr,
+            donorCount: donorCount,
             fundedPercentage: fundedPct
           } as Project;
         }
         return p;
       });
       onSaveProjects(updatedList);
+
+      // Call backend update
+      await apiUpdateProject(editingProject.id, {
+        ...formData,
+        goalAmountNpr: goalNpr,
+        raisedAmountNpr: raisedNpr,
+        donorCount: donorCount,
+      });
+      showNotification(`Program "${formData.title}" updated successfully in database!`);
     } else {
       // Create new
+      const rawSlug = formData.slug || formData.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || `program-${Date.now()}`;
       const newProj: Project = {
         id: `proj-${Date.now()}`,
+        slug: rawSlug,
         title: formData.title || 'Untitled Program',
         titleNp: formData.titleNp || formData.title,
-        category: formData.category || 'Grassroots Relief',
+        category: formData.category || 'Clothes Bank Nepal',
         categoryNp: formData.categoryNp || formData.category,
         categoryType: formData.categoryType || 'relief',
-        description: formData.description || 'Genzicon community initiative.',
+        description: formData.description || 'Genzicon community initiative in Nepal.',
         descriptionNp: formData.descriptionNp || formData.description,
         fullDescription: formData.fullDescription || formData.description,
-        status: formData.status || 'Active',
+        fullDescriptionNp: formData.fullDescriptionNp || formData.descriptionNp,
+        status: (formData.status as any) || 'Active',
         fundedPercentage: fundedPct,
         goalAmountNpr: goalNpr,
         raisedAmountNpr: raisedNpr,
+        donorCount: donorCount,
         goalAmountUsd: Number(formData.goalAmountUsd) || Math.round(goalNpr / 133),
         raisedAmountUsd: Number(formData.raisedAmountUsd) || Math.round(raisedNpr / 133),
         location: formData.location || 'Nepal',
         locationNp: formData.locationNp || formData.location,
-        beneficiaries: formData.beneficiaries || '500+ Citizens',
+        beneficiaries: formData.beneficiaries || '1,000+ Citizens',
         beneficiariesNp: formData.beneficiariesNp || formData.beneficiaries,
         imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80',
         imageAlt: formData.title || 'Project photo'
@@ -164,25 +202,63 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
       }
 
       onSaveProjects([newProj, ...projects]);
+      showNotification(`New program "${newProj.title}" published with live tracking!`);
     }
     handleCloseModal();
   };
 
-  // Quick Fund Booster
-  const handleQuickAddFunds = (id: string, amountToAdd: number) => {
+  // Quick Fund Booster & Donor Count adjustment
+  const handleOpenAdjustModal = (project: Project) => {
+    setAdjustModalProject(project);
+    setAdjustAmountNpr(50000);
+    setAdjustDonorsCount(5);
+    setAdjustMode('add');
+  };
+
+  const handleApplyDonationAdjustment = async () => {
+    if (!adjustModalProject) return;
+
+    let newRaised = adjustModalProject.raisedAmountNpr;
+    let newDonors = adjustModalProject.donorCount || 0;
+
+    if (adjustMode === 'add') {
+      newRaised += Number(adjustAmountNpr);
+      newDonors += Number(adjustDonorsCount);
+    } else {
+      newRaised = Number(adjustAmountNpr);
+      newDonors = Number(adjustDonorsCount);
+    }
+
+    const newPct = Math.min(100, Math.round((newRaised / (adjustModalProject.goalAmountNpr || 1)) * 100));
+
     const updated = projects.map(p => {
-      if (p.id === id) {
-        const newRaised = p.raisedAmountNpr + amountToAdd;
-        const newPct = Math.min(100, Math.round((newRaised / p.goalAmountNpr) * 100));
+      if (p.id === adjustModalProject.id) {
         return {
           ...p,
           raisedAmountNpr: newRaised,
+          donorCount: newDonors,
           fundedPercentage: newPct
         };
       }
       return p;
     });
     onSaveProjects(updated);
+
+    // Call API
+    if (adjustMode === 'add') {
+      await apiAdjustProjectDonations(adjustModalProject.id, {
+        add_amount: Number(adjustAmountNpr),
+        add_donors: Number(adjustDonorsCount),
+      });
+    } else {
+      await apiAdjustProjectDonations(adjustModalProject.id, {
+        set_raised: Number(adjustAmountNpr),
+        set_donors: Number(adjustDonorsCount),
+      });
+    }
+
+    showNotification(`Updated donation tracking for "${adjustModalProject.title}": रू ${newRaised.toLocaleString()} raised (${newDonors} donors).`);
+    setAdjustModalProject(null);
   };
 
   const filteredProjects = projects.filter(p => {
@@ -196,14 +272,28 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification */}
+      {saveSuccessMsg && (
+        <div className="p-3 bg-[#00743a] text-white text-xs font-bold flex items-center justify-between shadow-md">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{saveSuccessMsg}</span>
+          </div>
+          <button onClick={() => setSaveSuccessMsg(null)}>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header Bar */}
       <div className="bg-white p-4 sm:p-5 border border-[#d8e3fb] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-bold text-[#111c2d] font-heading">
-            {isNp ? 'सक्रिय ग्राउन्ड कार्यक्रमहरू (Active Ground Programs)' : 'Active Ground Programs Management'}
+          <h2 className="text-base font-bold text-[#111c2d] font-heading flex items-center gap-2">
+            <FolderKanban className="w-4 h-4 text-[#003c90]" />
+            <span>{isNp ? 'फिल्ड कार्यक्रम तथा आर्थिक संकलन व्यवस्थापन' : 'Field Initiatives & Live Donation Management'}</span>
           </h2>
-          <p className="text-xs text-[#737784]">
-            Add, update, or close active field projects shown across the homepage and initiatives portal.
+          <p className="text-xs text-[#737784] mt-0.5">
+            Create initiatives, configure SEO friendly slugs, adjust live donation amounts/donors, and monitor field progress.
           </p>
         </div>
 
@@ -238,9 +328,8 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             <option value="all">All Categories</option>
             <option value="clothes">Clothes Bank</option>
             <option value="green">Clean & Green Nepal</option>
-            <option value="skill">Skills & Livelihood</option>
-            <option value="water">Clean Water</option>
-            <option value="education">Education</option>
+            <option value="skill">Skills & Enterprise</option>
+            <option value="relief">Relief & Health</option>
           </select>
 
           <select
@@ -249,8 +338,9 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
             className="px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
           >
             <option value="all">All Status</option>
-            <option value="active">Active Only</option>
-            <option value="completed">Completed Only</option>
+            <option value="active">Active Campaigns</option>
+            <option value="urgent">Urgent Priority</option>
+            <option value="completed">Completed</option>
           </select>
         </div>
       </div>
@@ -275,18 +365,29 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                     {project.category}
                   </span>
                   <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-xs ${
-                    project.status === 'Active' ? 'bg-[#00743a] text-white' : 'bg-slate-700 text-white'
+                    project.status === 'Urgent' ? 'bg-rose-600 text-white' : (project.status === 'Active' ? 'bg-[#00743a] text-white' : 'bg-slate-700 text-white')
                   }`}>
                     {project.status}
                   </span>
+                </div>
+
+                <div className="absolute bottom-2.5 right-2.5 bg-black/70 px-2 py-0.5 text-[10px] font-bold text-white">
+                  {project.donorCount || Math.max(1, Math.round((project.raisedAmountNpr || 0) / 4500))} Donors
                 </div>
               </div>
 
               {/* Body Content */}
               <div className="p-4 space-y-2.5">
-                <div className="flex items-center gap-1.5 text-[11px] text-[#737784]">
-                  <MapPin className="w-3.5 h-3.5 text-[#00743a] shrink-0" />
-                  <span>{project.location}</span>
+                <div className="flex items-center justify-between text-[11px] text-[#737784]">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-3.5 h-3.5 text-[#00743a] shrink-0" />
+                    <span>{project.location}</span>
+                  </div>
+                  {project.slug && (
+                    <span className="text-[10px] font-mono text-[#003c90] bg-[#f0f3ff] px-1.5 py-0.5">
+                      /programs/{project.slug}
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="text-sm font-bold text-[#111c2d] font-heading line-clamp-2">
@@ -298,46 +399,50 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                 </p>
 
                 {/* Progress Bar & Values */}
-                <div className="space-y-1 pt-1">
+                <div className="space-y-1 p-2.5 bg-[#f9f9ff] border border-[#e7eeff]">
                   <div className="flex justify-between text-[11px] font-bold">
                     <span className="text-[#003c90]">{project.fundedPercentage}% Funded</span>
-                    <span className="text-[#737784]">
-                      रू {project.raisedAmountNpr.toLocaleString()} / रू {project.goalAmountNpr.toLocaleString()}
+                    <span className="text-[#111c2d] font-mono">
+                      रू {(project.raisedAmountNpr || 0).toLocaleString()} / रू {(project.goalAmountNpr || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="w-full h-2 bg-[#e7eeff] overflow-hidden">
                     <div
-                      className="h-full bg-[#003c90] transition-all"
+                      className="h-full bg-[#00743a] transition-all"
                       style={{ width: `${Math.min(100, project.fundedPercentage)}%` }}
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 text-[11px] text-[#434653] pt-1">
-                  <Users className="w-3.5 h-3.5 text-[#003c90]" />
-                  <span>Impact: <strong>{project.beneficiaries}</strong></span>
+                <div className="flex items-center justify-between text-[11px] text-[#434653] pt-0.5">
+                  <div className="flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5 text-[#003c90]" />
+                    <span>{project.beneficiaries}</span>
+                  </div>
+                  <span className="font-mono text-[10px] text-[#737784]">
+                    ≈ ${(project.raisedAmountUsd || Math.round((project.raisedAmountNpr || 0) / 133)).toLocaleString()} USD
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Program Action Toolbar */}
             <div className="p-3 bg-[#f9f9ff] border-t border-[#d8e3fb] flex items-center justify-between gap-2">
-              {/* Quick fund increment button */}
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => handleQuickAddFunds(project.id, 50000)}
-                  className="px-2 py-1 bg-white hover:bg-[#e7eeff] text-[#003c90] text-[10px] font-bold border border-[#d8e3fb] transition-colors"
-                  title="Add NPR 50,000 verified offline donation to progress"
-                >
-                  +50k NPR
-                </button>
-              </div>
+              {/* Quick Donation Adjust Button */}
+              <button
+                type="button"
+                onClick={() => handleOpenAdjustModal(project)}
+                className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00743a] text-xs font-bold border border-emerald-300 transition-colors flex items-center gap-1"
+                title="Adjust live donation amount & donor count"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Adjust Funds</span>
+              </button>
 
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => handleOpenEdit(project)}
-                  className="px-2.5 py-1 bg-white hover:bg-[#f0f3ff] text-[#003c90] text-xs font-bold border border-[#d8e3fb] flex items-center gap-1 transition-colors"
+                  className="px-2.5 py-1.5 bg-white hover:bg-[#f0f3ff] text-[#003c90] text-xs font-bold border border-[#d8e3fb] flex items-center gap-1 transition-colors"
                 >
                   <Edit3 className="w-3 h-3" />
                   <span>Edit</span>
@@ -345,7 +450,7 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
                 <button
                   onClick={() => handleDelete(project.id)}
-                  className="p-1 text-red-600 hover:bg-red-50 transition-colors"
+                  className="p-1.5 text-red-600 hover:bg-red-50 transition-colors border border-transparent hover:border-red-200"
                   title="Delete project"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -356,14 +461,128 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
         ))}
       </div>
 
-      {/* Program Create/Edit Modal */}
+      {/* Adjust Live Donations & Donors Modal */}
+      {adjustModalProject && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white max-w-lg w-full border border-[#d8e3fb] shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#d8e3fb]">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#111c2d] font-heading flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-[#00743a]" />
+                <span>Adjust Program Donations & Donors</span>
+              </h3>
+              <button onClick={() => setAdjustModalProject(null)} className="p-1 hover:bg-[#f0f3ff]">
+                <X className="w-4 h-4 text-[#737784]" />
+              </button>
+            </div>
+
+            <div className="bg-[#f9f9ff] p-3 border border-[#e7eeff] space-y-1">
+              <span className="text-[10px] font-bold text-[#003c90] uppercase block">Selected Program</span>
+              <h4 className="text-sm font-bold text-[#111c2d]">{adjustModalProject.title}</h4>
+              <div className="text-xs text-[#737784] font-mono flex items-center gap-3 pt-1">
+                <span>Current Raised: <strong>रू {(adjustModalProject.raisedAmountNpr || 0).toLocaleString()}</strong></span>
+                <span>Current Donors: <strong>{adjustModalProject.donorCount || 0}</strong></span>
+              </div>
+            </div>
+
+            {/* Mode Switch: Add to existing vs Set exact value */}
+            <div className="flex border border-[#d8e3fb]">
+              <button
+                type="button"
+                onClick={() => { setAdjustMode('add'); setAdjustAmountNpr(50000); setAdjustDonorsCount(5); }}
+                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  adjustMode === 'add' ? 'bg-[#003c90] text-white' : 'bg-white text-[#434653] hover:bg-[#f0f3ff]'
+                }`}
+              >
+                + Add / Boost Amount
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAdjustMode('set'); setAdjustAmountNpr(adjustModalProject.raisedAmountNpr || 0); setAdjustDonorsCount(adjustModalProject.donorCount || 0); }}
+                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  adjustMode === 'set' ? 'bg-[#003c90] text-white' : 'bg-white text-[#434653] hover:bg-[#f0f3ff]'
+                }`}
+              >
+                Set Exact Amount
+              </button>
+            </div>
+
+            {adjustMode === 'add' && (
+              <div>
+                <label className="block text-[11px] font-bold text-[#737784] uppercase mb-1.5">
+                  Quick Amount Presets (NPR)
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[10000, 25000, 50000, 100000].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setAdjustAmountNpr(amt)}
+                      className={`py-1.5 text-xs font-bold border ${
+                        adjustAmountNpr === amt
+                          ? 'bg-[#00743a] text-white border-[#00743a]'
+                          : 'bg-white text-[#111c2d] border-[#d8e3fb] hover:bg-[#f0f3ff]'
+                      }`}
+                    >
+                      +रू {(amt / 1000)}k
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                {adjustMode === 'add' ? 'Donation Amount to Add (NPR)' : 'New Total Raised Amount (NPR)'} *
+              </label>
+              <input
+                type="number"
+                value={adjustAmountNpr}
+                onChange={(e) => setAdjustAmountNpr(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-sm font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                {adjustMode === 'add' ? 'New Donor Count to Add (+ Donors)' : 'New Exact Donor Count'}
+              </label>
+              <input
+                type="number"
+                value={adjustDonorsCount}
+                onChange={(e) => setAdjustDonorsCount(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-sm font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#d8e3fb]">
+              <button
+                type="button"
+                onClick={() => setAdjustModalProject(null)}
+                className="px-4 py-2 border border-[#d8e3fb] text-xs font-bold uppercase text-[#434653] hover:bg-[#f0f3ff]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyDonationAdjustment}
+                className="px-5 py-2 bg-[#00743a] hover:bg-[#005227] text-white text-xs font-bold uppercase tracking-wider shadow-xs"
+              >
+                Save & Update Live Tracking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Program Create/Edit Full Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#d8e3fb] shadow-xl p-6">
+          <div className="bg-white max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-[#d8e3fb] shadow-xl p-6">
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#d8e3fb]">
               <h3 className="text-sm font-bold uppercase tracking-wider text-[#111c2d] font-heading flex items-center gap-2">
                 <FolderKanban className="w-4 h-4 text-[#003c90]" />
-                <span>{editingProject ? 'Edit Ground Program' : 'Create New Ground Program'}</span>
+                <span>{editingProject ? 'Edit Field Initiative' : 'Create New Field Initiative'}</span>
               </h3>
               <button onClick={handleCloseModal} className="p-1 hover:bg-[#f0f3ff]">
                 <X className="w-4 h-4 text-[#737784]" />
@@ -378,24 +597,43 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                   </label>
                   <input
                     type="text"
-                    required
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="e.g. Winter Warmth & Clothes Relief Drive"
+                    placeholder="Winter Clothes & Blanket Relief Drive"
                     className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    required
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Program Title (नेपाली)
+                    Program Title (Nepali)
                   </label>
                   <input
                     type="text"
-                    value={formData.titleNp || ''}
+                    value={formData.titleNp}
                     onChange={(e) => setFormData({ ...formData, titleNp: e.target.value })}
-                    placeholder="e.g. जाडो न्यानो कपडा वितरण अभियान"
+                    placeholder="तराई शीतलहर न्यानो कपडा वितरण"
                     className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* SEO Slug */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                  SEO URL Slug (e.g. winter-clothes-terai-relief)
+                </label>
+                <div className="flex items-center">
+                  <span className="px-3 py-2 bg-[#f0f3ff] border border-r-0 border-[#d8e3fb] text-xs text-[#737784] font-mono">
+                    /programs/
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.slug || ''}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder="winter-clothes-relief-terai"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] font-mono focus:outline-none focus:border-[#003c90] focus:bg-white"
                   />
                 </div>
               </div>
@@ -403,145 +641,163 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Pillar / Category
+                    Category *
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   >
-                    <option value="Clothes Bank Nepal">Clothes Bank Nepal (जनसेवा)</option>
-                    <option value="Clean Nepal, Green Nepal">Clean Nepal, Green Nepal (हरित)</option>
-                    <option value="Skills & Livelihood">Skills & Business Development (सीप)</option>
-                    <option value="Clean Water & WASH">Clean Water & WASH</option>
-                    <option value="Disaster Relief">Disaster Relief</option>
-                    <option value="Child Education">Child Education</option>
+                    <option value="Clothes Bank Nepal">Clothes Bank Nepal</option>
+                    <option value="Clean Nepal, Green Nepal">Clean Nepal, Green Nepal</option>
+                    <option value="Skills & Business Development">Skills & Business Development</option>
+                    <option value="Himalayan Relief">Himalayan Relief</option>
+                    <option value="Education & IT">Education & IT</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Location / Districts
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="e.g. Dhanusha, Mahottari"
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Target Beneficiaries
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.beneficiaries}
-                    onChange={(e) => setFormData({ ...formData, beneficiaries: e.target.value })}
-                    placeholder="e.g. 5,000 Families"
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Goal Amount (NPR) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.goalAmountNpr}
-                    onChange={(e) => setFormData({ ...formData, goalAmountNpr: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Raised Amount (NPR)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.raisedAmountNpr}
-                    onChange={(e) => setFormData({ ...formData, raisedAmountNpr: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Status
+                    Status *
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
                   >
-                    <option value="Active">Active (Ongoing on Ground)</option>
-                    <option value="Completed">Completed (100% Goal Met)</option>
+                    <option value="Active">Active Campaign</option>
+                    <option value="Urgent">Urgent Support Required</option>
+                    <option value="Completed">Successfully Completed</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Location / District *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="Dhanusha, Madhesh Province"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    required
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                  Program Image URL
-                </label>
-                <input
-                  type="url"
-                  required
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] font-mono"
-                />
+              {/* Financials & Donors */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-[#f9f9ff] border border-[#e7eeff]">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Target Budget (NPR) *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.goalAmountNpr}
+                    onChange={(e) => setFormData({ ...formData, goalAmountNpr: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-white text-xs font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Donations Raised (NPR) *
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.raisedAmountNpr}
+                    onChange={(e) => setFormData({ ...formData, raisedAmountNpr: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-white text-xs font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Verified Donors Count
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.donorCount || 0}
+                    onChange={(e) => setFormData({ ...formData, donorCount: Number(e.target.value) })}
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-white text-xs font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  />
+                </div>
               </div>
 
+              {/* Beneficiaries & Image */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Beneficiaries Target
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.beneficiaries}
+                    onChange={(e) => setFormData({ ...formData, beneficiaries: e.target.value })}
+                    placeholder="18,500+ Vulnerable Citizens"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Hero Photo URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Short Summary */}
               <div>
                 <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                  Short Summary Description *
+                  Short Description (English) *
                 </label>
                 <textarea
                   rows={2}
-                  required
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Clear 1-2 sentence description for project cards..."
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  placeholder="Summary for cards and previews..."
+                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  required
                 />
               </div>
 
+              {/* Full Description */}
               <div>
                 <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                  Detailed Field Implementation Story (Optional)
+                  Full Story & Operational Plan (English)
                 </label>
                 <textarea
                   rows={3}
-                  value={formData.fullDescription || ''}
+                  value={formData.fullDescription}
                   onChange={(e) => setFormData({ ...formData, fullDescription: e.target.value })}
-                  placeholder="In-depth details of communities served, distribution schedules, logistics..."
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                  placeholder="Detailed breakdown of how donations are utilized on the ground..."
+                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
                 />
               </div>
 
-              <div className="pt-3 border-t border-[#d8e3fb] flex items-center justify-end gap-2">
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#d8e3fb]">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 bg-[#f9f9ff] hover:bg-[#f0f3ff] text-[#434653] text-xs font-bold border border-[#d8e3fb]"
+                  className="px-4 py-2 border border-[#d8e3fb] text-xs font-bold uppercase text-[#434653] hover:bg-[#f0f3ff]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#00743a] hover:bg-[#005227] text-white text-xs font-bold uppercase tracking-wider shadow-xs"
+                  className="px-5 py-2 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider shadow-xs"
                 >
-                  {editingProject ? 'Update Program' : 'Publish Ground Program'}
+                  {editingProject ? 'Save Changes' : 'Publish Initiative'}
                 </button>
               </div>
             </form>

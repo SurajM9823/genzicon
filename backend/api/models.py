@@ -72,29 +72,44 @@ class Project(models.Model):
         ('Completed', 'Successfully Completed'),
     ]
 
-    title = models.CharField(max_length=255)
-    title_np = models.CharField(max_length=255)
-    category = models.CharField(max_length=100)  # Education, Health, Clothes Bank, Winter Relief
-    district = models.CharField(max_length=100)
-    province = models.CharField(max_length=100)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Active')
-    target_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    raised_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
-    beneficiaries_count = models.CharField(max_length=100)
-    image_url = models.URLField(max_length=500, blank=True, null=True)
-    description = models.TextField()
-    description_np = models.TextField()
-    is_featured = models.BooleanField(default=False)
+    slug = models.SlugField(max_length=255, unique=True, blank=True, null=True, verbose_name="SEO URL Slug (e.g. winter-clothes-drive-terai)")
+    title = models.CharField(max_length=255, verbose_name="Title (English)")
+    title_np = models.CharField(max_length=255, blank=True, verbose_name="Title (Nepali)")
+    category = models.CharField(max_length=100, default='Clothes Bank Nepal', verbose_name="Category")
+    category_np = models.CharField(max_length=100, blank=True, default='कपडा बैंक नेपाल', verbose_name="Category (Nepali)")
+    district = models.CharField(max_length=100, default='Kathmandu', verbose_name="District")
+    province = models.CharField(max_length=100, default='Bagmati Province', verbose_name="Province")
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Active', verbose_name="Operational Status")
+    target_amount = models.DecimalField(max_digits=12, decimal_places=2, default=500000.00, verbose_name="Target Goal (NPR)")
+    raised_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, verbose_name="Donations Raised (NPR)")
+    donor_count = models.PositiveIntegerField(default=0, verbose_name="Verified Donor Count")
+    beneficiaries_count = models.CharField(max_length=100, default='1,000+ Citizens', verbose_name="Beneficiaries Reached")
+    image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Hero Image URL")
+    description = models.TextField(verbose_name="Short Summary (English)")
+    description_np = models.TextField(blank=True, verbose_name="Short Summary (Nepali)")
+    full_description = models.TextField(blank=True, verbose_name="Full Story / Operational Goals (English)")
+    full_description_np = models.TextField(blank=True, verbose_name="Full Story / Operational Goals (Nepali)")
+    is_featured = models.BooleanField(default=True, verbose_name="Featured on Homepage")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-is_featured', '-created_at']
         verbose_name = "Field Program"
         verbose_name_plural = "Field Programs"
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            import re
+            base = re.sub(r'[^a-zA-Z0-9\s-]', '', self.title).strip().lower()
+            candidate = re.sub(r'[\s]+', '-', base)
+            if not candidate:
+                candidate = f"program-{uuid.uuid4().hex[:6]}"
+            self.slug = candidate
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.title} ({self.district})"
+        return f"{self.title} [{self.district}] (रू {self.raised_amount} / रू {self.target_amount})"
 
 class ClothesDonation(models.Model):
     """Clothes Bank Donor Pickup & Dropoff Pipeline"""

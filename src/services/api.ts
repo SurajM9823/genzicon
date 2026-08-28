@@ -1,4 +1,5 @@
 // Django REST Framework API Client for Genzicon Foundation
+import { Project } from '../types';
 
 const API_BASE = (typeof window !== 'undefined' && (window as any).VITE_API_URL) 
   ? (window as any).VITE_API_URL 
@@ -221,31 +222,46 @@ export async function apiSaveImpactStats(stats: any[]) {
 // --------------------------------------------------------------------------
 // 4. Ground Programs & Projects
 // --------------------------------------------------------------------------
-export async function apiGetProjects() {
+export function formatProjectFromBackend(p: any): Project {
+  const goalNpr = Number(p.target_amount) || 0;
+  const raisedNpr = Number(p.raised_amount) || 0;
+  const fundedPct = goalNpr > 0 ? Math.min(100, Math.round((raisedNpr / goalNpr) * 100)) : 0;
+  
+  return {
+    id: String(p.id),
+    slug: p.slug || `program-${p.id}`,
+    title: p.title,
+    titleNp: p.title_np || p.title,
+    category: p.category || 'Field Initiative',
+    categoryNp: p.category_np || p.category,
+    categoryType: p.category?.toLowerCase().includes('clean') ? 'agriculture' : (p.category?.toLowerCase().includes('skill') ? 'education' : 'relief'),
+    description: p.description || '',
+    descriptionNp: p.description_np || p.description || '',
+    fullDescription: p.full_description || p.description || '',
+    fullDescriptionNp: p.full_description_np || p.description_np || '',
+    status: p.status || 'Active',
+    fundedPercentage: p.progress_percentage || fundedPct,
+    goalAmountNpr: goalNpr,
+    raisedAmountNpr: raisedNpr,
+    goalAmountUsd: Math.round(goalNpr / 133),
+    raisedAmountUsd: Math.round(raisedNpr / 133),
+    donorCount: Number(p.donor_count) || (raisedNpr > 0 ? Math.max(1, Math.round(raisedNpr / 4500)) : 0),
+    location: p.province ? `${p.district}, ${p.province}` : (p.district || 'Nepal'),
+    beneficiaries: p.beneficiaries_count || '1,000+ Citizens',
+    imageUrl: p.image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200',
+    imageAlt: p.title || 'Field Program',
+  };
+}
+
+export async function apiGetProjects(): Promise<Project[] | null> {
   try {
     const res = await fetch(`${API_BASE}/projects/`);
     if (res.ok) {
       const data = await res.json();
-      const results = Array.isArray(data) ? data : data.results || [];
-      return results.map((p: any) => ({
-        id: String(p.id),
-        title: p.title,
-        titleNp: p.title_np,
-        category: p.category,
-        categoryType: p.category?.toLowerCase().includes('clean') ? 'clean-energy' : 'education',
-        description: p.description,
-        descriptionNp: p.description_np,
-        status: p.status,
-        fundedPercentage: p.progress_percentage || 0,
-        goalAmountNpr: Number(p.target_amount) || 0,
-        raisedAmountNpr: Number(p.raised_amount) || 0,
-        goalAmountUsd: Math.round((Number(p.target_amount) || 0) / 135),
-        raisedAmountUsd: Math.round((Number(p.raised_amount) || 0) / 135),
-        location: `${p.district}, ${p.province}`,
-        beneficiaries: p.beneficiaries_count,
-        imageUrl: p.image_url || 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&q=80&w=800',
-        imageAlt: p.title,
-      }));
+      const results = Array.isArray(data) ? data : (data.results || []);
+      if (results.length > 0) {
+        return results.map(formatProjectFromBackend);
+      }
     }
   } catch (e) {
     console.warn('Could not fetch live projects from backend:', e);
@@ -253,21 +269,40 @@ export async function apiGetProjects() {
   return null;
 }
 
-export async function apiCreateProject(projectData: any) {
+export async function apiGetProjectBySlug(slug: string): Promise<Project | null> {
   try {
+    const res = await fetch(`${API_BASE}/projects/by_slug/?slug=${encodeURIComponent(slug)}`);
+    if (res.ok) {
+      const data = await res.json();
+      return formatProjectFromBackend(data);
+    }
+  } catch (e) {
+    console.warn(`Could not fetch project with slug ${slug}:`, e);
+  }
+  return null;
+}
+
+export async function apiCreateProject(projectData: Partial<Project>) {
+  try {
+    const locParts = (projectData.location || 'Kathmandu, Bagmati').split(',');
     const payload = {
+      slug: projectData.slug || undefined,
       title: projectData.title,
       title_np: projectData.titleNp || projectData.title,
-      category: projectData.category || 'Grassroots Relief',
-      district: projectData.location?.split(',')[0]?.trim() || 'Kathmandu',
-      province: projectData.location?.split(',')[1]?.trim() || 'Bagmati Province',
+      category: projectData.category || 'Clothes Bank Nepal',
+      category_np: projectData.categoryNp || projectData.category,
+      district: locParts[0]?.trim() || 'Kathmandu',
+      province: locParts[1]?.trim() || 'Bagmati Province',
       status: projectData.status || 'Active',
-      target_amount: projectData.goalAmountNpr || 100000,
+      target_amount: projectData.goalAmountNpr || 500000,
       raised_amount: projectData.raisedAmountNpr || 0,
-      beneficiaries_count: projectData.beneficiaries || '500+ People',
-      image_url: projectData.imageUrl,
-      description: projectData.description,
-      description_np: projectData.descriptionNp || projectData.description,
+      donor_count: projectData.donorCount || 0,
+      beneficiaries_count: projectData.beneficiaries || '1,000+ Citizens',
+      image_url: projectData.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200',
+      description: projectData.description || '',
+      description_np: projectData.descriptionNp || projectData.description || '',
+      full_description: projectData.fullDescription || projectData.description || '',
+      full_description_np: projectData.fullDescriptionNp || projectData.descriptionNp || '',
       is_featured: true,
     };
     const res = await fetch(`${API_BASE}/projects/`, {
@@ -284,7 +319,59 @@ export async function apiCreateProject(projectData: any) {
   return null;
 }
 
-export async function apiDeleteProject(id: string) {
+export async function apiUpdateProject(id: string | number, projectData: Partial<Project>) {
+  try {
+    const locParts = (projectData.location || '').split(',');
+    const payload: any = {};
+    if (projectData.title !== undefined) payload.title = projectData.title;
+    if (projectData.titleNp !== undefined) payload.title_np = projectData.titleNp;
+    if (projectData.slug !== undefined) payload.slug = projectData.slug;
+    if (projectData.category !== undefined) payload.category = projectData.category;
+    if (projectData.categoryNp !== undefined) payload.category_np = projectData.categoryNp;
+    if (projectData.status !== undefined) payload.status = projectData.status;
+    if (projectData.goalAmountNpr !== undefined) payload.target_amount = projectData.goalAmountNpr;
+    if (projectData.raisedAmountNpr !== undefined) payload.raised_amount = projectData.raisedAmountNpr;
+    if (projectData.donorCount !== undefined) payload.donor_count = projectData.donorCount;
+    if (projectData.beneficiaries !== undefined) payload.beneficiaries_count = projectData.beneficiaries;
+    if (projectData.imageUrl !== undefined) payload.image_url = projectData.imageUrl;
+    if (projectData.description !== undefined) payload.description = projectData.description;
+    if (projectData.descriptionNp !== undefined) payload.description_np = projectData.descriptionNp;
+    if (projectData.fullDescription !== undefined) payload.full_description = projectData.fullDescription;
+    if (projectData.fullDescriptionNp !== undefined) payload.full_description_np = projectData.fullDescriptionNp;
+    if (locParts.length > 0 && locParts[0].trim()) payload.district = locParts[0].trim();
+    if (locParts.length > 1 && locParts[1].trim()) payload.province = locParts[1].trim();
+
+    const res = await fetch(`${API_BASE}/projects/${id}/`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn(`Could not update project ${id}:`, e);
+  }
+  return null;
+}
+
+export async function apiAdjustProjectDonations(id: string | number, data: { add_amount?: number; set_raised?: number; set_goal?: number; add_donors?: number; set_donors?: number }) {
+  try {
+    const res = await fetch(`${API_BASE}/projects/${id}/adjust_donation/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn(`Could not adjust donation for project ${id}:`, e);
+  }
+  return null;
+}
+
+export async function apiDeleteProject(id: string | number) {
   try {
     const res = await fetch(`${API_BASE}/projects/${id}/`, {
       method: 'DELETE',

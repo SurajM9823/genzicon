@@ -56,9 +56,28 @@ class ImpactStatAdmin(admin.ModelAdmin):
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'district', 'province', 'status', 'raised_amount', 'target_amount', 'is_featured')
-    list_filter = ('status', 'province', 'category', 'is_featured')
-    search_fields = ('title', 'district', 'description')
+    list_display = ('title', 'category', 'district', 'raised_amount', 'target_amount', 'donor_count', 'status', 'is_featured', 'created_at')
+    list_editable = ('raised_amount', 'target_amount', 'donor_count', 'status', 'is_featured')
+    list_filter = ('status', 'category', 'province', 'is_featured')
+    search_fields = ('title', 'title_np', 'district', 'province', 'slug', 'description')
+    prepopulated_fields = {'slug': ('title',)}
+    fieldsets = (
+        ('Basic Information & SEO', {
+            'fields': ('title', 'title_np', 'slug', 'category', 'category_np', 'is_featured')
+        }),
+        ('Location & Outreach', {
+            'fields': ('district', 'province', 'beneficiaries_count')
+        }),
+        ('Donation Goals & Live Tracking', {
+            'fields': ('target_amount', 'raised_amount', 'donor_count', 'status')
+        }),
+        ('Media & Visuals', {
+            'fields': ('image_url',)
+        }),
+        ('Story & Operational Detail', {
+            'fields': ('description', 'description_np', 'full_description', 'full_description_np')
+        }),
+    )
 
 @admin.register(ClothesDonation)
 class ClothesDonationAdmin(admin.ModelAdmin):

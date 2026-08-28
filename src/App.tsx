@@ -3,7 +3,7 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomeScreen } from './components/HomeScreen';
 import { ClothesBankScreen } from './components/ClothesBankScreen';
-import { PillarsScreen } from './components/PillarsScreen';
+import { ProgramsScreen } from './components/ProgramsScreen';
 import { VolunteerScreen } from './components/VolunteerScreen';
 import { DonateScreen } from './components/DonateScreen';
 import { ContactScreen } from './components/ContactScreen';
@@ -15,29 +15,41 @@ import { VolunteerSuccessModal } from './components/VolunteerSuccessModal';
 import { NavTab, Project, DonationSubmission, VolunteerFormData, Language } from './types';
 
 // Helper to parse path from pathname or legacy hash
-function getTabFromUrl(): NavTab {
+function parseUrlState(): { tab: NavTab; slug: string | null } {
   const path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
-  if (path === 'admin' || path === 'login') return 'admin';
-  if (path === 'donate') return 'donate';
-  if (path === 'volunteer') return 'volunteer';
-  if (path === 'clothes-bank' || path === 'clothes') return 'clothes-bank';
-  if (path === 'initiatives' || path === 'projects') return 'initiatives';
-  if (path === 'contact' || path === 'about') return 'contact';
+  
+  if (path === 'admin' || path === 'login') return { tab: 'admin', slug: null };
+  if (path === 'donate') return { tab: 'donate', slug: null };
+  if (path === 'volunteer') return { tab: 'volunteer', slug: null };
+  if (path === 'clothes-bank' || path === 'clothes') return { tab: 'clothes-bank', slug: null };
+  
+  if (path.startsWith('programs/') || path.startsWith('projects/') || path.startsWith('initiatives/')) {
+    const parts = path.split('/');
+    return { tab: 'programs', slug: parts[1] || null };
+  }
+
+  if (path === 'programs' || path === 'initiatives' || path === 'projects') {
+    return { tab: 'programs', slug: null };
+  }
+
+  if (path === 'contact' || path === 'about') return { tab: 'contact', slug: null };
 
   // Fallback check for any legacy hash in URL
   const hash = window.location.hash.replace('#', '').toLowerCase();
-  if (hash === 'admin' || hash === 'login') return 'admin';
-  if (hash === 'donate') return 'donate';
-  if (hash === 'volunteer') return 'volunteer';
-  if (hash === 'clothes-bank' || hash === 'clothes') return 'clothes-bank';
-  if (hash === 'initiatives' || hash === 'projects') return 'initiatives';
-  if (hash === 'contact' || hash === 'about') return 'contact';
+  if (hash === 'admin' || hash === 'login') return { tab: 'admin', slug: null };
+  if (hash === 'donate') return { tab: 'donate', slug: null };
+  if (hash === 'volunteer') return { tab: 'volunteer', slug: null };
+  if (hash === 'clothes-bank' || hash === 'clothes') return { tab: 'clothes-bank', slug: null };
+  if (hash === 'programs' || hash === 'initiatives' || hash === 'projects') return { tab: 'programs', slug: null };
+  if (hash === 'contact' || hash === 'about') return { tab: 'contact', slug: null };
 
-  return 'impact';
+  return { tab: 'impact', slug: null };
 }
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<NavTab>(getTabFromUrl);
+  const [urlState, setUrlState] = useState<{ tab: NavTab; slug: string | null }>(parseUrlState);
+  const currentTab = urlState.tab;
+  const selectedSlug = urlState.slug;
 
   const [language, setLanguage] = useState<Language>('en');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -48,7 +60,7 @@ export default function App() {
   // Sync with browser back/forward buttons (popstate) and hash changes
   useEffect(() => {
     const handleLocationChange = () => {
-      setCurrentTab(getTabFromUrl());
+      setUrlState(parseUrlState());
     };
 
     window.addEventListener('popstate', handleLocationChange);
@@ -60,11 +72,18 @@ export default function App() {
   }, []);
 
   const handleSelectTab = (tab: NavTab) => {
-    setCurrentTab(tab);
+    setUrlState({ tab, slug: null });
     const targetPath = tab === 'impact' ? '/' : `/${tab}`;
     if (window.location.pathname !== targetPath || window.location.hash) {
       window.history.pushState(null, '', targetPath);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleOpenProgramSlug = (project: Project) => {
+    const slug = project.slug || project.id || project.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    setUrlState({ tab: 'programs', slug });
+    window.history.pushState(null, '', `/programs/${slug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -78,7 +97,7 @@ export default function App() {
   };
 
   const handleOpenProjectDetail = (project: Project) => {
-    setActiveProjectDetail(project);
+    handleOpenProgramSlug(project);
   };
 
   const handleDonateComplete = (submission: DonationSubmission) => {
@@ -112,7 +131,7 @@ export default function App() {
           <HomeScreen
             language={language}
             onSelectTab={handleSelectTab}
-            onOpenProjectDetail={handleOpenProjectDetail}
+            onOpenProjectDetail={handleOpenProgramSlug}
             onQuickDonateProject={handleOpenDonate}
           />
         )}
@@ -125,12 +144,15 @@ export default function App() {
           />
         )}
 
-        {(currentTab === 'initiatives' || currentTab === 'projects') && (
-          <PillarsScreen
+        {(currentTab === 'initiatives' || currentTab === 'projects' || currentTab === 'programs') && (
+          <ProgramsScreen
             language={language}
-            onNavigateToClothesBank={() => handleSelectTab('clothes-bank')}
-            onOpenDonateModal={() => handleOpenDonate()}
+            selectedSlug={selectedSlug}
+            onSelectProgram={(proj) => setSelectedProject(proj)}
+            onOpenDonateModal={(proj) => handleOpenDonate(proj)}
             onNavigateToVolunteer={() => handleSelectTab('volunteer')}
+            onNavigateToClothesBank={() => handleSelectTab('clothes-bank')}
+            onBackToProgramsList={() => setUrlState({ tab: 'programs', slug: null })}
           />
         )}
 

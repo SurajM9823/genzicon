@@ -2,6 +2,7 @@ export type NavTab =
   | 'impact' 
   | 'clothes-bank'
   | 'initiatives'
+  | 'programs'
   | 'about' 
   | 'team' 
   | 'volunteer' 
@@ -93,6 +94,7 @@ export interface ProjectUpdate {
 
 export interface Project {
   id: string;
+  slug?: string;
   title: string;
   titleNp?: string;
   category: string;
@@ -102,12 +104,13 @@ export interface Project {
   descriptionNp?: string;
   fullDescription?: string;
   fullDescriptionNp?: string;
-  status: 'Active' | 'Completed';
+  status: 'Active' | 'Urgent' | 'Completed';
   fundedPercentage: number;
   goalAmountNpr: number;
   raisedAmountNpr: number;
   goalAmountUsd: number;
   raisedAmountUsd: number;
+  donorCount?: number;
   location: string;
   locationNp?: string;
   beneficiaries: string;
