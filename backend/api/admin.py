@@ -9,6 +9,7 @@ from django.utils.html import format_html
 @admin.register(SiteContent)
 class SiteContentAdmin(admin.ModelAdmin):
     list_display = ('order', 'hero_title', 'hero_banner_tag', 'is_active', 'image_preview', 'updated_at')
+    list_display_links = ('hero_title',)
     list_editable = ('order', 'is_active')
     list_filter = ('is_active',)
     search_fields = ('hero_title', 'hero_title_np', 'hero_subtitle')
