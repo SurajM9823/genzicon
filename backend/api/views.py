@@ -77,8 +77,14 @@ def dashboard_overview(request):
 
 # --- Public Site Dynamic Content ---
 class SiteContentViewSet(viewsets.ModelViewSet):
-    queryset = SiteContent.objects.all()
+    queryset = SiteContent.objects.all().order_by('order', '-created_at')
     serializer_class = SiteContentSerializer
+
+    def get_queryset(self):
+        # Admins see all slides in the admin, public requests only get active slides
+        if self.request.user and self.request.user.is_staff:
+            return SiteContent.objects.all().order_by('order', '-created_at')
+        return SiteContent.objects.filter(is_active=True).order_by('order', '-created_at')
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'current']:
@@ -87,10 +93,47 @@ class SiteContentViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def current(self, request):
-        content = SiteContent.objects.first()
-        if not content:
-            content = SiteContent.objects.create()
-        return Response(SiteContentSerializer(content).data)
+        active_slides = SiteContent.objects.filter(is_active=True).order_by('order', '-created_at')
+        if not active_slides.exists():
+            active_slides = SiteContent.objects.all().order_by('order', '-created_at')
+            if not active_slides.exists():
+                SiteContent.objects.create()
+                active_slides = SiteContent.objects.all()
+
+        first = active_slides.first()
+        serialized_slides = []
+        hero_images = []
+
+        for slide in active_slides:
+            img_url = slide.hero_image.url if slide.hero_image else (slide.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600")
+            if img_url.startswith('/'):
+                img_url = request.build_absolute_uri(img_url)
+            hero_images.append(img_url)
+            serialized_slides.append({
+                'id': f"slide-{slide.id}",
+                'title': slide.hero_title,
+                'titleNp': slide.hero_title_np,
+                'subtitle': slide.hero_subtitle,
+                'subtitleNp': slide.hero_subtitle_np,
+                'tag': slide.hero_banner_tag,
+                'tagNp': slide.hero_banner_tag_np,
+                'imageUrl': img_url,
+            })
+
+        first_img = hero_images[0] if hero_images else (first.hero_image_url or "")
+
+        return Response({
+            'hero_title': first.hero_title,
+            'hero_title_np': first.hero_title_np,
+            'hero_subtitle': first.hero_subtitle,
+            'hero_subtitle_np': first.hero_subtitle_np,
+            'hero_image_url': first_img,
+            'hero_banner_tag': first.hero_banner_tag,
+            'hero_banner_tag_np': first.hero_banner_tag_np,
+            'hero_images': hero_images,
+            'hero_slides': serialized_slides,
+            'count': len(serialized_slides),
+        })
 
 
 class ImpactStatViewSet(viewsets.ModelViewSet):

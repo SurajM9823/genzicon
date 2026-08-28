@@ -9,7 +9,8 @@ import {
   MapPin, 
   ArrowRight,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Sparkles
 } from 'lucide-react';
 import { IMPACT_STATS, PROJECTS_DATA, DEFAULT_SITE_CONTENT } from '../data/mockData';
 import { Project, NavTab, Language, SiteContentConfig } from '../types';
@@ -49,11 +50,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   });
 
-  // Carousel Image Index
+  // Carousel Slides & Image Index
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const carouselImages = siteContent.heroCarouselImages && siteContent.heroCarouselImages.length > 0
-    ? siteContent.heroCarouselImages
-    : [siteContent.heroImageUrl];
+
+  const activeSlides = siteContent.heroSlides && siteContent.heroSlides.length > 0
+    ? siteContent.heroSlides
+    : (siteContent.heroImages && siteContent.heroImages.length > 0
+        ? siteContent.heroImages.map((img, idx) => ({
+            id: `slide-${idx}`,
+            title: siteContent.heroTitle,
+            titleNp: siteContent.heroTitleNp,
+            subtitle: siteContent.heroSubtitle,
+            subtitleNp: siteContent.heroSubtitleNp,
+            tag: siteContent.heroBannerTag,
+            tagNp: siteContent.heroBannerTagNp,
+            imageUrl: img,
+          }))
+        : [{
+            id: 'slide-0',
+            title: siteContent.heroTitle,
+            titleNp: siteContent.heroTitleNp,
+            subtitle: siteContent.heroSubtitle,
+            subtitleNp: siteContent.heroSubtitleNp,
+            tag: siteContent.heroBannerTag,
+            tagNp: siteContent.heroBannerTagNp,
+            imageUrl: siteContent.heroImageUrl,
+          }]
+      );
+
+  const currentSlide = activeSlides[activeSlideIndex] || activeSlides[0];
 
   useEffect(() => {
     // Initial fetch from live backend API
@@ -95,14 +120,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     };
   }, []);
 
-  // Automatic Carousel rotation if multiple images exist
+  // Automatic Carousel rotation if multiple slides exist
   useEffect(() => {
-    if (carouselImages.length <= 1) return;
+    if (activeSlides.length <= 1) return;
     const interval = setInterval(() => {
-      setActiveSlideIndex(prev => (prev + 1) % carouselImages.length);
+      setActiveSlideIndex(prev => (prev + 1) % activeSlides.length);
     }, 6000);
     return () => clearInterval(interval);
-  }, [carouselImages.length]);
+  }, [activeSlides.length]);
 
   const featuredProjects = projectsList.slice(0, 3);
   
@@ -120,7 +145,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const heroY = useTransform(smoothProgress, [0, 0.8], [0, 60]);
   const heroRotateX = useTransform(smoothProgress, [0, 0.8], [0, 12]);
 
-  const activeHeroImg = carouselImages[activeSlideIndex] || siteContent.heroImageUrl;
+  const activeHeroImg = currentSlide.imageUrl || siteContent.heroImageUrl;
 
   return (
     <div id="home-screen" className="w-full bg-[#f9f9ff] overflow-x-hidden">
@@ -143,15 +168,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/60" />
         </motion.div>
 
-        {/* Carousel Indicators & Controls if multiple images */}
-        {carouselImages.length > 1 && (
+        {/* Carousel Indicators & Controls if multiple slides */}
+        {activeSlides.length > 1 && (
           <div className="absolute bottom-4 z-20 flex items-center gap-1.5">
-            {carouselImages.map((_, idx) => (
+            {activeSlides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveSlideIndex(idx)}
                 aria-label={`Slide ${idx + 1}`}
-                className={`h-1.5 transition-all duration-300 ${
+                className={`h-1.5 transition-all duration-300 rounded-full ${
                   activeSlideIndex === idx ? 'w-6 bg-emerald-400' : 'w-2 bg-white/50 hover:bg-white'
                 }`}
               />
@@ -171,25 +196,45 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
+          {/* Badge Tag */}
+          {(currentSlide.tag || siteContent.heroBannerTag) && (
+            <motion.div
+              key={`tag-${activeSlideIndex}`}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 mb-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-white/15 text-emerald-300 border border-white/20 backdrop-blur-md"
+            >
+              <Sparkles className="w-3 h-3 text-emerald-400" />
+              <span>
+                {isNp
+                  ? (currentSlide.tagNp || siteContent.heroBannerTagNp || currentSlide.tag || siteContent.heroBannerTag)
+                  : (currentSlide.tag || siteContent.heroBannerTag)}
+              </span>
+            </motion.div>
+          )}
+
           {/* Action-Oriented Hero Title */}
           <motion.h1
+            key={`title-${activeSlideIndex}`}
             className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight font-heading"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.7 }}
+            transition={{ duration: 0.5 }}
           >
-            {isNp ? (siteContent.heroTitleNp || siteContent.heroTitle) : siteContent.heroTitle}
+            {isNp ? (currentSlide.titleNp || currentSlide.title || siteContent.heroTitleNp || siteContent.heroTitle) : (currentSlide.title || siteContent.heroTitle)}
           </motion.h1>
 
           <motion.p 
+            key={`subtitle-${activeSlideIndex}`}
             className="text-xs sm:text-sm text-white/90 mb-6 max-w-lg font-normal leading-relaxed"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.7 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
             {isNp
-              ? (siteContent.heroSubtitleNp || siteContent.heroSubtitle)
-              : siteContent.heroSubtitle}
+              ? (currentSlide.subtitleNp || currentSlide.subtitle || siteContent.heroSubtitleNp || siteContent.heroSubtitle)
+              : (currentSlide.subtitle || siteContent.heroSubtitle)}
           </motion.p>
 
           {/* Action CTAs with subtle 3D lift */}

@@ -68,18 +68,55 @@ export async function apiGetDashboardOverview() {
 // --------------------------------------------------------------------------
 export async function apiGetSiteContent() {
   try {
-    const res = await fetch(`${API_BASE}/site-content/current/`);
+    const res = await fetch(`${API_BASE}/site-content/current/`, {
+      headers: getAuthHeaders(),
+    });
     if (res.ok) {
       const data = await res.json();
       return {
-        heroTitle: data.hero_title,
-        heroTitleNp: data.hero_title_np,
-        heroSubtitle: data.hero_subtitle,
-        heroSubtitleNp: data.hero_subtitle_np,
-        heroImageUrl: data.hero_image_url,
-        heroBannerTag: data.hero_banner_tag,
-        heroBannerTagNp: data.hero_banner_tag_np,
+        heroTitle: data.hero_title || '',
+        heroTitleNp: data.hero_title_np || '',
+        heroSubtitle: data.hero_subtitle || '',
+        heroSubtitleNp: data.hero_subtitle_np || '',
+        heroImageUrl: data.hero_image_url || '',
+        heroImages: Array.isArray(data.hero_images) ? data.hero_images : [data.hero_image_url],
+        heroSlides: Array.isArray(data.hero_slides) ? data.hero_slides : undefined,
+        heroBannerTag: data.hero_banner_tag || '',
+        heroBannerTagNp: data.hero_banner_tag_np || '',
       };
+    } else {
+      // Fallback: try listing /site-content/
+      const listRes = await fetch(`${API_BASE}/site-content/`, {
+        headers: getAuthHeaders(),
+      });
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        const items = Array.isArray(listData) ? listData : (listData.results || []);
+        if (items.length > 0) {
+          const slides = items.map((item: any) => ({
+            id: `slide-${item.id}`,
+            title: item.hero_title,
+            titleNp: item.hero_title_np,
+            subtitle: item.hero_subtitle,
+            subtitleNp: item.hero_subtitle_np,
+            tag: item.hero_banner_tag,
+            tagNp: item.hero_banner_tag_np,
+            imageUrl: item.final_image_url || item.hero_image || item.hero_image_url,
+          }));
+          const first = items[0];
+          return {
+            heroTitle: first.hero_title,
+            heroTitleNp: first.hero_title_np,
+            heroSubtitle: first.hero_subtitle,
+            heroSubtitleNp: first.hero_subtitle_np,
+            heroImageUrl: first.final_image_url || first.hero_image || first.hero_image_url,
+            heroImages: slides.map((s: any) => s.imageUrl),
+            heroSlides: slides,
+            heroBannerTag: first.hero_banner_tag,
+            heroBannerTagNp: first.hero_banner_tag_np,
+          };
+        }
+      }
     }
   } catch (e) {
     console.warn('Could not fetch live site content:', e);

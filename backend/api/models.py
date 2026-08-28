@@ -11,22 +11,38 @@ def generate_receipt_number():
     return f"REC-{get_random_string(6).upper()}"
 
 class SiteContent(models.Model):
-    """Dynamic Website CMS Hero Content & Taglines"""
-    hero_title = models.CharField(max_length=255, default="Grassroots Youth-Led Transformation Across Nepal")
-    hero_title_np = models.CharField(max_length=255, default="नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण")
-    hero_subtitle = models.TextField(default="Bridging immediate community needs through civic transparency, verified ground impact, youth volunteer taskforces, and zero administrative waste.")
-    hero_subtitle_np = models.TextField(default="पारदर्शी सेवा, प्रमाणित प्रभाव, युवा स्वयंसेवक परिचालन र प्रत्यक्ष सहयोग मार्फत समुदाय सशक्तिकरण।")
-    hero_image_url = models.URLField(max_length=500, default="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600")
-    hero_banner_tag = models.CharField(max_length=100, default="Grassroots Youth NGO")
-    hero_banner_tag_np = models.CharField(max_length=100, default="युवा नेतृत्व गैरसरकारी संस्था")
+    """Dynamic Website CMS Hero Content & Carousel Slides"""
+    hero_title = models.CharField(max_length=255, default="Grassroots Youth-Led Transformation Across Nepal", verbose_name="Hero Title (English)")
+    hero_title_np = models.CharField(max_length=255, default="नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण", verbose_name="Hero Title (Nepali)")
+    hero_subtitle = models.TextField(default="Bridging immediate community needs through civic transparency, verified ground impact, youth volunteer taskforces, and zero administrative waste.", verbose_name="Subtitle (English)")
+    hero_subtitle_np = models.TextField(default="पारदर्शी सेवा, प्रमाणित प्रभाव, युवा स्वयंसेवक परिचालन र प्रत्यक्ष सहयोग मार्फत समुदाय सशक्तिकरण।", verbose_name="Subtitle (Nepali)")
+    
+    # Image upload OR external URL
+    hero_image = models.ImageField(upload_to='hero_slides/', blank=True, null=True, verbose_name="Upload Hero Image (File)")
+    hero_image_url = models.URLField(max_length=500, default="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600", blank=True, null=True, verbose_name="Or Image URL (Unsplash / CDN)")
+    
+    hero_banner_tag = models.CharField(max_length=100, default="Grassroots Youth NGO", verbose_name="Badge Tag (English)")
+    hero_banner_tag_np = models.CharField(max_length=100, default="युवा नेतृत्व गैरसरकारी संस्था", verbose_name="Badge Tag (Nepali)")
+    
+    order = models.PositiveIntegerField(default=0, verbose_name="Slide Display Order")
+    is_active = models.BooleanField(default=True, verbose_name="Is Active Slide?")
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Site Hero & Content"
-        verbose_name_plural = "Site Hero & Content"
+        ordering = ['order', '-created_at']
+        verbose_name = "Hero Carousel Slide"
+        verbose_name_plural = "Hero Carousel Slides"
+
+    @property
+    def final_image_url(self):
+        if self.hero_image:
+            return self.hero_image.url
+        return self.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600"
 
     def __str__(self):
-        return f"Site Hero CMS (Updated: {self.updated_at.strftime('%Y-%m-%d')})"
+        status = "Active" if self.is_active else "Inactive"
+        return f"Slide #{self.order}: {self.hero_title[:40]} [{status}]"
 
 class ImpactStat(models.Model):
     """Live Statistical Counters shown on homepage"""

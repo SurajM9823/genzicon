@@ -10,9 +10,19 @@ class ImpactStatSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SiteContentSerializer(serializers.ModelSerializer):
+    final_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = SiteContent
         fields = '__all__'
+
+    def get_final_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.hero_image:
+            if request is not None:
+                return request.build_absolute_uri(obj.hero_image.url)
+            return obj.hero_image.url
+        return obj.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600"
 
 class ProjectSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.SerializerMethodField()

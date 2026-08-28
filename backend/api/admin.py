@@ -4,9 +4,36 @@ from .models import (
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry
 )
 
+from django.utils.html import format_html
+
 @admin.register(SiteContent)
 class SiteContentAdmin(admin.ModelAdmin):
-    list_display = ('hero_title', 'hero_banner_tag', 'updated_at')
+    list_display = ('order', 'hero_title', 'hero_banner_tag', 'is_active', 'image_preview', 'updated_at')
+    list_editable = ('order', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('hero_title', 'hero_title_np', 'hero_subtitle')
+    fieldsets = (
+        ('Slide Visibility & Order', {
+            'fields': ('is_active', 'order')
+        }),
+        ('English Content', {
+            'fields': ('hero_banner_tag', 'hero_title', 'hero_subtitle')
+        }),
+        ('Nepali Content (नेपाली सामग्री)', {
+            'fields': ('hero_banner_tag_np', 'hero_title_np', 'hero_subtitle_np')
+        }),
+        ('Slide Image (Upload Image File OR URL)', {
+            'fields': ('hero_image', 'hero_image_url'),
+            'description': 'You can upload an image file from your computer OR paste an image URL.'
+        }),
+    )
+
+    def image_preview(self, obj):
+        url = obj.hero_image.url if obj.hero_image else obj.hero_image_url
+        if url:
+            return format_html('<img src="{}" style="width: 70px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc;" />', url)
+        return "-"
+    image_preview.short_description = "Image Preview"
 
 @admin.register(ImpactStat)
 class ImpactStatAdmin(admin.ModelAdmin):
