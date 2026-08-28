@@ -326,3 +326,24 @@ export interface BankAndQrConfig {
   hotlineEmail: string;
 }
 
+export interface ClothesHubConfig {
+  hubName: string;
+  hubNameNp: string;
+  address: string;
+  addressNp: string;
+  landmark: string;
+  landmarkNp: string;
+  city: string;
+  district: string;
+  province: string;
+  phone1: string;
+  phone2: string;
+  email?: string;
+  operatingHours: string;
+  operatingHoursNp: string;
+  mapEmbedUrl: string;
+  googleMapsDirectionsUrl: string;
+  contactNote: string;
+  contactNoteNp: string;
+}
+

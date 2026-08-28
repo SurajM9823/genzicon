@@ -18,7 +18,8 @@ import {
   ContactMessage,
   SiteContentConfig,
   BankAndQrConfig,
-  Language 
+  Language,
+  ClothesHubConfig
 } from '../types';
 import { 
   DEFAULT_SITE_CONTENT, 
@@ -28,7 +29,8 @@ import {
   INITIAL_DONATION_RECORDS, 
   SAMPLE_CLOTHES_DONATION_REQUESTS, 
   SAMPLE_CLOTHES_ASSISTANCE_REQUESTS,
-  INITIAL_CONTACT_MESSAGES
+  INITIAL_CONTACT_MESSAGES,
+  DEFAULT_CLOTHES_HUB_CONFIG
 } from '../data/mockData';
 import {
   apiAdminLogin,
@@ -41,7 +43,9 @@ import {
   apiGetClothesDonations,
   apiGetVolunteers,
   apiGetDonations,
-  apiGetContacts
+  apiGetContacts,
+  apiGetClothesHubConfig,
+  apiSaveClothesHubConfig
 } from '../services/api';
 import { AdminHeader, AdminTabType } from './admin/AdminHeader';
 import { AdminOverviewTab } from './admin/AdminOverviewTab';
@@ -160,6 +164,16 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     }
   });
 
+  // 8. Clothes Bank Hub Configuration (Location, Map Embed, 2+ Phones, Hours)
+  const [hubConfig, setHubConfig] = useState<ClothesHubConfig>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_clothes_hub_config');
+      return saved ? JSON.parse(saved) : DEFAULT_CLOTHES_HUB_CONFIG;
+    } catch {
+      return DEFAULT_CLOTHES_HUB_CONFIG;
+    }
+  });
+
   // Synchronize state changes to localStorage and backend API
   useEffect(() => {
     // Listen for real-time clothes donations, volunteer registrations, and other updates
@@ -196,12 +210,25 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
             setContacts(parsed);
           }
         }
+
+        const savedHub = localStorage.getItem('genzicon_clothes_hub_config');
+        if (savedHub) {
+          try {
+            const parsedHub = JSON.parse(savedHub);
+            if (parsedHub && parsedHub.hubName) {
+              setHubConfig(parsedHub);
+            }
+          } catch (e) {
+            console.warn('Error parsing cached hub config:', e);
+          }
+        }
       } catch (e) {
         console.warn('Error reading updated data in Admin event listener:', e);
       }
     };
 
     window.addEventListener('genzicon_clothes_updated', handleSyncFromLocalStorage);
+    window.addEventListener('genzicon_clothes_hub_updated', handleSyncFromLocalStorage);
     window.addEventListener('storage', handleSyncFromLocalStorage);
 
     // Initial check on mount
@@ -210,6 +237,7 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     if (!isAuthenticated) {
       return () => {
         window.removeEventListener('genzicon_clothes_updated', handleSyncFromLocalStorage);
+        window.removeEventListener('genzicon_clothes_hub_updated', handleSyncFromLocalStorage);
         window.removeEventListener('storage', handleSyncFromLocalStorage);
       };
     }
@@ -222,7 +250,8 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           liveClothes,
           liveVolunteers,
           liveDonations,
-          liveContacts
+          liveContacts,
+          liveHubConfig
         ] = await Promise.all([
           apiGetSiteContent(),
           apiGetProjects(),
@@ -230,6 +259,7 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           apiGetVolunteers(),
           apiGetDonations(),
           apiGetContacts(),
+          apiGetClothesHubConfig(),
         ]);
 
         if (liveContent) setSiteContent(prev => ({ ...prev, ...liveContent }));
@@ -250,6 +280,10 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
         if (liveVolunteers && liveVolunteers.length > 0) setVolunteers(liveVolunteers);
         if (liveDonations && liveDonations.length > 0) setDonations(liveDonations);
         if (liveContacts && liveContacts.length > 0) setContacts(liveContacts);
+        if (liveHubConfig && liveHubConfig.hubName) {
+          setHubConfig(liveHubConfig);
+          localStorage.setItem('genzicon_clothes_hub_config', JSON.stringify(liveHubConfig));
+        }
       } catch (err) {
         console.warn('Backend sync in Admin:', err);
       }
@@ -259,6 +293,7 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
 
     return () => {
       window.removeEventListener('genzicon_clothes_updated', handleSyncFromLocalStorage);
+      window.removeEventListener('genzicon_clothes_hub_updated', handleSyncFromLocalStorage);
       window.removeEventListener('storage', handleSyncFromLocalStorage);
     };
   }, [isAuthenticated]);
@@ -312,6 +347,13 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
   const handleSaveContacts = (updatedContacts: ContactMessage[]) => {
     setContacts(updatedContacts);
     localStorage.setItem('genzicon_contacts', JSON.stringify(updatedContacts));
+  };
+
+  const handleSaveHubConfig = async (updated: ClothesHubConfig) => {
+    setHubConfig(updated);
+    localStorage.setItem('genzicon_clothes_hub_config', JSON.stringify(updated));
+    window.dispatchEvent(new Event('genzicon_clothes_hub_updated'));
+    await apiSaveClothesHubConfig(updated);
   };
 
   // Auth Handling
@@ -513,6 +555,8 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
             language={language}
             clothesDonations={clothesDonations}
             onSaveClothesDonations={handleSaveClothesDonations}
+            hubConfig={hubConfig}
+            onSaveHubConfig={handleSaveHubConfig}
           />
         )}
 

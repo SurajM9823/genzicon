@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Shirt, 
@@ -22,23 +22,71 @@ import {
   PackageOpen,
   Info
 } from 'lucide-react';
-import { Language, ClothesDonationRequest } from '../types';
-import { SAMPLE_CLOTHES_DONATION_REQUESTS } from '../data/mockData';
-import { apiSubmitClothesDonation } from '../services/api';
+import { Language, ClothesDonationRequest, ClothesHubConfig } from '../types';
+import { SAMPLE_CLOTHES_DONATION_REQUESTS, DEFAULT_CLOTHES_HUB_CONFIG } from '../data/mockData';
+import { apiSubmitClothesDonation, apiGetClothesHubConfig, getCleanMapEmbedUrl } from '../services/api';
 import { ClothesDonorSlider } from './ClothesDonorSlider';
 
 interface ClothesBankScreenProps {
   language: Language;
+  hubConfig?: ClothesHubConfig;
   onOpenDonateModal: () => void;
   onNavigateToVolunteer: () => void;
 }
 
 export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
   language,
+  hubConfig: propHubConfig,
   onOpenDonateModal,
   onNavigateToVolunteer
 }) => {
   const isNp = language === 'np';
+
+  // Dynamic Clothes Hub Configuration State
+  const [hubConfig, setHubConfig] = useState<ClothesHubConfig>(() => {
+    if (propHubConfig) return propHubConfig;
+    try {
+      const saved = localStorage.getItem('genzicon_clothes_hub_config');
+      return saved ? JSON.parse(saved) : DEFAULT_CLOTHES_HUB_CONFIG;
+    } catch {
+      return DEFAULT_CLOTHES_HUB_CONFIG;
+    }
+  });
+
+  useEffect(() => {
+    if (propHubConfig) {
+      setHubConfig(propHubConfig);
+    }
+  }, [propHubConfig]);
+
+  useEffect(() => {
+    const handleSyncHub = () => {
+      try {
+        const saved = localStorage.getItem('genzicon_clothes_hub_config');
+        if (saved) {
+          setHubConfig(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.warn('Error reading clothes hub config:', e);
+      }
+    };
+
+    window.addEventListener('genzicon_clothes_hub_updated', handleSyncHub);
+    window.addEventListener('storage', handleSyncHub);
+
+    // Also fetch from live backend
+    apiGetClothesHubConfig().then(liveConfig => {
+      if (liveConfig) {
+        setHubConfig(liveConfig);
+        localStorage.setItem('genzicon_clothes_hub_config', JSON.stringify(liveConfig));
+      }
+    });
+
+    return () => {
+      window.removeEventListener('genzicon_clothes_hub_updated', handleSyncHub);
+      window.removeEventListener('storage', handleSyncHub);
+    };
+  }, []);
 
   // Clothes Donation Form State
   const [donorName, setDonorName] = useState('');
@@ -500,11 +548,11 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                 </span>
               </div>
 
-              {/* Map View Frame */}
-              <div className="relative w-full h-48 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden">
+              {/* Map View Frame with dynamic embed URL */}
+              <div className="relative w-full h-52 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden">
                 <iframe
                   title="Genzicon Clothes Bank Central Hub Map"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp"
+                  src={getCleanMapEmbedUrl(hubConfig.mapEmbedUrl)}
                   width="100%"
                   height="100%"
                   style={{ border: 0 }}
@@ -519,25 +567,48 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                   <h5 className="text-xs font-bold text-[#111c2d] uppercase tracking-wider">
                     {isNp ? 'केन्द्रको आधिकारिक ठेगाना:' : 'Official Receiving Station:'}
                   </h5>
-                  <p className="text-xs text-[#434653] font-medium mt-0.5">
-                    <strong>Genzicon Clothes Bank Nepal</strong><br />
-                    Tinkune / New Baneshwor (Near Ring Road), Kathmandu 44600<br />
-                    {isNp ? 'समय: बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)' : 'Hours: 8:00 AM – 6:00 PM Daily (Open Saturdays)'}
-                  </p>
+                  <div className="text-xs text-[#434653] font-medium mt-0.5 space-y-0.5">
+                    <strong className="text-[#003c90] text-sm block">
+                      {isNp ? (hubConfig.hubNameNp || hubConfig.hubName) : hubConfig.hubName}
+                    </strong>
+                    <div>{isNp ? (hubConfig.addressNp || hubConfig.address) : hubConfig.address}</div>
+                    {(hubConfig.landmark || hubConfig.landmarkNp) && (
+                      <div className="text-[#737784]">
+                        {isNp ? (hubConfig.landmarkNp || hubConfig.landmark) : hubConfig.landmark}
+                      </div>
+                    )}
+                    <div className="text-[#00743a] font-semibold pt-0.5">
+                      {isNp 
+                        ? (hubConfig.operatingHoursNp ? `समय: ${hubConfig.operatingHoursNp}` : `समय: ${hubConfig.operatingHours}`)
+                        : `Hours: ${hubConfig.operatingHours}`}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="p-3 bg-[#f0f4fc] border border-[#d8e3fb] space-y-1.5">
-                  <div className="flex items-center gap-2 text-xs font-bold text-[#003c90]">
-                    <Phone className="w-3.5 h-3.5 text-[#00743a]" />
-                    <span>9823000000 / 01-4240000</span>
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-[#003c90]">
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-[#00743a]" />
+                      <a href={`tel:${hubConfig.phone1.replace(/\s+/g, '')}`} className="hover:underline">
+                        {hubConfig.phone1}
+                      </a>
+                    </div>
+                    {hubConfig.phone2 && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#d8e3fb]">/</span>
+                        <a href={`tel:${hubConfig.phone2.replace(/\s+/g, '')}`} className="hover:underline">
+                          {hubConfig.phone2}
+                        </a>
+                      </div>
+                    )}
                   </div>
                   <p className="text-[11px] text-[#737784]">
-                    {isNp ? 'पठाओ राइडर वा गाडी आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।' : 'Direct phone contact for rider delivery & parcel coordination.'}
+                    {isNp ? (hubConfig.contactNoteNp || hubConfig.contactNote) : hubConfig.contactNote}
                   </p>
                 </div>
 
                 <a
-                  href="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal"
+                  href={hubConfig.googleMapsDirectionsUrl || `https://maps.google.com/?q=${encodeURIComponent(hubConfig.address + ', ' + hubConfig.city)}`}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-2.5 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-xs"

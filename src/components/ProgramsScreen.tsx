@@ -507,60 +507,31 @@ export const ProgramsScreen: React.FC<ProgramsScreenProps> = ({
   // --------------------------------------------------------------------------
   return (
     <div id="programs-directory-screen" className="w-full pt-14 pb-20 bg-[#f9f9ff] min-h-screen">
-      {/* Header Hero Banner */}
-      <div className="bg-[#003c90] text-white border-b border-[#002660]">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      {/* Header Hero Banner with Rich Photographic Background & Gradient Overlay */}
+      <div className="relative bg-[#002660] text-white border-b border-[#001d4a] overflow-hidden">
+        {/* Background Image with subtle zoom & high-clarity overlay */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1920&q=80"
+            alt="Genzicon Foundation Community Programs in Nepal"
+            className="w-full h-full object-cover object-center transform scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#001d4a]/95 via-[#003c90]/88 to-[#001d4a]/90 backdrop-blur-[1px]" />
+        </div>
+
+        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <div className="max-w-3xl">
-            <span className="inline-block px-2.5 py-1 bg-white/10 text-blue-100 text-[10px] font-black uppercase tracking-wider mb-3">
+            <span className="inline-block px-2.5 py-1 bg-white/15 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-3 border border-white/20 backdrop-blur-xs">
               {isNp ? 'नेपालभर सञ्चालित सामाजिक कार्यक्रमहरू' : 'Grassroots Field Initiatives Across Nepal'}
             </span>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-3 font-heading">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-3 font-heading text-white drop-shadow-xs">
               {isNp ? 'सक्रिय ग्राउन्ड कार्यक्रमहरू तथा परियोजनाहरू' : 'Active Ground Programs & Field Initiatives'}
             </h1>
-            <p className="text-xs sm:text-sm text-blue-100 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-blue-100/90 font-normal leading-relaxed max-w-2xl">
               {isNp
                 ? 'कपडा बैंक, चुरे वृक्षारोपण, महिला सिलाई तालिम र आपतकालीन राहत सहितका सम्पूर्ण स्थलगत कार्यक्रमहरूको प्रत्यक्ष प्रगति तथा आर्थिक विवरण।'
                 : 'Explore all active campaigns with verified real-time funding progress, beneficiary metrics, and direct donation tracking.'}
             </p>
-          </div>
-
-          {/* Quick Aggregate Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-6 border-t border-white/15">
-            <div className="bg-white/10 p-3 border border-white/10">
-              <span className="block text-lg sm:text-xl font-black text-white font-mono font-heading">
-                {activeCount}
-              </span>
-              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">
-                {isNp ? 'सक्रिय परियोजना' : 'Active Programs'}
-              </span>
-            </div>
-
-            <div className="bg-white/10 p-3 border border-white/10">
-              <span className="block text-lg sm:text-xl font-black text-white font-mono font-heading">
-                रू {(totalRaised / 100000).toFixed(1)}L+
-              </span>
-              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">
-                {isNp ? 'कुल संकलित सहयोग' : 'Total Funds Raised'}
-              </span>
-            </div>
-
-            <div className="bg-white/10 p-3 border border-white/10">
-              <span className="block text-lg sm:text-xl font-black text-white font-mono font-heading">
-                {totalDonors.toLocaleString()}+
-              </span>
-              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">
-                {isNp ? 'सहयोगी दाताहरू' : 'Verified Donors'}
-              </span>
-            </div>
-
-            <div className="bg-white/10 p-3 border border-white/10">
-              <span className="block text-lg sm:text-xl font-black text-white font-mono font-heading">
-                77
-              </span>
-              <span className="text-[10px] text-blue-100 uppercase tracking-wider font-semibold">
-                {isNp ? 'जिल्ला सञ्जाल' : 'Districts Reach'}
-              </span>
-            </div>
           </div>
         </div>
       </div>

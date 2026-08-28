@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
 )
 
 class ImpactStatSerializer(serializers.ModelSerializer):
@@ -74,3 +74,9 @@ class ContactInquirySerializer(serializers.ModelSerializer):
         model = ContactInquiry
         fields = '__all__'
         read_only_fields = ['created_at']
+
+class ClothesHubConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClothesHubConfig
+        fields = '__all__'
+        read_only_fields = ['updated_at']

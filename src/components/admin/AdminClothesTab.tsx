@@ -21,37 +21,88 @@ import {
   Quote,
   ShieldCheck,
   Building2,
-  Send
+  Send,
+  Map,
+  Navigation,
+  ExternalLink,
+  Save,
+  RotateCcw,
+  HelpCircle,
+  Eye
 } from 'lucide-react';
 import { 
   ClothesDonationRequest, 
   ClothesDonor, 
-  Language 
+  Language,
+  ClothesHubConfig 
 } from '../../types';
-import { SAMPLE_CLOTHES_DONORS } from '../../data/mockData';
+import { SAMPLE_CLOTHES_DONORS, DEFAULT_CLOTHES_HUB_CONFIG } from '../../data/mockData';
 import { 
   apiUpdateClothesStatus, 
   apiGetClothesDonors, 
   apiCreateClothesDonor, 
   apiUpdateClothesDonor, 
-  apiDeleteClothesDonor 
+  apiDeleteClothesDonor,
+  apiSaveClothesHubConfig,
+  getCleanMapEmbedUrl
 } from '../../services/api';
 
 interface AdminClothesTabProps {
   language: Language;
   clothesDonations: ClothesDonationRequest[];
   onSaveClothesDonations: (updated: ClothesDonationRequest[]) => void;
+  hubConfig?: ClothesHubConfig;
+  onSaveHubConfig?: (config: ClothesHubConfig) => void;
 }
 
 export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
   language,
   clothesDonations,
   onSaveClothesDonations,
+  hubConfig: propHubConfig,
+  onSaveHubConfig
 }) => {
   const isNp = language === 'np';
-  const [activeSubTab, setActiveSubTab] = useState<'donors' | 'donations'>('donors');
+  const [activeSubTab, setActiveSubTab] = useState<'donors' | 'donations' | 'hub_config'>('donors');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // Hub Configuration State
+  const [hubForm, setHubForm] = useState<ClothesHubConfig>(() => {
+    if (propHubConfig) return propHubConfig;
+    try {
+      const saved = localStorage.getItem('genzicon_clothes_hub_config');
+      return saved ? JSON.parse(saved) : DEFAULT_CLOTHES_HUB_CONFIG;
+    } catch {
+      return DEFAULT_CLOTHES_HUB_CONFIG;
+    }
+  });
+  const [hubSaveToast, setHubSaveToast] = useState(false);
+
+  useEffect(() => {
+    if (propHubConfig) {
+      setHubForm(propHubConfig);
+    }
+  }, [propHubConfig]);
+
+  const handleSaveHubForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSaveHubConfig) {
+      onSaveHubConfig(hubForm);
+    } else {
+      localStorage.setItem('genzicon_clothes_hub_config', JSON.stringify(hubForm));
+      window.dispatchEvent(new Event('genzicon_clothes_hub_updated'));
+      await apiSaveClothesHubConfig(hubForm);
+    }
+    setHubSaveToast(true);
+    setTimeout(() => setHubSaveToast(false), 3500);
+  };
+
+  const handleResetHubForm = () => {
+    if (confirm('Reset Central Hub location, phones, hours, and map to default Tinkune Hub?')) {
+      setHubForm(DEFAULT_CLOTHES_HUB_CONFIG);
+    }
+  };
 
   // Clothes Donors List State
   const [donors, setDonors] = useState<ClothesDonor[]>(() => {
@@ -349,17 +400,17 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
         </div>
       </div>
 
-      {/* Sub Tabs: Donors Wall vs Dispatches */}
-      <div className="flex items-center justify-between border-b border-[#d8e3fb] bg-white p-1">
-        <div className="flex items-center gap-1">
+      {/* Sub Tabs: Donors Wall vs Dispatches vs Central Hub Config */}
+      <div className="flex flex-wrap items-center justify-between border-b border-[#d8e3fb] bg-white p-1 gap-2">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => {
               setActiveSubTab('donors');
               setSearchTerm('');
             }}
-            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
               activeSubTab === 'donors'
-                ? 'bg-[#003c90] text-white'
+                ? 'bg-[#003c90] text-white shadow-xs'
                 : 'text-[#434653] hover:bg-[#f0f3ff]'
             }`}
           >
@@ -373,15 +424,30 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
               setActiveSubTab('donations');
               setSearchTerm('');
             }}
-            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors ${
+            className={`px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
               activeSubTab === 'donations'
-                ? 'bg-[#003c90] text-white'
+                ? 'bg-[#003c90] text-white shadow-xs'
                 : 'text-[#434653] hover:bg-[#f0f3ff]'
             }`}
           >
             <Truck className="w-4 h-4" />
             <span>{isNp ? '२. आएका संकलन / पार्सल विवरण' : '2. Incoming Dispatches'}</span>
             <span className="px-1.5 py-0.2 bg-white/20 text-[10px]">{clothesDonations.length}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveSubTab('hub_config');
+              setSearchTerm('');
+            }}
+            className={`px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
+              activeSubTab === 'hub_config'
+                ? 'bg-[#00743a] text-white shadow-xs'
+                : 'text-[#434653] hover:bg-[#f0f3ff]'
+            }`}
+          >
+            <Map className="w-4 h-4 text-emerald-300" />
+            <span>{isNp ? '३. मुख्य केन्द्र, फोन र गुगल म्याप (Hub & Map)' : '3. Central Hub & Google Maps Settings'}</span>
           </button>
         </div>
 
@@ -396,13 +462,15 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
             </button>
           )}
 
-          <button
-            onClick={handleExportCSV}
-            className="px-3 py-1.5 bg-white border border-[#d8e3fb] hover:bg-[#f0f3ff] text-[#003c90] text-xs font-bold flex items-center gap-1.5 transition-colors"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">CSV Export</span>
-          </button>
+          {activeSubTab !== 'hub_config' && (
+            <button
+              onClick={handleExportCSV}
+              className="px-3 py-1.5 bg-white border border-[#d8e3fb] hover:bg-[#f0f3ff] text-[#003c90] text-xs font-bold flex items-center gap-1.5 transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">CSV Export</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -673,6 +741,487 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
             </table>
           </div>
         </div>
+      )}
+
+      {/* SUB-TAB 3: CENTRAL CLOTHES HUB & GOOGLE MAPS CONFIGURATION */}
+      {activeSubTab === 'hub_config' && (
+        <form onSubmit={handleSaveHubForm} className="space-y-6">
+          {/* Header Bar */}
+          <div className="bg-white p-4 sm:p-5 border border-[#d8e3fb] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-[#111c2d] font-heading flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-[#00743a]" />
+                <span>
+                  {isNp ? 'काठमाडौँ मुख्य कपडा संकलन केन्द्र, फोन र म्याप व्यवस्थापन' : 'Central Clothes Hub Location, Phones & Google Maps'}
+                </span>
+              </h3>
+              <p className="text-xs text-[#737784] mt-0.5">
+                {isNp 
+                  ? 'कपडा बैंक पृष्ठको नक्सा, २ वटा मोबाइल नम्बर, खुल्ने समय र ठेगाना यहाँबाट सम्पादन गर्नुहोस्।' 
+                  : 'Update the live interactive Google Map embed, hotline contact numbers (at least 2), address, and operating hours.'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {hubSaveToast && (
+                <div className="flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 border border-emerald-200 animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>{isNp ? 'सार्वजनिक पृष्ठमा प्रकाशित भयो!' : 'Published Live!'}</span>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleResetHubForm}
+                className="px-3 py-2 bg-[#f9f9ff] hover:bg-[#f0f3ff] text-[#434653] text-xs font-bold border border-[#d8e3fb] flex items-center gap-1 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{isNp ? 'डिफल्ट फर्काउनुहोस्' : 'Reset Defaults'}</span>
+              </button>
+
+              <button
+                type="submit"
+                className="px-4 py-2 bg-[#00743a] hover:bg-[#00542a] text-white text-xs font-bold uppercase tracking-wider shadow-xs flex items-center gap-1.5 transition-colors"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>{isNp ? 'सेभ र अपडेट गर्नुहोस्' : 'Save & Publish Live'}</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left 7 Cols: Inputs */}
+            <div className="lg:col-span-7 space-y-5">
+              {/* Section 1: Hub Names & Address */}
+              <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
+                  <Building2 className="w-4 h-4 text-[#003c90]" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
+                    {isNp ? '१. संकलन केन्द्रको नाम र ठेगाना (Hub Identity & Address)' : '1. Hub Identity & Drop-off Location'}
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'केन्द्रको नाम (English) *' : 'Hub Name (English) *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={hubForm.hubName}
+                      onChange={(e) => setHubForm({ ...hubForm, hubName: e.target.value })}
+                      placeholder="e.g. Genzicon Clothes Bank Nepal - Central Hub"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'केन्द्रको नाम (नेपाली)' : 'Hub Name (Nepali)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.hubNameNp}
+                      onChange={(e) => setHubForm({ ...hubForm, hubNameNp: e.target.value })}
+                      placeholder="जस्तै: जेन्जिकन कपडा बैंक नेपाल - मुख्य संकलन केन्द्र"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'सडक / टोल ठेगाना (English) *' : 'Street / Area Address (English) *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={hubForm.address}
+                      onChange={(e) => setHubForm({ ...hubForm, address: e.target.value })}
+                      placeholder="e.g. Tinkune / New Baneshwor (Near Ring Road)"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'सडक / टोल ठेगाना (नेपाली)' : 'Street / Area Address (Nepali)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.addressNp}
+                      onChange={(e) => setHubForm({ ...hubForm, addressNp: e.target.value })}
+                      placeholder="जस्तै: तीनकुने / नयाँ बानेश्वर (रिङ रोड नजिक)"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'नजिकको चिनारी / ल्यान्डमार्क (English)' : 'Landmark & Postal Code (English)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.landmark}
+                      onChange={(e) => setHubForm({ ...hubForm, landmark: e.target.value })}
+                      placeholder="e.g. Opposite to Central Park, Kathmandu 44600"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'नजिकको चिनारी / ल्यान्डमार्क (नेपाली)' : 'Landmark & Postal Code (Nepali)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.landmarkNp}
+                      onChange={(e) => setHubForm({ ...hubForm, landmarkNp: e.target.value })}
+                      placeholder="जस्तै: सेन्ट्रल पार्क अगाडि, काठमाडौँ ४४६००"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'सहर / जिल्ला' : 'City & District'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.city}
+                      onChange={(e) => setHubForm({ ...hubForm, city: e.target.value, district: e.target.value })}
+                      placeholder="Kathmandu"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'प्रदेश' : 'Province'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.province}
+                      onChange={(e) => setHubForm({ ...hubForm, province: e.target.value })}
+                      placeholder="Bagmati Province"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Contact Phone Numbers (Support at least 2 numbers) */}
+              <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
+                  <Phone className="w-4 h-4 text-[#00743a]" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
+                    {isNp ? '२. सम्पर्क फोन नम्बरहरू (At Least 2 Contact Numbers)' : '2. Contact Phone Numbers & Dispatch Hotline'}
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'मुख्य हटलाइन फोन / मोबाइल १ *' : 'Primary Mobile / Hotline 1 *'}
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#00743a]" />
+                      <input
+                        type="text"
+                        required
+                        value={hubForm.phone1}
+                        onChange={(e) => setHubForm({ ...hubForm, phone1: e.target.value })}
+                        placeholder="e.g. 9823000000"
+                        className="w-full pl-9 pr-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white font-mono font-bold"
+                      />
+                    </div>
+                    <p className="text-[10px] text-[#737784] mt-1">
+                      {isNp ? 'पठाओ, इनड्राइभ वा दाताले फोन गर्ने पहिलो नम्बर।' : 'Direct line for riders, courier parcels & donors.'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'सहायक फोन / ह्वाट्सएप २ *' : 'Secondary Phone / WhatsApp 2 *'}
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[#003c90]" />
+                      <input
+                        type="text"
+                        required
+                        value={hubForm.phone2}
+                        onChange={(e) => setHubForm({ ...hubForm, phone2: e.target.value })}
+                        placeholder="e.g. 01-4240000 or 9841000000"
+                        className="w-full pl-9 pr-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white font-mono font-bold"
+                      />
+                    </div>
+                    <p className="text-[10px] text-[#737784] mt-1">
+                      {isNp ? 'वैकल्पिक सम्पर्क वा कार्यालयको ल्यान्डलाइन।' : 'Alternative contact or office landline.'}
+                    </p>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'इमेल ठेगाना' : 'Hub Email (Optional)'}
+                    </label>
+                    <input
+                      type="email"
+                      value={hubForm.email || ''}
+                      onChange={(e) => setHubForm({ ...hubForm, email: e.target.value })}
+                      placeholder="clothes@genzicon.com"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Operating Hours & Rider Coordination Note */}
+              <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
+                  <Clock className="w-4 h-4 text-[#003c90]" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
+                    {isNp ? '३. खुल्ने समय र ढुवानी निर्देशन' : '3. Operating Hours & Dispatch Instructions'}
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'समय (English) *' : 'Operating Hours (English) *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={hubForm.operatingHours}
+                      onChange={(e) => setHubForm({ ...hubForm, operatingHours: e.target.value })}
+                      placeholder="8:00 AM – 6:00 PM Daily (Open Saturdays)"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'समय (नेपाली)' : 'Operating Hours (Nepali)'}
+                    </label>
+                    <input
+                      type="text"
+                      value={hubForm.operatingHoursNp}
+                      onChange={(e) => setHubForm({ ...hubForm, operatingHoursNp: e.target.value })}
+                      placeholder="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'राइडर तथा ढुवानी निर्देशन नोट (English)' : 'Rider / Delivery Instruction Note (English)'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={hubForm.contactNote}
+                      onChange={(e) => setHubForm({ ...hubForm, contactNote: e.target.value })}
+                      placeholder="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination."
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'राइडर तथा ढुवानी निर्देशन नोट (नेपाली)' : 'Rider / Delivery Instruction Note (Nepali)'}
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={hubForm.contactNoteNp}
+                      onChange={(e) => setHubForm({ ...hubForm, contactNoteNp: e.target.value })}
+                      placeholder="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।"
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 4: Google Maps Embed Code & Directions Link */}
+              <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
+                  <Map className="w-4 h-4 text-[#003c90]" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
+                    {isNp ? '४. गुगल म्याप एम्बेड कोड तथा डाइरेक्सन लिङ्क' : '4. Google Maps iFrame Embed & Directions Link'}
+                  </h4>
+                </div>
+
+                <div className="space-y-3.5 text-xs">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold text-[#111c2d] uppercase tracking-wider">
+                        {isNp ? 'गुगल म्याप iFrame Embed कोड वा लिङ्क *' : 'Google Maps iFrame Embed Code or URL *'}
+                      </label>
+                      <span className="text-[11px] text-[#003c90] font-bold">
+                        {isNp ? 'iFrame कोड सिधै पेस्ट गर्न सकिन्छ' : 'Accepts full <iframe ...> tag or URL'}
+                      </span>
+                    </div>
+
+                    <textarea
+                      rows={4}
+                      required
+                      value={hubForm.mapEmbedUrl}
+                      onChange={(e) => setHubForm({ ...hubForm, mapEmbedUrl: e.target.value })}
+                      placeholder='Paste <iframe src="https://www.google.com/maps/embed?..." ...></iframe> or direct Google Maps link'
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    />
+
+                    <div className="mt-2 p-2.5 bg-[#f0f4fc] border border-[#d8e3fb] text-[11px] text-[#434653] flex items-start gap-2">
+                      <HelpCircle className="w-4 h-4 text-[#003c90] shrink-0 mt-0.5" />
+                      <div>
+                        <strong>{isNp ? 'गुगल म्याप कसरी लिने?' : 'How to get Google Maps embed code:'}</strong>
+                        <p className="mt-0.5">
+                          {isNp 
+                            ? 'Google Maps मा आफ्नो कार्यालय खोल्नुहोस् > Share मा क्लिक गर्नुहोस् > Embed a map छान्नुहोस् > Copy HTML क्लिक गरेर यहाँ पेस्ट गर्नुहोस्।'
+                            : 'Open your location in Google Maps > Click "Share" > Select "Embed a map" tab > Click "Copy HTML" and paste the code right here.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
+                      {isNp ? 'गुगल म्याप डाइरेक्सन लिङ्क (Directions URL)' : 'Google Maps Directions URL (For navigation button)'}
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={hubForm.googleMapsDirectionsUrl}
+                        onChange={(e) => setHubForm({ ...hubForm, googleMapsDirectionsUrl: e.target.value })}
+                        placeholder="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal"
+                        className="flex-1 px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                      />
+                      {hubForm.googleMapsDirectionsUrl && (
+                        <a
+                          href={hubForm.googleMapsDirectionsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-2 bg-[#f0f4fc] hover:bg-[#d8e3fb] text-[#003c90] font-bold text-xs flex items-center gap-1 border border-[#d8e3fb]"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Test</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right 5 Cols: Live Real-Time Interactive Preview */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="bg-[#111c2d] text-white p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+                  <Eye className="w-4 h-4 text-emerald-400" />
+                  <span>{isNp ? 'सार्वजनिक पृष्ठमा यस्तो देखिन्छ (Live Preview)' : 'Live Public Screen Preview'}</span>
+                </div>
+                <span className="px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold">
+                  Interactive
+                </span>
+              </div>
+
+              {/* Exact Preview Card as shown on ClothesBankScreen */}
+              <div className="bg-white border-2 border-[#003c90] overflow-hidden shadow-md">
+                <div className="p-4 bg-[#003c90] text-white flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-emerald-400" />
+                    <h4 className="text-xs font-bold uppercase tracking-wider">
+                      {isNp ? 'काठमाडौँ मुख्य संकलन केन्द्र (Map)' : 'Kathmandu Central Hub Location'}
+                    </h4>
+                  </div>
+                  <span className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] font-bold">
+                    Open Daily
+                  </span>
+                </div>
+
+                {/* Map View Frame */}
+                <div className="relative w-full h-56 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden">
+                  <iframe
+                    title="Live Central Hub Google Map Preview"
+                    src={getCleanMapEmbedUrl(hubForm.mapEmbedUrl)}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full"
+                  />
+                </div>
+
+                <div className="p-4 sm:p-5 space-y-3.5">
+                  <div>
+                    <h5 className="text-xs font-bold text-[#111c2d] uppercase tracking-wider">
+                      {isNp ? 'केन्द्रको आधिकारिक ठेगाना:' : 'Official Receiving Station:'}
+                    </h5>
+                    <div className="text-xs text-[#434653] font-medium mt-1 space-y-0.5">
+                      <strong className="text-[#003c90] text-sm block">
+                        {isNp ? (hubForm.hubNameNp || hubForm.hubName) : hubForm.hubName}
+                      </strong>
+                      <div>{isNp ? (hubForm.addressNp || hubForm.address) : hubForm.address}</div>
+                      {(hubForm.landmark || hubForm.landmarkNp) && (
+                        <div className="text-[#737784]">
+                          {isNp ? (hubForm.landmarkNp || hubForm.landmark) : hubForm.landmark}
+                        </div>
+                      )}
+                      <div className="text-[#00743a] font-bold pt-1">
+                        {isNp 
+                          ? (hubForm.operatingHoursNp ? `समय: ${hubForm.operatingHoursNp}` : `समय: ${hubForm.operatingHours}`)
+                          : `Hours: ${hubForm.operatingHours}`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-[#f0f4fc] border border-[#d8e3fb] space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-[#003c90]">
+                      <div className="flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-[#00743a]" />
+                        <span>{hubForm.phone1 || '9823000000'}</span>
+                      </div>
+                      {hubForm.phone2 && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[#d8e3fb]">/</span>
+                          <span>{hubForm.phone2}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[#737784]">
+                      {isNp ? (hubForm.contactNoteNp || hubForm.contactNote) : hubForm.contactNote}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (hubForm.googleMapsDirectionsUrl) {
+                        window.open(hubForm.googleMapsDirectionsUrl, '_blank');
+                      }
+                    }}
+                    className="w-full py-2.5 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-xs"
+                  >
+                    <Navigation className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{isNp ? 'गुगल म्यापमा बाटो हेर्नुहोस्' : 'Get Google Maps Directions'}</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-4 bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1.5">
+                <div className="flex items-center gap-2 font-bold text-emerald-800">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  <span>{isNp ? 'स्वतः सिङ्क तथा सुरक्षित' : 'Real-time Cross-Screen Synchronization'}</span>
+                </div>
+                <p className="text-[11px] text-emerald-800/80">
+                  {isNp
+                    ? 'यहाँ सेभ गर्ने बित्तिकै सम्पूर्ण प्रयोगकर्ता र राइडरहरूले नयाँ नक्सा र फोन नम्बर तत्काल देख्नेछन्।'
+                    : 'Changes saved here are instantly broadcasted to public visitor screens and synchronized with the central database.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </form>
       )}
 
       {/* ADD / EDIT DONOR MODAL */}

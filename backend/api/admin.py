@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
 )
 
 from django.utils.html import format_html
@@ -130,3 +130,28 @@ class ContactInquiryAdmin(admin.ModelAdmin):
     list_display = ('name', 'email', 'phone', 'subject', 'status', 'created_at')
     list_filter = ('status',)
     search_fields = ('name', 'email', 'subject', 'message')
+
+@admin.register(ClothesHubConfig)
+class ClothesHubConfigAdmin(admin.ModelAdmin):
+    list_display = ('hub_name', 'phone1', 'phone2', 'city', 'operating_hours', 'updated_at')
+    fieldsets = (
+        ('Hub Identity & Names', {
+            'fields': ('hub_name', 'hub_name_np')
+        }),
+        ('Contact Phones (At least 2 numbers)', {
+            'fields': ('phone1', 'phone2', 'email')
+        }),
+        ('Location & Receiving Address', {
+            'fields': ('address', 'address_np', 'landmark', 'landmark_np', 'city', 'district', 'province')
+        }),
+        ('Operating Hours', {
+            'fields': ('operating_hours', 'operating_hours_np')
+        }),
+        ('Google Maps Embed & Directions', {
+            'fields': ('map_embed_url', 'google_maps_directions_url'),
+            'description': 'Paste Google Maps <iframe> code, direct embed link, or location URL.'
+        }),
+        ('Rider & Parcel Delivery Instructions', {
+            'fields': ('contact_note', 'contact_note_np')
+        }),
+    )

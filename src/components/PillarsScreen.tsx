@@ -39,14 +39,26 @@ export const PillarsScreen: React.FC<PillarsScreenProps> = ({
 
   return (
     <div id="pillars-screen" className="w-full pt-16 pb-16 bg-[#f9f9ff] min-h-screen">
-      {/* Header Banner */}
-      <div className="bg-[#003c90] text-white border-b border-[#002660]">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-10 sm:py-12">
+      {/* Header Banner with Rich Photographic Background & Gradient Overlay */}
+      <div className="relative bg-[#002660] text-white border-b border-[#001d4a] overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1920&q=80"
+            alt="Genzicon Foundation Pillars Nepal"
+            className="w-full h-full object-cover object-center transform scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#001d4a]/95 via-[#003c90]/88 to-[#001d4a]/90 backdrop-blur-[1px]" />
+        </div>
+
+        <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
           <div className="max-w-3xl">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2 font-heading">
+            <span className="inline-block px-2.5 py-1 bg-white/15 text-emerald-300 text-[10px] font-black uppercase tracking-wider mb-3 border border-white/20 backdrop-blur-xs">
+              {isNp ? 'हाम्रा मुख्य कार्यक्षेत्र' : 'Our Core Focus Areas'}
+            </span>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight mb-3 font-heading text-white drop-shadow-xs">
               {isNp ? 'हाम्रा तीन आधारस्तम्भ' : 'Our Three Core Pillars'}
             </h1>
-            <p className="text-xs sm:text-sm text-blue-100 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-blue-100/90 font-normal leading-relaxed max-w-2xl">
               {isNp
                 ? 'हाम्रो सम्पूर्ण सामाजिक कार्य ३ वटा मुख्य स्तम्भमा केन्द्रित छ: जनसेवा (कपडा बैंक), प्रकृति संरक्षण (सफा तथा हरित नेपाल), र आत्मनिर्भरता (दक्षता तथा उद्यमशीलता विकास)।'
                 : 'Empowering Nepal through three interconnected pillars: People (Clothes Bank), Nature (Clean & Green Nepal), and Sustainable Livelihoods (Skills & Enterprise).'}

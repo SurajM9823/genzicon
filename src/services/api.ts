@@ -1,5 +1,5 @@
 // Django REST Framework API Client for Genzicon Foundation
-import { Project } from '../types';
+import { Project, ClothesHubConfig } from '../types';
 
 const API_BASE = (typeof window !== 'undefined' && (window as any).VITE_API_URL) 
   ? (window as any).VITE_API_URL 
@@ -645,6 +645,130 @@ export async function apiUpdateClothesStatus(id: string | number, status: string
     return res.ok;
   } catch (e) {
     console.warn('Could not update clothes status:', e);
+    return false;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 5.1 Central Clothes Hub Dynamic Configuration & Map Embed Parser
+// --------------------------------------------------------------------------
+/**
+ * Safely extracts or normalizes a Google Maps embed URL from various user input formats:
+ * 1. Full <iframe> embed code: <iframe src="https://www.google.com/maps/embed?..." ...></iframe>
+ * 2. Raw embed URL: https://www.google.com/maps/embed?...
+ * 3. Regular Google Maps search/place URL: https://maps.google.com/?q=... -> https://maps.google.com/maps?q=...&output=embed
+ * 4. Standard OpenStreetMap or custom embed URL
+ */
+export function getCleanMapEmbedUrl(rawInput?: string): string {
+  const fallback = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp';
+  if (!rawInput || typeof rawInput !== 'string' || !rawInput.trim()) {
+    return fallback;
+  }
+
+  const trimmed = rawInput.trim();
+
+  // If user pasted full <iframe ... src="..." ...> tag
+  if (trimmed.toLowerCase().includes('<iframe')) {
+    const srcMatch = trimmed.match(/src=["']([^"']+)["']/i);
+    if (srcMatch && srcMatch[1]) {
+      return srcMatch[1];
+    }
+  }
+
+  // If it's already an embed link (Google Maps embed or OSM embed)
+  if (trimmed.includes('/maps/embed') || trimmed.includes('output=embed')) {
+    return trimmed;
+  }
+
+  // If it's a standard Google Maps URL with ?q= or /place/
+  if (trimmed.includes('google.com/maps') || trimmed.includes('maps.google.com')) {
+    try {
+      const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+      const q = url.searchParams.get('q');
+      if (q) {
+        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      }
+      const placeMatch = trimmed.match(/maps\/(?:place|search)\/([^/@?]+)/i);
+      if (placeMatch && placeMatch[1]) {
+        const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+        return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return trimmed;
+}
+
+export async function apiGetClothesHubConfig(): Promise<ClothesHubConfig | null> {
+  try {
+    const res = await fetch(`${API_BASE}/clothes-hub-config/`);
+    if (res.ok) {
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await res.json();
+        const item = Array.isArray(data) ? (data[0] || null) : data;
+        if (item && (item.hub_name || item.hubName || item.phone1)) {
+          return {
+            hubName: item.hub_name || item.hubName,
+            hubNameNp: item.hub_name_np || item.hubNameNp || '',
+            address: item.address,
+            addressNp: item.address_np || item.addressNp || '',
+            landmark: item.landmark || '',
+            landmarkNp: item.landmark_np || item.landmarkNp || '',
+            city: item.city || 'Kathmandu',
+            district: item.district || 'Kathmandu',
+            province: item.province || 'Bagmati Province',
+            phone1: item.phone1,
+            phone2: item.phone2 || '',
+            email: item.email || '',
+            operatingHours: item.operating_hours || item.operatingHours || '',
+            operatingHoursNp: item.operating_hours_np || item.operatingHoursNp || '',
+            mapEmbedUrl: item.map_embed_url || item.mapEmbedUrl || '',
+            googleMapsDirectionsUrl: item.google_maps_directions_url || item.googleMapsDirectionsUrl || '',
+            contactNote: item.contact_note || item.contactNote || '',
+            contactNoteNp: item.contact_note_np || item.contactNoteNp || '',
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Could not fetch clothes hub config from backend:', e);
+  }
+  return null;
+}
+
+export async function apiSaveClothesHubConfig(config: ClothesHubConfig): Promise<boolean> {
+  try {
+    const payload = {
+      hub_name: config.hubName,
+      hub_name_np: config.hubNameNp,
+      address: config.address,
+      address_np: config.addressNp,
+      landmark: config.landmark,
+      landmark_np: config.landmarkNp,
+      city: config.city,
+      district: config.district,
+      province: config.province,
+      phone1: config.phone1,
+      phone2: config.phone2,
+      email: config.email || '',
+      operating_hours: config.operatingHours,
+      operating_hours_np: config.operatingHoursNp,
+      map_embed_url: config.mapEmbedUrl,
+      google_maps_directions_url: config.googleMapsDirectionsUrl,
+      contact_note: config.contactNote,
+      contact_note_np: config.contactNoteNp,
+    };
+    const res = await fetch(`${API_BASE}/clothes-hub-config/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Could not save clothes hub config to backend:', e);
     return false;
   }
 }

@@ -7,11 +7,12 @@ from django.db.models import Sum, Count
 
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
 )
 from .serializers import (
     SiteContentSerializer, ImpactStatSerializer, ProjectSerializer, ClothesDonorSerializer,
-    ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer
+    ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer,
+    ClothesHubConfigSerializer
 )
 
 # --- Admin Authentication Endpoint ---
@@ -645,3 +646,52 @@ class ContactInquiryViewSet(viewsets.ModelViewSet):
         if self.action in ['create']:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+
+
+def ensure_default_hub_config():
+    """Ensure at least one default central clothes hub configuration exists"""
+    if ClothesHubConfig.objects.count() == 0:
+        ClothesHubConfig.objects.create(
+            hub_name="Genzicon Clothes Bank Nepal - Central Hub",
+            hub_name_np="जेन्जिकन कपडा बैंक नेपाल - मुख्य संकलन केन्द्र",
+            address="Tinkune / New Baneshwor (Near Ring Road)",
+            address_np="तीनकुने / नयाँ बानेश्वर (रिङ रोड नजिक)",
+            landmark="Opposite to Central Park, Kathmandu 44600",
+            landmark_np="सेन्ट्रल पार्क अगाडि, काठमाडौँ ४४६००",
+            city="Kathmandu",
+            district="Kathmandu",
+            province="Bagmati Province",
+            phone1="9823000000",
+            phone2="01-4240000",
+            email="clothes@genzicon.com",
+            operating_hours="8:00 AM – 6:00 PM Daily (Open Saturdays)",
+            operating_hours_np="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)",
+            map_embed_url="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp",
+            google_maps_directions_url="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal",
+            contact_note="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.",
+            contact_note_np="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।"
+        )
+
+
+class ClothesHubConfigViewSet(viewsets.ModelViewSet):
+    queryset = ClothesHubConfig.objects.all()
+    serializer_class = ClothesHubConfigSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.AllowAny()]  # Allow seamless sync from admin client
+
+    def list(self, request, *args, **kwargs):
+        ensure_default_hub_config()
+        config = ClothesHubConfig.objects.first()
+        serializer = self.get_serializer(config)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        ensure_default_hub_config()
+        config = ClothesHubConfig.objects.first()
+        serializer = self.get_serializer(config, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)

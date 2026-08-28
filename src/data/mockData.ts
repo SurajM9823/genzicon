@@ -11,6 +11,7 @@ import {
   VolunteerRecord,
   SiteContentConfig,
   BankAndQrConfig,
+  ClothesHubConfig,
   ContactMessage
 } from '../types';
 
@@ -927,6 +928,27 @@ export const DEFAULT_BANK_QR_CONFIG: BankAndQrConfig = {
   khaltiQrImage: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=khalti://pay?id=9823000000',
   hotlinePhone: '+977 1-4240000 / 9823000000',
   hotlineEmail: 'donate@genzicon.org'
+};
+
+export const DEFAULT_CLOTHES_HUB_CONFIG: ClothesHubConfig = {
+  hubName: 'Genzicon Clothes Bank Nepal - Central Hub',
+  hubNameNp: 'जेन्जिकन कपडा बैंक नेपाल - मुख्य संकलन केन्द्र',
+  address: 'Tinkune / New Baneshwor (Near Ring Road)',
+  addressNp: 'तीनकुने / नयाँ बानेश्वर (रिङ रोड नजिक)',
+  landmark: 'Opposite to Central Park, Kathmandu 44600',
+  landmarkNp: 'सेन्ट्रल पार्क अगाडि, काठमाडौँ ४४६००',
+  city: 'Kathmandu',
+  district: 'Kathmandu',
+  province: 'Bagmati Province',
+  phone1: '9823000000',
+  phone2: '01-4240000',
+  email: 'clothes@genzicon.com',
+  operatingHours: '8:00 AM – 6:00 PM Daily (Open Saturdays)',
+  operatingHoursNp: 'बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)',
+  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp',
+  googleMapsDirectionsUrl: 'https://maps.google.com/?q=Tinkune,Kathmandu,Nepal',
+  contactNote: 'Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.',
+  contactNoteNp: 'पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।',
 };
 
 export const INITIAL_CONTACT_MESSAGES: ContactMessage[] = [

@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navLinks: { id: NavTab; labelEn: string; labelNp: string; isPill?: boolean; icon?: any }[] = [
     { id: 'impact', labelEn: 'Home', labelNp: 'गृहपृष्ठ' },
     { id: 'clothes-bank', labelEn: 'Clothes Bank', labelNp: 'कपडा बैंक', isPill: true, icon: Shirt },
-    { id: 'initiatives', labelEn: '3 Pillars', labelNp: '३ स्तम्भ' },
+    { id: 'programs', labelEn: 'Programs', labelNp: 'कार्यक्रमहरू' },
     { id: 'volunteer', labelEn: 'Volunteer', labelNp: 'स्वयंसेवक' },
     { id: 'donate', labelEn: 'Donate', labelNp: 'सहयोग' },
     { id: 'contact', labelEn: 'Contact', labelNp: 'सम्पर्क' }

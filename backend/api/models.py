@@ -264,3 +264,33 @@ class ContactInquiry(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.subject}"
+
+
+class ClothesHubConfig(models.Model):
+    """Central Clothes Hub Location, Phone Numbers, Operating Hours, and Map Embed"""
+    hub_name = models.CharField(max_length=255, default="Genzicon Clothes Bank Nepal - Central Hub", verbose_name="Hub Name (English)")
+    hub_name_np = models.CharField(max_length=255, default="जेन्जिकन कपडा बैंक नेपाल - मुख्य संकलन केन्द्र", blank=True, verbose_name="Hub Name (Nepali)")
+    address = models.CharField(max_length=255, default="Tinkune / New Baneshwor (Near Ring Road)", verbose_name="Address (English)")
+    address_np = models.CharField(max_length=255, default="तीनकुने / नयाँ बानेश्वर (रिङ रोड नजिक)", blank=True, verbose_name="Address (Nepali)")
+    landmark = models.CharField(max_length=255, default="Opposite to Central Park, Kathmandu 44600", blank=True, verbose_name="Landmark / City (English)")
+    landmark_np = models.CharField(max_length=255, default="सेन्ट्रल पार्क अगाडि, काठमाडौँ ४४६००", blank=True, verbose_name="Landmark / City (Nepali)")
+    city = models.CharField(max_length=100, default="Kathmandu", verbose_name="City")
+    district = models.CharField(max_length=100, default="Kathmandu", verbose_name="District")
+    province = models.CharField(max_length=100, default="Bagmati Province", verbose_name="Province")
+    phone1 = models.CharField(max_length=50, default="9823000000", verbose_name="Primary Phone / Hotline")
+    phone2 = models.CharField(max_length=50, default="01-4240000", blank=True, verbose_name="Secondary Phone / WhatsApp")
+    email = models.EmailField(default="clothes@genzicon.com", blank=True, null=True, verbose_name="Hub Email")
+    operating_hours = models.CharField(max_length=255, default="8:00 AM – 6:00 PM Daily (Open Saturdays)", verbose_name="Operating Hours (English)")
+    operating_hours_np = models.CharField(max_length=255, default="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)", blank=True, verbose_name="Operating Hours (Nepali)")
+    map_embed_url = models.TextField(default="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp", verbose_name="Google Maps Embed URL or iFrame Code")
+    google_maps_directions_url = models.URLField(max_length=500, default="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal", blank=True, verbose_name="Directions URL (Google Maps Link)")
+    contact_note = models.TextField(default="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.", blank=True, verbose_name="Delivery Note (English)")
+    contact_note_np = models.TextField(default="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।", blank=True, verbose_name="Delivery Note (Nepali)")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Clothes Hub Configuration"
+        verbose_name_plural = "Clothes Hub Configuration"
+
+    def __str__(self):
+        return f"{self.hub_name} ({self.phone1} / {self.phone2})"
