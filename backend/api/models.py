@@ -4,6 +4,12 @@ from django.utils.crypto import get_random_string
 def generate_reference_id(prefix='GZ'):
     return f"{prefix}-{get_random_string(6).upper()}"
 
+def generate_volunteer_id():
+    return f"VOL-{get_random_string(6).upper()}"
+
+def generate_receipt_number():
+    return f"REC-{get_random_string(6).upper()}"
+
 class SiteContent(models.Model):
     """Dynamic Website CMS Hero Content & Taglines"""
     hero_title = models.CharField(max_length=255, default="Grassroots Youth-Led Transformation Across Nepal")
@@ -116,7 +122,7 @@ class Volunteer(models.Model):
         ('Contacted', 'Contacted by Field Lead'),
     ]
 
-    volunteer_id = models.CharField(max_length=30, unique=True, default=lambda: generate_reference_id('VOL'))
+    volunteer_id = models.CharField(max_length=30, unique=True, default=generate_volunteer_id)
     full_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=30)
     email = models.EmailField()
@@ -144,7 +150,7 @@ class DonationRecord(models.Model):
         ('Failed', 'Cancelled / Failed'),
     ]
 
-    receipt_number = models.CharField(max_length=40, unique=True, default=lambda: generate_reference_id('REC'))
+    receipt_number = models.CharField(max_length=40, unique=True, default=generate_receipt_number)
     donor_name = models.CharField(max_length=150)
     donor_email = models.EmailField(blank=True, null=True)
     donor_phone = models.CharField(max_length=30, blank=True, null=True)
