@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Save, 
   Image as ImageIcon, 
@@ -8,10 +8,15 @@ import {
   Sparkles, 
   RotateCcw,
   Eye,
-  Layers
+  Layers,
+  Upload,
+  Play,
+  Film,
+  Compass
 } from 'lucide-react';
 import { SiteContentConfig, Language, StatMetric } from '../../types';
 import { DEFAULT_SITE_CONTENT } from '../../data/mockData';
+import { HeroMediaRenderer, isRiveMedia } from '../HeroMediaRenderer';
 
 interface AdminContentTabProps {
   language: Language;
@@ -44,29 +49,42 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
     }));
   }, [siteContent]);
 
-  // Curated Nepali NGO imagery presets
-  const presetImages = [
+  // Curated Nepali NGO imagery and interactive Rive animation presets
+  const presetMedia = [
     {
       title: 'Clothes Distribution in Village',
+      type: 'image',
       url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80'
     },
     {
       title: 'Chure Reforestation & Green Nepal',
+      type: 'image',
       url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1600&q=80'
     },
     {
       title: 'Youth & Children Education',
+      type: 'image',
       url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80'
     },
     {
       title: 'Women Sewing & Livelihood Training',
+      type: 'image',
       url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80'
     },
     {
       title: 'Himalayan Mountain Community Support',
+      type: 'image',
       url: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1600&q=80'
+    },
+    {
+      title: '✨ Rive Community Interactive Animation',
+      type: 'rive',
+      url: 'https://rive.app/s/eA3509dM50mYp49u_2gZ_A/embed'
     }
   ];
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleStatChange = (index: number, field: keyof StatMetric, value: string) => {
     const updatedStats = [...formData.impactStats];
@@ -79,13 +97,72 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
 
   const handleAddCarouselImage = () => {
     if (!customImageUrl.trim()) return;
-    if (formData.heroCarouselImages.includes(customImageUrl.trim())) return;
+    const cleanUrl = customImageUrl.trim();
+    if (formData.heroCarouselImages.includes(cleanUrl)) return;
     
     setFormData({
       ...formData,
-      heroCarouselImages: [...formData.heroCarouselImages, customImageUrl.trim()]
+      heroCarouselImages: [...formData.heroCarouselImages, cleanUrl],
+      heroImageUrl: cleanUrl
     });
     setCustomImageUrl('');
+  };
+
+  /**
+   * Smart client-side photo upload & compression:
+   * Downscales large smartphone/DSLR photos (e.g. 10MB-30MB) using HTML5 canvas
+   * to high-quality ~1600px JPEG (~250KB) so it never triggers "413 Request Entity Too Large"
+   */
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxWidth = 1600;
+        const maxHeight = 1000;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.88);
+          setFormData(prev => ({
+            ...prev,
+            heroCarouselImages: [...(prev.heroCarouselImages || []), compressedDataUrl],
+            heroImageUrl: compressedDataUrl
+          }));
+        }
+        setIsUploading(false);
+      };
+
+      img.onerror = () => {
+        setIsUploading(false);
+      };
+
+      img.src = event.target?.result as string;
+    };
+
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleRemoveCarouselImage = (indexToRemove: number) => {
@@ -131,7 +208,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
             {isNp ? 'गृहपृष्ठ सामग्री तथा ब्यानर व्यवस्थापन' : 'Hero Carousel & Static Content CMS'}
           </h2>
           <p className="text-xs text-[#737784]">
-            Update homepage carousel images, hero titles, descriptions, and verified impact stat counters.
+            Update homepage carousel images, Rive interactive animations, hero titles, descriptions, and verified impact stat counters.
           </p>
         </div>
 
@@ -162,7 +239,7 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
         </div>
       </div>
 
-      {/* Section 1: Hero / Carousel Images */}
+      {/* Section 1: Hero / Carousel Images & Rive Animations */}
       <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-[#f0f3ff] pb-3">
           <div className="flex items-center gap-2">
@@ -171,10 +248,10 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
             </div>
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
-                1. Hero Background & Carousel Banner Images
+                1. Hero Background & Carousel Media (Photos & Rive Animations)
               </h3>
               <p className="text-[11px] text-[#737784]">
-                Choose the primary hero banner image and maintain the photo carousel pool.
+                Choose the primary hero banner, upload photos directly from your device, or embed interactive 60fps Rive animations.
               </p>
             </div>
           </div>
@@ -182,18 +259,27 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
 
         {/* Current Active Hero Preview */}
         <div>
-          <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-1.5">
-            Active Display Hero Banner
-          </label>
-          <div className="relative h-48 w-full border-2 border-[#003c90] overflow-hidden group">
-            <img
-              src={formData.heroImageUrl}
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider">
+              Active Display Hero Banner Preview
+            </label>
+            {isRiveMedia(formData.heroImageUrl) && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold">
+                <Sparkles className="w-3 h-3" />
+                Rive Interactive Animation Active
+              </span>
+            )}
+          </div>
+          <div className="relative h-56 w-full border-2 border-[#003c90] overflow-hidden group bg-slate-900">
+            <HeroMediaRenderer
+              mediaUrl={formData.heroImageUrl}
               alt="Active Hero Preview"
               className="w-full h-full object-cover object-center"
+              interactive={true}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/40 p-4 flex flex-col justify-end text-white">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 p-4 flex flex-col justify-end text-white pointer-events-none">
               <div className="inline-block px-2 py-0.5 bg-[#00743a] text-[10px] font-bold uppercase tracking-wider w-fit mb-1">
-                Active Live Hero Image
+                Active Live Hero Media
               </div>
               <h3 className="text-base font-bold font-heading">{formData.heroTitle}</h3>
               <p className="text-xs text-white/80 line-clamp-1">{formData.heroSubtitle}</p>
@@ -204,24 +290,34 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
         {/* Image Pool / Carousel Thumbnails */}
         <div>
           <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider mb-2">
-            Carousel Image Pool (Click any image to set as Active Banner)
+            Carousel Media Pool ({formData.heroCarouselImages?.length || 0} Items) - Click to set as Active Banner
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {(formData.heroCarouselImages || []).map((imgUrl, index) => {
               const isSelected = formData.heroImageUrl === imgUrl;
+              const isRive = isRiveMedia(imgUrl);
               return (
                 <div 
                   key={index}
-                  className={`relative border-2 rounded-none overflow-hidden group transition-all ${
+                  className={`relative border-2 rounded-none overflow-hidden group transition-all bg-slate-900 ${
                     isSelected ? 'border-[#003c90] ring-2 ring-blue-200' : 'border-[#d8e3fb] hover:border-[#737784]'
                   }`}
                 >
-                  <img
-                    src={imgUrl}
-                    alt={`Carousel banner ${index + 1}`}
-                    className="w-full h-24 object-cover cursor-pointer"
+                  <div 
+                    className="w-full h-24 overflow-hidden cursor-pointer relative"
                     onClick={() => handleSelectActiveHero(imgUrl)}
-                  />
+                  >
+                    <HeroMediaRenderer
+                      mediaUrl={imgUrl}
+                      alt={`Carousel media ${index + 1}`}
+                      className="w-full h-24 object-cover"
+                    />
+                    {isRive && (
+                      <span className="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-600 text-white text-[9px] font-bold shadow-xs">
+                        RIVE
+                      </span>
+                    )}
+                  </div>
                   <div className="p-1.5 bg-[#f9f9ff] flex items-center justify-between text-[10px]">
                     <button
                       type="button"
@@ -247,37 +343,63 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
           </div>
         </div>
 
-        {/* Add New Custom Image URL & Presets */}
+        {/* Add New Custom Image URL, Photo Upload & Rive Presets */}
         <div className="pt-3 border-t border-[#f0f3ff] space-y-3">
-          <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider">
-            Add New Image to Carousel
-          </label>
-          
-          <div className="flex gap-2">
+          <div className="flex items-center justify-between">
+            <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider">
+              Add Photo File or Rive / Media URL
+            </label>
+            <span className="text-[10px] text-[#737784]">
+              Supports: Direct Photo Upload, Rive URLs (<code className="font-mono bg-slate-100 px-1">rive.app/s/...</code>), and Image CDN links.
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2">
+            {/* Direct Device Upload with auto-optimization */}
             <input
-              type="url"
-              value={customImageUrl}
-              onChange={(e) => setCustomImageUrl(e.target.value)}
-              placeholder="Paste direct image URL (https://images.unsplash.com/...)"
-              className="flex-1 px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white font-mono"
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
             />
             <button
               type="button"
-              onClick={handleAddCarouselImage}
-              className="px-4 py-2 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold transition-colors flex items-center gap-1"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 bg-[#00743a] hover:bg-[#005227] text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shrink-0 shadow-xs"
             >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Image</span>
+              <Upload className="w-3.5 h-3.5" />
+              <span>{isUploading ? 'Optimizing...' : 'Upload Photo from Device'}</span>
             </button>
+
+            {/* Custom URL Input */}
+            <div className="flex flex-1 gap-2">
+              <input
+                type="text"
+                value={customImageUrl}
+                onChange={(e) => setCustomImageUrl(e.target.value)}
+                placeholder="Paste Image URL or Rive Share Link (e.g. https://rive.app/s/...)"
+                className="flex-1 px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white font-mono"
+              />
+              <button
+                type="button"
+                onClick={handleAddCarouselImage}
+                className="px-4 py-2 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold transition-colors flex items-center gap-1 shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Media</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Presets Picker */}
           <div>
             <span className="text-[10px] font-bold text-[#737784] uppercase tracking-wider block mb-1.5">
-              Or pick from curated Nepal NGO stock presets:
+              Or pick from curated Nepal NGO stock photos & Rive animations:
             </span>
             <div className="flex flex-wrap gap-1.5">
-              {presetImages.map((preset, idx) => (
+              {presetMedia.map((preset, idx) => (
                 <button
                   key={idx}
                   type="button"
@@ -292,7 +414,11 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
                       handleSelectActiveHero(preset.url);
                     }
                   }}
-                  className="px-2.5 py-1 text-[11px] bg-[#f0f3ff] hover:bg-[#d8e3fb] text-[#003c90] font-semibold border border-blue-200 transition-colors"
+                  className={`px-2.5 py-1 text-[11px] font-semibold border transition-colors ${
+                    preset.type === 'rive'
+                      ? 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'
+                      : 'bg-[#f0f3ff] hover:bg-[#d8e3fb] text-[#003c90] border-blue-200'
+                  }`}
                 >
                   + {preset.title}
                 </button>

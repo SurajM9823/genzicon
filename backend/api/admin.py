@@ -8,7 +8,7 @@ from django.utils.html import format_html
 
 @admin.register(SiteContent)
 class SiteContentAdmin(admin.ModelAdmin):
-    list_display = ('order', 'hero_title', 'hero_banner_tag', 'is_active', 'image_preview', 'updated_at')
+    list_display = ('order', 'hero_title', 'hero_banner_tag', 'is_active', 'media_preview', 'updated_at')
     list_display_links = ('hero_title',)
     list_editable = ('order', 'is_active')
     list_filter = ('is_active',)
@@ -23,18 +23,33 @@ class SiteContentAdmin(admin.ModelAdmin):
         ('Nepali Content (नेपाली सामग्री)', {
             'fields': ('hero_banner_tag_np', 'hero_title_np', 'hero_subtitle_np')
         }),
-        ('Slide Image (Upload Image File OR URL)', {
+        ('Slide Background Media (Upload Image File OR Paste Rive / Media URL)', {
             'fields': ('hero_image', 'hero_image_url'),
-            'description': 'You can upload an image file from your computer OR paste an image URL.'
+            'description': 'Upload an image file (PNG/JPG/WEBP) from your device OR paste an Image URL, Rive Animation link (e.g. https://rive.app/s/...), or .riv URL.'
         }),
     )
 
-    def image_preview(self, obj):
-        url = obj.hero_image.url if obj.hero_image else obj.hero_image_url
-        if url:
-            return format_html('<img src="{}" style="width: 70px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc;" />', url)
-        return "-"
-    image_preview.short_description = "Image Preview"
+    def media_preview(self, obj):
+        url = obj.hero_image.url if obj.hero_image else (obj.hero_image_url or "")
+        if not url:
+            return "-"
+        
+        # Check if Rive animation
+        if 'rive.app' in url.lower() or url.lower().endswith('.riv') or '.riv?' in url.lower():
+            embed_url = url
+            if 'rive.app/s/' in url and not url.endswith('/embed'):
+                embed_url = url.rstrip('/') + '/embed'
+            return format_html(
+                '<div style="display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#f3e8ff; border:1px solid #d8b4fe; border-radius:4px; font-size:11px; font-weight:bold; color:#6b21a8;">'
+                '<span style="background:#9333ea; color:white; padding:1px 4px; border-radius:3px; font-size:9px;">RIVE</span> '
+                '<a href="{}" target="_blank" style="color:#6b21a8; text-decoration:underline;">Animation Preview &nearr;</a>'
+                '</div>',
+                embed_url
+            )
+        
+        return format_html('<img src="{}" style="width: 70px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #ccc;" />', url)
+    
+    media_preview.short_description = "Media / Rive Preview"
 
 @admin.register(ImpactStat)
 class ImpactStatAdmin(admin.ModelAdmin):

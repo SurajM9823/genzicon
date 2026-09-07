@@ -15,6 +15,7 @@ import {
 import { IMPACT_STATS, PROJECTS_DATA, DEFAULT_SITE_CONTENT } from '../data/mockData';
 import { Project, NavTab, Language, SiteContentConfig } from '../types';
 import { apiGetSiteContent, apiGetProjects } from '../services/api';
+import { HeroMediaRenderer } from './HeroMediaRenderer';
 
 interface HomeScreenProps {
   language: Language;
@@ -169,18 +170,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         ref={heroRef}
         className="relative h-[72vh] min-h-[440px] max-h-[660px] w-full flex items-center justify-center overflow-hidden border-b border-[#d8e3fb] [perspective:1200px]"
       >
-        {/* Parallax Background Image with 3D Depth & Carousel Transition */}
+        {/* Parallax Background Image / Rive Animation with 3D Depth & Carousel Transition */}
         <motion.div 
           className="absolute inset-0 z-0 will-change-transform"
           style={{ scale: bgScale, y: bgY }}
         >
-          <img
-            key={activeHeroImg}
-            src={activeHeroImg}
-            alt="Genzicon Foundation Community Work Nepal"
-            className="w-full h-full object-cover object-center transition-all duration-1000 ease-in-out"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/60" />
+          <div key={activeHeroImg} className="w-full h-full transition-all duration-1000 ease-in-out">
+            <HeroMediaRenderer
+              mediaUrl={activeHeroImg}
+              alt="Genzicon Foundation Community Work Nepal"
+              className="w-full h-full object-cover object-center"
+            />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/60 pointer-events-none" />
         </motion.div>
 
         {/* Carousel Indicators & Controls if multiple slides */}

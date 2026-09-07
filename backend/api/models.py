@@ -18,9 +18,9 @@ class SiteContent(models.Model):
     hero_subtitle = models.TextField(default="Bridging immediate community needs through civic transparency, verified ground impact, youth volunteer taskforces, and zero administrative waste.", verbose_name="Subtitle (English)")
     hero_subtitle_np = models.TextField(default="पारदर्शी सेवा, प्रमाणित प्रभाव, युवा स्वयंसेवक परिचालन र प्रत्यक्ष सहयोग मार्फत समुदाय सशक्तिकरण।", verbose_name="Subtitle (Nepali)")
     
-    # Image upload OR external URL
+    # Image upload OR external URL / Rive Animation / Embed
     hero_image = models.ImageField(upload_to='hero_slides/', blank=True, null=True, verbose_name="Upload Hero Image (File)")
-    hero_image_url = models.URLField(max_length=500, default="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600", blank=True, null=True, verbose_name="Or Image URL (Unsplash / CDN)")
+    hero_image_url = models.TextField(default="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600", blank=True, null=True, verbose_name="Or Image URL / Rive Animation / Embed Link")
     
     hero_banner_tag = models.CharField(max_length=100, default="Grassroots Youth NGO", verbose_name="Badge Tag (English)")
     hero_banner_tag_np = models.CharField(max_length=100, default="युवा नेतृत्व गैरसरकारी संस्था", verbose_name="Badge Tag (Nepali)")
