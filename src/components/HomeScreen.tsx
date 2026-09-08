@@ -163,6 +163,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const activeHeroImg = currentSlide.imageUrl || siteContent.heroImageUrl;
 
+  
   return (
     <div id="home-screen" className="w-full bg-[#f9f9ff] overflow-x-hidden">
       {/* Hero Section with 3D Parallax & Depth */}
