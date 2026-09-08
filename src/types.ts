@@ -301,6 +301,7 @@ export interface SiteContentConfig {
   heroCarouselImages?: string[];
   heroImages?: string[];
   heroSlides?: HeroSlideItem[];
+  heroImageFit?: 'ambient' | 'cover' | 'top' | 'bottom' | 'contain';
   heroTitle: string;
   heroTitleNp: string;
   heroSubtitle: string;

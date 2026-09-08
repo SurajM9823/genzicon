@@ -155,21 +155,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   });
 
   const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 25 });
-  const bgScale = useTransform(smoothProgress, [0, 1], [1, 1.18]);
-  const bgY = useTransform(smoothProgress, [0, 1], [0, 90]);
+  const bgScale = useTransform(smoothProgress, [0, 1], [1, 1.05]);
+  const bgY = useTransform(smoothProgress, [0, 1], [0, 60]);
   const heroOpacity = useTransform(smoothProgress, [0, 0.8], [1, 0]);
-  const heroY = useTransform(smoothProgress, [0, 0.8], [0, 60]);
-  const heroRotateX = useTransform(smoothProgress, [0, 0.8], [0, 12]);
+  const heroY = useTransform(smoothProgress, [0, 0.8], [0, 45]);
+  const heroRotateX = useTransform(smoothProgress, [0, 0.8], [0, 8]);
 
   const activeHeroImg = currentSlide.imageUrl || siteContent.heroImageUrl;
+  const activeFitMode = siteContent.heroImageFit || 'cover';
 
-  
   return (
     <div id="home-screen" className="w-full bg-[#f9f9ff] overflow-x-hidden">
-      {/* Hero Section with 3D Parallax & Depth */}
+      {/* Hero Section with Generous Height & 3D Parallax */}
       <section 
         ref={heroRef}
-        className="relative h-[72vh] min-h-[440px] max-h-[660px] w-full flex items-center justify-center overflow-hidden border-b border-[#d8e3fb] [perspective:1200px]"
+        className="relative h-[78vh] min-h-[500px] lg:h-[84vh] max-h-[820px] w-full flex items-center justify-center overflow-hidden border-b border-[#d8e3fb] [perspective:1200px]"
       >
         {/* Parallax Background Image / Rive Animation with 3D Depth & Carousel Transition */}
         <motion.div 
@@ -180,10 +180,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <HeroMediaRenderer
               mediaUrl={activeHeroImg}
               alt="Genzicon Foundation Community Work Nepal"
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full"
+              fitMode={activeFitMode}
             />
           </div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/60 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/55 pointer-events-none" />
         </motion.div>
 
         {/* Carousel Indicators & Controls if multiple slides */}

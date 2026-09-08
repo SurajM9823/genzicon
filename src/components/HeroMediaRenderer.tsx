@@ -1,10 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
+export type ImageFitMode = 'ambient' | 'cover' | 'top' | 'bottom' | 'contain';
+
 interface HeroMediaRendererProps {
   mediaUrl?: string;
   alt?: string;
   className?: string;
   interactive?: boolean;
+  fitMode?: ImageFitMode;
 }
 
 /**
@@ -71,8 +74,9 @@ export function isVideoMedia(url?: string): boolean {
 export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
   mediaUrl,
   alt = 'Genzicon Hero Media',
-  className = 'w-full h-full object-cover object-center',
+  className = 'w-full h-full object-cover',
   interactive = false,
+  fitMode = 'cover',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trimmedUrl = (mediaUrl || '').trim();
@@ -93,7 +97,7 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
             canvas: canvasRef.current,
             autoplay: true,
             layout: new Layout({
-              fit: Fit.Cover,
+              fit: fitMode === 'contain' ? Fit.Contain : Fit.Cover,
               alignment: Alignment.Center,
             }),
           });
@@ -111,7 +115,7 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
         riveInstance.cleanup();
       }
     };
-  }, [trimmedUrl]);
+  }, [trimmedUrl, fitMode]);
 
   if (!trimmedUrl) {
     return (
@@ -163,16 +167,55 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
     );
   }
 
-  // 4. Standard Photo / Image / CDN / Data URL
+  // 4. Standard Photo / Image with Smart Framing to avoid aggressive cut-offs
+  const fallbackUrl = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600';
+
+  // Ambient Mode: Full uncropped image in center with blurred matching background filling wide desktop screens
+  if (fitMode === 'ambient') {
+    return (
+      <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-slate-950">
+        {/* Ambient Blurred Background Glow */}
+        <img
+          src={trimmedUrl}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center blur-2xl opacity-45 brightness-75 scale-110 pointer-events-none select-none transition-all duration-700"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = fallbackUrl;
+          }}
+        />
+        {/* Full Uncropped High-Res Foreground Photo */}
+        <img
+          src={trimmedUrl}
+          alt={alt}
+          className="relative z-10 max-w-full max-h-full w-auto h-auto object-contain object-center drop-shadow-2xl transition-all duration-700"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = fallbackUrl;
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Focus positioning classes
+  let positionClass = 'object-[center_20%] md:object-[center_25%]'; // Smart Top-Center focus by default
+  if (fitMode === 'top') {
+    positionClass = 'object-top';
+  } else if (fitMode === 'bottom') {
+    positionClass = 'object-bottom';
+  } else if (fitMode === 'contain') {
+    positionClass = 'object-contain object-center bg-slate-950';
+  } else if (fitMode === 'cover') {
+    positionClass = 'object-[center_20%] md:object-[center_25%]';
+  }
+
   return (
     <img
       src={trimmedUrl}
       alt={alt}
-      className={className}
+      className={`w-full h-full object-cover ${positionClass} transition-all duration-700 ${className}`}
       onError={(e) => {
-        // Graceful fallback to default high quality image if broken link
-        (e.target as HTMLImageElement).src =
-          'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600';
+        (e.target as HTMLImageElement).src = fallbackUrl;
       }}
     />
   );

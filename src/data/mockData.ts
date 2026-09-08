@@ -905,6 +905,7 @@ export const DEFAULT_SITE_CONTENT: SiteContentConfig = {
     'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1600&q=80',
     'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80'
   ],
+  heroImageFit: 'cover',
   heroTitle: 'Empowering Communities Across Nepal',
   heroTitleNp: 'जनसेवा, हरित अभियान र सीप विकास',
   heroSubtitle: 'Grassroots clothes banking, native reforestation, and vocational skill training across Nepal.',

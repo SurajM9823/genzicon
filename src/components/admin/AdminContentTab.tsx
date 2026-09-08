@@ -259,27 +259,44 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
 
         {/* Current Active Hero Preview */}
         <div>
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
             <label className="block text-[11px] font-bold text-[#111c2d] uppercase tracking-wider">
               Active Display Hero Banner Preview
             </label>
-            {isRiveMedia(formData.heroImageUrl) && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold">
-                <Sparkles className="w-3 h-3" />
-                Rive Interactive Animation Active
-              </span>
-            )}
+            
+            {/* Image Framing & Fit Mode Selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-bold text-[#737784] uppercase">Framing Mode:</span>
+              <select
+                value={formData.heroImageFit || 'cover'}
+                onChange={(e) => setFormData({ ...formData, heroImageFit: e.target.value as any })}
+                className="text-[11px] font-bold px-2.5 py-1 border border-[#003c90] bg-white text-[#003c90] rounded-none focus:outline-none shadow-xs"
+              >
+                <option value="cover">📐 Smart Top-Center Fill (Standard)</option>
+                <option value="top">👤 Focus Top (Keep Heads & Faces in View)</option>
+                <option value="ambient">✨ Smart Ambient Frame (100% Full Photo - No Crop)</option>
+                <option value="contain">🖼️ Fit Inside Banner (Contain)</option>
+                <option value="bottom">⚓ Focus Bottom</option>
+              </select>
+            </div>
           </div>
-          <div className="relative h-56 w-full border-2 border-[#003c90] overflow-hidden group bg-slate-900">
+
+          <div className="relative h-64 w-full border-2 border-[#003c90] overflow-hidden group bg-slate-900">
             <HeroMediaRenderer
               mediaUrl={formData.heroImageUrl}
               alt="Active Hero Preview"
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full"
+              fitMode={formData.heroImageFit || 'cover'}
               interactive={true}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 p-4 flex flex-col justify-end text-white pointer-events-none">
-              <div className="inline-block px-2 py-0.5 bg-[#00743a] text-[10px] font-bold uppercase tracking-wider w-fit mb-1">
-                Active Live Hero Media
+              <div className="flex items-center gap-2 mb-1">
+                <div className="inline-block px-2 py-0.5 bg-[#00743a] text-[10px] font-bold uppercase tracking-wider w-fit">
+                  Active Live Hero Media
+                </div>
+                <div className="inline-block px-2 py-0.5 bg-black/60 backdrop-blur-sm text-[10px] font-mono text-white/90">
+                  Fit: {formData.heroImageFit || 'cover'}
+                </div>
               </div>
               <h3 className="text-base font-bold font-heading">{formData.heroTitle}</h3>
               <p className="text-xs text-white/80 line-clamp-1">{formData.heroSubtitle}</p>
