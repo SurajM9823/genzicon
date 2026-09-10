@@ -47,14 +47,18 @@ export const VolunteerSuccessModal: React.FC<VolunteerSuccessModalProps> = ({
             : `Your application for ${data.interest} has been recorded in our Nepal Volunteer Taskforce.`}
         </p>
 
-        {/* Digital Volunteer ID Badge Preview */}
         <div className="bg-[#111c2d] text-white p-3.5 rounded-none text-left mb-4 border border-white/10">
           <div className="flex justify-between items-start mb-2 border-b border-white/20 pb-1.5">
             <div>
-              <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-400 block">
-                Volunteer Pass
-              </span>
-              <h4 className="text-xs font-bold">{data.fullName}</h4>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-400 block">
+                  Volunteer Application Pass
+                </span>
+                <span className="text-[8px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded-xs font-bold">
+                  {isNp ? 'प्रमाणीकरण बाँकी (Pending Review)' : 'Pending Verification'}
+                </span>
+              </div>
+              <h4 className="text-xs font-bold mt-0.5">{data.fullName}</h4>
             </div>
             <span className="font-mono text-[11px] bg-white/20 px-2 py-0.5 rounded-none font-bold">
               {volunteerId}
@@ -74,17 +78,18 @@ export const VolunteerSuccessModal: React.FC<VolunteerSuccessModalProps> = ({
 
           <div className="text-[9px] text-emerald-300 font-semibold flex items-center gap-1 pt-1.5 border-t border-white/10">
             <ShieldCheck className="w-3 h-3" />
-            <span>SWC Affiliation No: 54128</span>
+            <span>SWC Affiliation No: 54128 • Genzicon Civic Youth Registry</span>
           </div>
         </div>
 
         <div className="bg-[#f0f3ff] p-3 rounded-none text-left text-xs space-y-1 border border-[#d8e3fb] mb-4 text-[#434653]">
           <div className="font-bold text-[#003c90] flex items-center gap-1 text-[11px]">
             <Calendar className="w-3 h-3" />
-            <span>{isNp ? 'आगामी प्रक्रिया:' : 'Next Steps:'}</span>
+            <span>{isNp ? 'आगामी प्रक्रिया (Next Steps):' : 'Verification & Activation Process:'}</span>
           </div>
-          <p className="text-[11px]">• {isNp ? 'जिल्ला संयोजकले २४ घण्टाभित्र सम्पर्क गर्नुहुनेछ।' : 'District coordinator will contact you shortly.'}</p>
-          <p className="text-[11px]">• {isNp ? 'अभिमुखीकरण सत्र इमेलमा पठाइएको छ।' : `Orientation packet sent to ${data.email}.`}</p>
+          <p className="text-[11px]">• {isNp ? 'तपाईंको आवेदन फिल्ड संयोजकलाई पठाइएको छ र प्रमाणीकरण हुँदैछ।' : 'Your application is registered in Pending status and sent to our field leads.'}</p>
+          <p className="text-[11px]">• {isNp ? 'प्रमाणीकरण पूरा भएपछि तपाईंको नाम यसै पृष्ठको सक्रिय स्वयंसेवक सूचीमा समावेश हुनेछ।' : 'Once approved, your verified profile will appear on the Active Volunteers Directory below.'}</p>
+          <p className="text-[11px]">• {isNp ? 'अभिमुखीकरण सामग्री तपाईंको इमेलमा पठाइएको छ।' : `Orientation packet and next task details sent to ${data.email}.`}</p>
         </div>
 
         <button

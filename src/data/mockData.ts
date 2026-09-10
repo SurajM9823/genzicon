@@ -946,7 +946,7 @@ export const DEFAULT_CLOTHES_HUB_CONFIG: ClothesHubConfig = {
   email: 'clothes@genzicon.com',
   operatingHours: '8:00 AM – 6:00 PM Daily (Open Saturdays)',
   operatingHoursNp: 'बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)',
-  mapEmbedUrl: 'https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed',
+  mapEmbedUrl: 'https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed',
   googleMapsDirectionsUrl: 'https://maps.app.goo.gl/jzMPyppNjnAydjax8',
   contactNote: 'Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.',
   contactNoteNp: 'पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।',
@@ -984,4 +984,92 @@ export const INITIAL_CONTACT_MESSAGES: ContactMessage[] = [
     status: 'Resolved'
   }
 ];
+
+export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
+  {
+    id: 'vol-01',
+    volunteerId: 'VOL-2026-01',
+    fullName: 'Aarav Sharma',
+    email: 'aarav.sharma@gmail.com',
+    phone: '9841000001',
+    province: 'Bagmati Province',
+    district: 'Kathmandu',
+    interest: 'Clothes Bank Nepal (Collection, Sorting & Distribution)',
+    availability: 'Weekends (Saturday/Sunday)',
+    reason: 'Active field coordinator and clothes sorting lead at Central Hub.',
+    submittedAt: '2026-01-15',
+    status: 'Approved'
+  },
+  {
+    id: 'vol-02',
+    volunteerId: 'VOL-2026-02',
+    fullName: 'Pooja Thapa Magar',
+    email: 'pooja.magar@gmail.com',
+    phone: '9801000002',
+    province: 'Gandaki Province',
+    district: 'Kaski (Pokhara)',
+    interest: 'Clean Nepal, Green Nepal (100K Tree Plantation & Chure Reforestation)',
+    availability: 'Part-time (5-10 hours/week)',
+    reason: 'Environmental science graduate and local green club youth mobilizer.',
+    submittedAt: '2026-01-20',
+    status: 'Approved'
+  },
+  {
+    id: 'vol-03',
+    volunteerId: 'VOL-2026-03',
+    fullName: 'Bikash Mahato',
+    email: 'bikash.mahato@gmail.com',
+    phone: '9812000003',
+    province: 'Madhesh Province',
+    district: 'Siraha',
+    interest: 'Clothes Bank Nepal (Field Distribution & Cold Wave Relief)',
+    availability: 'Full-time Field Volunteer',
+    reason: 'Field emergency response coordinator in Musahar and Dalit settlements.',
+    submittedAt: '2026-02-01',
+    status: 'Approved'
+  },
+  {
+    id: 'vol-04',
+    volunteerId: 'VOL-2026-04',
+    fullName: 'Sunita KC',
+    email: 'sunita.kc@gmail.com',
+    phone: '9847000004',
+    province: 'Lumbini Province',
+    district: 'Rupandehi',
+    interest: 'Skills & Business (Women Tailoring & Garment Making Trainer)',
+    availability: 'Weekends (Saturday/Sunday)',
+    reason: 'Vocational sewing and cutting instructor for women empowerment.',
+    submittedAt: '2026-02-10',
+    status: 'Approved'
+  },
+  {
+    id: 'vol-05',
+    volunteerId: 'VOL-2026-05',
+    fullName: 'Dipendra Chaudhary',
+    email: 'dipendra.c@gmail.com',
+    phone: '9829000005',
+    province: 'Koshi Province',
+    district: 'Morang (Biratnagar)',
+    interest: 'Clean Nepal, Green Nepal (Bagmati River Cleanups & Plastic Reduction)',
+    availability: 'Weekends (Saturday/Sunday)',
+    reason: 'Youth river cleanup volunteer organizer and tree planter.',
+    submittedAt: '2026-02-18',
+    status: 'Approved'
+  },
+  {
+    id: 'vol-06',
+    volunteerId: 'VOL-2026-06',
+    fullName: 'Roshani Shrestha',
+    email: 'roshani.s@gmail.com',
+    phone: '9860000006',
+    province: 'Bagmati Province',
+    district: 'Lalitpur',
+    interest: 'Skills & Business (Youth Digital IT, Computer & Mobile Repair Trainer)',
+    availability: 'Part-time (5-10 hours/week)',
+    reason: 'Computer instructor volunteering for youth tech and digital literacy classes.',
+    submittedAt: '2026-03-01',
+    status: 'Approved'
+  }
+];
+
 

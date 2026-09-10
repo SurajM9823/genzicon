@@ -152,10 +152,39 @@ class ClothesDonationAdmin(admin.ModelAdmin):
 class VolunteerAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = ('volunteer_id', 'full_name', 'phone', 'district', 'province', 'interest', 'status', 'created_at')
+    list_editable = ('status',)
     list_filter = ('status', 'province')
-    search_fields = ('volunteer_id', 'full_name', 'phone', 'email')
+    search_fields = ('volunteer_id', 'full_name', 'phone', 'email', 'district', 'skills')
+    fieldsets = (
+        ('Volunteer Identification', {
+            'fields': ('volunteer_id', 'full_name', 'status')
+        }),
+        ('Contact Details', {
+            'fields': ('phone', 'email')
+        }),
+        ('Regional Location', {
+            'fields': ('province', 'district')
+        }),
+        ('Pillar Track & Availability', {
+            'fields': ('interest', 'availability')
+        }),
+        ('Experience & Background Notes', {
+            'fields': ('skills',)
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.status:
+            obj.status = 'Approved'
+        super().save_model(request, obj, form, change)
 
     def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_add_permission(self, request):
+        return True
+
+    def has_delete_permission(self, request, obj=None):
         return True
 
 @admin.register(DonationRecord)

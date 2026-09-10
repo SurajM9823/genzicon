@@ -1126,7 +1126,7 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
                 </div>
 
                 {/* Map View Frame */}
-                <div className="relative w-full h-56 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden">
+                <div className="relative w-full h-56 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden group">
                   <iframe
                     title="Live Central Hub Google Map Preview"
                     src={getCleanMapEmbedUrl(hubForm.mapEmbedUrl)}
@@ -1137,6 +1137,16 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
                     referrerPolicy="no-referrer"
                     className="w-full h-full"
                   />
+                  <a
+                    href={hubForm.googleMapsDirectionsUrl || 'https://maps.app.goo.gl/jzMPyppNjnAydjax8'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 bg-white/95 hover:bg-white text-[#003c90] shadow-md border border-[#d8e3fb] text-[10px] font-bold flex items-center gap-1 transition-all"
+                  >
+                    <MapPin className="w-3 h-3 text-emerald-600 shrink-0" />
+                    <span>{isNp ? 'गुगल म्यापमा खोल्नुहोस्' : 'Open in Google Maps'}</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#737784] shrink-0" />
+                  </a>
                 </div>
 
                 <div className="p-4 sm:p-5 space-y-3.5">

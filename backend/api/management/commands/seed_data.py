@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from api.models import SiteContent, ImpactStat, Project, ClothesDonation, Volunteer, DonationRecord, ContactInquiry
+from api.models import SiteContent, ImpactStat, Project, ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
 
 class Command(BaseCommand):
     help = 'Seeds initial demo and live database records for Genzicon Foundation'
@@ -82,6 +82,31 @@ class Command(BaseCommand):
                 'approx_items_count': 18,
                 'donation_mode': "doorstep_pickup",
                 'status': "Scheduled"
+            }
+        )
+
+        # 5. Clothes Hub Config
+        ClothesHubConfig.objects.get_or_create(
+            id=1,
+            defaults={
+                'hub_name': "Genzicon Clothes Bank Nepal - Central Hub",
+                'hub_name_np': "जेन्जिकन कपडा बैंक नेपाल - मुख्य संकलन केन्द्र",
+                'address': "Tinkune / New Baneshwor (Near Ring Road)",
+                'address_np': "तीनकुने / नयाँ बानेश्वर (रिङ रोड नजिक)",
+                'landmark': "Opposite to Central Park, Kathmandu 44600",
+                'landmark_np': "सेन्ट्रल पार्क अगाडि, काठमाडौँ ४४६००",
+                'city': "Kathmandu",
+                'district': "Kathmandu",
+                'province': "Bagmati Province",
+                'phone1': "9823000000",
+                'phone2': "01-4240000",
+                'email': "clothes@genzicon.com",
+                'operating_hours': "8:00 AM – 6:00 PM Daily (Open Saturdays)",
+                'operating_hours_np': "बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)",
+                'map_embed_url': "https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed",
+                'google_maps_directions_url': "https://maps.app.goo.gl/jzMPyppNjnAydjax8",
+                'contact_note': "Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.",
+                'contact_note_np': "पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।"
             }
         )
 

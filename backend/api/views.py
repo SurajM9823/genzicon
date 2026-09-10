@@ -612,16 +612,91 @@ class ClothesDonationViewSet(viewsets.ModelViewSet):
         return [permissions.IsAdminUser()]
 
 
+def ensure_default_volunteers():
+    """Ensure initial verified active volunteers exist for public directory"""
+    if Volunteer.objects.count() == 0:
+        sample_volunteers = [
+            {
+                'volunteer_id': 'VOL-2026-01',
+                'full_name': 'Aarav Sharma',
+                'phone': '9841000001',
+                'email': 'aarav.sharma@gmail.com',
+                'province': 'Bagmati Province',
+                'district': 'Kathmandu',
+                'interest': 'Clothes Bank Nepal (Collection, Sorting & Distribution)',
+                'availability': 'Weekends (Saturday/Sunday)',
+                'skills': 'Logistics coordination and youth volunteer team lead.',
+                'status': 'Approved',
+            },
+            {
+                'volunteer_id': 'VOL-2026-02',
+                'full_name': 'Pooja Thapa Magar',
+                'phone': '9801000002',
+                'email': 'pooja.magar@gmail.com',
+                'province': 'Gandaki Province',
+                'district': 'Kaski (Pokhara)',
+                'interest': 'Clean Nepal, Green Nepal (100K Tree Plantation & Chure Reforestation)',
+                'availability': 'Part-time (5-10 hours/week)',
+                'skills': 'Environmental science graduate and local community mobilizer.',
+                'status': 'Approved',
+            },
+            {
+                'volunteer_id': 'VOL-2026-03',
+                'full_name': 'Bikash Mahato',
+                'phone': '9812000003',
+                'email': 'bikash.mahato@gmail.com',
+                'province': 'Madhesh Province',
+                'district': 'Siraha',
+                'interest': 'Clothes Bank Nepal (Field Distribution & Cold Wave Relief)',
+                'availability': 'Full-time Field Volunteer',
+                'skills': 'Disaster relief distribution lead in Musahar settlements.',
+                'status': 'Approved',
+            },
+            {
+                'volunteer_id': 'VOL-2026-04',
+                'full_name': 'Sunita KC',
+                'phone': '9847000004',
+                'email': 'sunita.kc@gmail.com',
+                'province': 'Lumbini Province',
+                'district': 'Rupandehi',
+                'interest': 'Skills & Business (Women Tailoring & Garment Making Trainer)',
+                'availability': 'Weekends (Saturday/Sunday)',
+                'skills': 'Master tailor and vocational mentor for women empowerment.',
+                'status': 'Approved',
+            },
+        ]
+        for v in sample_volunteers:
+            Volunteer.objects.create(**v)
+
+
 class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = Volunteer.objects.all()
     serializer_class = VolunteerSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['full_name', 'phone', 'district', 'volunteer_id']
+    search_fields = ['full_name', 'phone', 'district', 'volunteer_id', 'interest', 'province']
 
     def get_permissions(self):
-        if self.action in ['create']:
+        if self.action in ['list', 'retrieve', 'create']:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+
+    def get_queryset(self):
+        ensure_default_volunteers()
+        user = self.request.user
+        if user and (user.is_staff or user.is_authenticated):
+            return Volunteer.objects.all().order_by('-created_at')
+        # Public visitors see only Approved / Active volunteers
+        return Volunteer.objects.filter(status__in=['Approved', 'Contacted']).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not (user and (user.is_staff or user.is_authenticated)):
+            # Public website submissions always start as 'Pending'
+            serializer.save(status='Pending')
+        else:
+            # Backend admin additions default to 'Approved'
+            status_val = self.request.data.get('status', 'Approved')
+            serializer.save(status=status_val)
 
 
 class DonationRecordViewSet(viewsets.ModelViewSet):
@@ -666,7 +741,7 @@ def ensure_default_hub_config():
             email="clothes@genzicon.com",
             operating_hours="8:00 AM – 6:00 PM Daily (Open Saturdays)",
             operating_hours_np="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)",
-            map_embed_url="https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed",
+            map_embed_url="https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed",
             google_maps_directions_url="https://maps.app.goo.gl/jzMPyppNjnAydjax8",
             contact_note="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.",
             contact_note_np="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।"

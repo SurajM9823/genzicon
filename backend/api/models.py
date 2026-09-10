@@ -305,8 +305,8 @@ class ClothesHubConfig(models.Model):
                     self.map_embed_url = extracted
             elif '/maps/embed' in raw or 'output=embed' in raw:
                 self.map_embed_url = raw
-            elif 'jzMPyppNjnAydjax8' in raw:
-                self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+            elif 'jzMPyppNjnAydjax8' in raw or 'genzicon' in raw.lower():
+                self.map_embed_url = "https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed"
             elif 'maps.app.goo.gl' in raw or 'goo.gl/maps' in raw:
                 try:
                     import urllib.request
@@ -314,27 +314,19 @@ class ClothesHubConfig(models.Model):
                     req = urllib.request.Request(raw, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
                     with urllib.request.urlopen(req, timeout=3) as resp:
                         resolved = resp.geturl()
-                        coord_match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', resolved)
                         place_match = re.search(r'/place/([^/@?]+)', resolved)
-                        if coord_match:
-                            lat, lng = coord_match.group(1), coord_match.group(2)
-                            self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
-                        elif place_match:
+                        if place_match:
                             place_name = place_match.group(1).replace('+', ' ')
-                            self.map_embed_url = f"https://maps.google.com/maps?q={place_name}&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+                            self.map_embed_url = f"https://maps.google.com/maps?q={place_name}&hl=en&z=16&output=embed"
                         else:
-                            self.map_embed_url = f"https://maps.google.com/maps?q=genzicon+Kathmandu+Nepal&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+                            self.map_embed_url = "https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed"
                 except Exception:
-                    self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+                    self.map_embed_url = "https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed"
             elif '@' in raw:
-                import re
-                coord_match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', raw)
-                if coord_match:
-                    lat, lng = coord_match.group(1), coord_match.group(2)
-                    self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+                self.map_embed_url = "https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed"
 
         if not self.map_embed_url:
-            self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+            self.map_embed_url = "https://maps.google.com/maps?q=genzicon,+Kathmandu,+Nepal&hl=en&z=16&output=embed"
         super().save(*args, **kwargs)
 
     def __str__(self):

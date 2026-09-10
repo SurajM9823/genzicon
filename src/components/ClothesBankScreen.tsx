@@ -549,7 +549,7 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
               </div>
 
               {/* Map View Frame with dynamic embed URL */}
-              <div className="relative w-full h-52 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden">
+              <div className="relative w-full h-56 bg-slate-100 border-b border-[#d8e3fb] overflow-hidden group">
                 <iframe
                   title="Genzicon Clothes Bank Central Hub Map"
                   src={getCleanMapEmbedUrl(hubConfig.mapEmbedUrl)}
@@ -560,6 +560,16 @@ export const ClothesBankScreen: React.FC<ClothesBankScreenProps> = ({
                   referrerPolicy="no-referrer"
                   className="w-full h-full"
                 />
+                <a
+                  href={hubConfig.googleMapsDirectionsUrl || 'https://maps.app.goo.gl/jzMPyppNjnAydjax8'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="absolute top-2.5 right-2.5 z-10 px-3 py-1.5 bg-white/95 hover:bg-white text-[#003c90] shadow-md border border-[#d8e3fb] text-[11px] font-bold flex items-center gap-1.5 transition-all hover:shadow-lg"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>{isNp ? 'गुगल म्यापमा खोल्नुहोस्' : 'Open in Google Maps'}</span>
+                  <ExternalLink className="w-3 h-3 text-[#737784] shrink-0" />
+                </a>
               </div>
 
               <div className="p-4 sm:p-5 space-y-3">
