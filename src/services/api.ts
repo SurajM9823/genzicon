@@ -905,30 +905,64 @@ export async function apiSubmitDonation(data: {
   donorName: string;
   donorEmail?: string;
   donorPhone?: string;
+  donorAddress?: string;
   amount: number;
   currency?: string;
   projectName?: string;
   paymentMethod: string;
-  frequency?: string;
+  note?: string;
+  donorPhotoFile?: File | null;
+  donorPhotoUrl?: string;
+  paymentSlipFile?: File | null;
+  paymentSlipUrl?: string;
 }) {
   try {
-    const payload = {
-      donor_name: data.donorName,
-      donor_email: data.donorEmail || '',
-      donor_phone: data.donorPhone || '',
-      amount: data.amount,
-      currency: data.currency || 'NPR',
-      project_name: data.projectName || 'General Fund',
-      payment_method: data.paymentMethod,
-      frequency: data.frequency || 'one-time',
-    };
+    let body: any;
+    let headers: Record<string, string> = {};
+
+    if (data.donorPhotoFile || data.paymentSlipFile) {
+      const formData = new FormData();
+      formData.append('donor_name', data.donorName);
+      formData.append('amount', String(data.amount));
+      formData.append('currency', data.currency || 'NPR');
+      formData.append('payment_method', data.paymentMethod);
+      formData.append('project_name', data.projectName || 'General Fund');
+      if (data.donorEmail) formData.append('donor_email', data.donorEmail);
+      if (data.donorPhone) formData.append('donor_phone', data.donorPhone);
+      if (data.donorAddress) formData.append('donor_address', data.donorAddress);
+      if (data.note) formData.append('note', data.note);
+      if (data.donorPhotoFile) formData.append('donor_photo', data.donorPhotoFile);
+      if (data.donorPhotoUrl) formData.append('donor_photo_url', data.donorPhotoUrl);
+      if (data.paymentSlipFile) formData.append('payment_slip', data.paymentSlipFile);
+      if (data.paymentSlipUrl) formData.append('payment_slip_url', data.paymentSlipUrl);
+      body = formData;
+    } else {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify({
+        donor_name: data.donorName,
+        donor_email: data.donorEmail || '',
+        donor_phone: data.donorPhone || '',
+        donor_address: data.donorAddress || '',
+        amount: data.amount,
+        currency: data.currency || 'NPR',
+        project_name: data.projectName || 'General Fund',
+        payment_method: data.paymentMethod,
+        note: data.note || '',
+        donor_photo_url: data.donorPhotoUrl || '',
+        payment_slip_url: data.paymentSlipUrl || '',
+      });
+    }
+
     const res = await fetch(`${API_BASE}/donations/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers,
+      body,
     });
     if (res.ok) {
       return await res.json();
+    } else {
+      const errText = await res.text();
+      console.warn('Donation submit error response:', res.status, errText);
     }
   } catch (e) {
     console.warn('Failed to submit donation record to backend:', e);
@@ -950,13 +984,17 @@ export async function apiGetDonations() {
         donorName: d.donor_name,
         donorEmail: d.donor_email || '',
         donorPhone: d.donor_phone || '',
+        donorAddress: d.donor_address || '',
+        donorPhotoUrl: d.final_donor_photo_url || d.donor_photo || d.donor_photo_url || '',
+        paymentSlipUrl: d.final_payment_slip_url || d.payment_slip || d.payment_slip_url || '',
         amount: Number(d.amount),
         currency: d.currency || 'NPR',
-        frequency: d.frequency || 'one-time',
-        paymentMethod: d.payment_method,
+        paymentMethod: d.payment_method || 'bank_transfer',
         projectName: d.project_name || 'General Fund',
+        note: d.note || '',
         date: d.created_at ? d.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
         status: d.status,
+        isPublic: d.is_public ?? true,
       }));
     }
   } catch (e) {

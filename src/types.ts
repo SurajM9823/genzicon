@@ -247,34 +247,40 @@ export interface VolunteerRecord extends VolunteerFormData {
 
 export interface DonationSubmission {
   amount: number;
-  currency: Currency;
-  customAmount?: string;
-  frequency: 'one-time' | 'monthly';
-  paymentMethod: 'esewa' | 'khalti' | 'fonepay' | 'bank' | 'card';
+  currency?: Currency;
+  paymentMethod: 'bank' | 'esewa' | 'khalti' | 'fonepay' | 'card';
   donorName: string;
-  donorEmail: string;
+  donorEmail?: string;
   donorPhone?: string;
+  donorAddress?: string;
+  donorPhotoFile?: File | null;
+  donorPhotoUrl?: string;
+  paymentSlipFile?: File | null;
+  paymentSlipUrl?: string;
   projectId?: string;
   projectName?: string;
-  address?: string;
   receiptNumber?: string;
-  transactionRef?: string;
+  note?: string;
   date?: string;
 }
 
 export interface DonationRecord {
   id: string;
-  donorName: string;
-  donorEmail: string;
-  donorPhone?: string;
-  amount: number;
-  currency: Currency;
-  frequency: 'one-time' | 'monthly';
-  paymentMethod: 'esewa' | 'khalti' | 'fonepay' | 'bank' | 'card';
-  projectName: string;
-  date: string;
   receiptNumber: string;
-  status: 'Verified' | 'Pending';
+  donorName: string;
+  donorEmail?: string;
+  donorPhone?: string;
+  donorAddress?: string;
+  donorPhotoUrl?: string;
+  paymentSlipUrl?: string;
+  amount: number;
+  currency?: Currency;
+  paymentMethod: 'bank' | 'esewa' | 'khalti' | 'fonepay' | 'card' | string;
+  projectName: string;
+  note?: string;
+  date: string;
+  status: 'Verified' | 'Approved' | 'Pending' | 'Failed';
+  isPublic?: boolean;
 }
 
 export interface ContactMessage {

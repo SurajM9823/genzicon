@@ -707,17 +707,95 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             serializer.save(status=status_val)
 
 
+def ensure_default_donations():
+    """Seed sample verified donors with transparent receipts if empty"""
+    if DonationRecord.objects.count() == 0:
+        sample_donations = [
+            {
+                'receipt_number': 'REC-2026-101',
+                'donor_name': 'Rameshwor Adhikari',
+                'donor_phone': '9851000000',
+                'donor_email': 'rameshwor.a@gmail.com',
+                'donor_address': 'Kathmandu, Bagmati Province',
+                'amount': 25000.00,
+                'payment_method': 'bank_transfer',
+                'project_name': 'Clothes Bank Nepal - Central Hub Support',
+                'donor_photo_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+                'status': 'Verified',
+                'is_public': True,
+            },
+            {
+                'receipt_number': 'REC-2026-102',
+                'donor_name': 'Pratima Shrestha',
+                'donor_phone': '9841220000',
+                'donor_email': 'pratima.s@gmail.com',
+                'donor_address': 'Lalitpur (Kupondole)',
+                'amount': 10000.00,
+                'payment_method': 'esewa',
+                'project_name': 'Clean Nepal, Green Nepal (100K Tree Plantation)',
+                'donor_photo_url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
+                'status': 'Verified',
+                'is_public': True,
+            },
+            {
+                'receipt_number': 'REC-2026-103',
+                'donor_name': 'Bikram Thapa',
+                'donor_phone': '9801330000',
+                'donor_email': 'bikram.t@gmail.com',
+                'donor_address': 'Pokhara, Kaski (Gandaki)',
+                'amount': 15000.00,
+                'payment_method': 'khalti',
+                'project_name': 'Youth Digital Skills & Women Tailoring Hub',
+                'donor_photo_url': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
+                'status': 'Verified',
+                'is_public': True,
+            },
+            {
+                'receipt_number': 'REC-2026-104',
+                'donor_name': 'Sunita & Deepak KC',
+                'donor_phone': '9847110000',
+                'donor_email': 'kc.family@gmail.com',
+                'donor_address': 'Butwal, Lumbini Province',
+                'amount': 5000.00,
+                'payment_method': 'bank_transfer',
+                'project_name': 'Terai Cold Wave Blanket & Warm Wear Relief',
+                'donor_photo_url': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
+                'status': 'Verified',
+                'is_public': True,
+            },
+        ]
+        for d in sample_donations:
+            DonationRecord.objects.create(**d)
+
+
 class DonationRecordViewSet(viewsets.ModelViewSet):
     queryset = DonationRecord.objects.all()
     serializer_class = DonationRecordSerializer
     authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['receipt_number', 'donor_name', 'donor_phone']
+    search_fields = ['receipt_number', 'donor_name', 'donor_phone', 'donor_address', 'project_name']
 
     def get_permissions(self):
-        if self.action in ['create']:
+        if self.action in ['list', 'retrieve', 'create']:
             return [permissions.AllowAny()]
         return [permissions.IsAdminUser()]
+
+    def get_queryset(self):
+        ensure_default_donations()
+        user = self.request.user
+        if user and (user.is_staff or user.is_authenticated):
+            return DonationRecord.objects.all().order_by('-created_at')
+        # Public visitors see only Approved / Verified donations marked as public
+        return DonationRecord.objects.filter(status__in=['Verified', 'Approved'], is_public=True).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if not (user and (user.is_staff or user.is_authenticated)):
+            # Public website submissions start as 'Pending' until verified
+            serializer.save(status='Pending')
+        else:
+            status_val = self.request.data.get('status', 'Verified')
+            serializer.save(status=status_val)
 
 
 class ContactInquiryViewSet(viewsets.ModelViewSet):

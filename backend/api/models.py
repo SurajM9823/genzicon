@@ -227,6 +227,7 @@ class DonationRecord(models.Model):
     """Monetary Donations & QR Bank Slips Ledger"""
     STATUS_CHOICES = [
         ('Verified', 'Verified by Finance'),
+        ('Approved', 'Approved / Verified'),
         ('Pending', 'Pending Bank Statement Slip Confirmation'),
         ('Failed', 'Cancelled / Failed'),
     ]
@@ -235,14 +236,39 @@ class DonationRecord(models.Model):
     donor_name = models.CharField(max_length=150)
     donor_email = models.EmailField(blank=True, null=True)
     donor_phone = models.CharField(max_length=30, blank=True, null=True)
+    donor_address = models.CharField(max_length=200, blank=True, null=True, verbose_name="Donor Location / Address")
+    donor_photo = models.ImageField(upload_to='donors_photos/', blank=True, null=True, verbose_name="Donor Photo / Avatar")
+    donor_photo_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Donor Photo URL")
+    payment_slip = models.ImageField(upload_to='donation_slips/', blank=True, null=True, verbose_name="Bank Payment Receipt / Slip")
+    payment_slip_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Payment Slip URL")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     currency = models.CharField(max_length=10, default='NPR')
     project = models.ForeignKey(Project, on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
-    project_name = models.CharField(max_length=255, blank=True, null=True)
-    payment_method = models.CharField(max_length=50)  # fonepay_qr, bank_transfer, esewa, cash
+    project_name = models.CharField(max_length=255, blank=True, null=True, default="General Fund (Where Needed Most)")
+    payment_method = models.CharField(max_length=50, default='bank_transfer')  # bank_transfer, esewa, khalti, fonepay_qr, card
     frequency = models.CharField(max_length=20, default='one-time')
+    note = models.TextField(blank=True, null=True, verbose_name="Message / Note")
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
+    is_public = models.BooleanField(default=True, verbose_name="Show in Public Donors List")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def final_donor_photo_url(self):
+        if self.donor_photo:
+            try:
+                return self.donor_photo.url
+            except Exception:
+                pass
+        return self.donor_photo_url or ""
+
+    @property
+    def final_payment_slip_url(self):
+        if self.payment_slip:
+            try:
+                return self.payment_slip.url
+            except Exception:
+                pass
+        return self.payment_slip_url or ""
 
     class Meta:
         ordering = ['-created_at']

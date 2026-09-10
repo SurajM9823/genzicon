@@ -997,6 +997,7 @@ export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
     interest: 'Clothes Bank Nepal (Collection, Sorting & Distribution)',
     availability: 'Weekends (Saturday/Sunday)',
     reason: 'Active field coordinator and clothes sorting lead at Central Hub.',
+    imageUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
     submittedAt: '2026-01-15',
     status: 'Approved'
   },
@@ -1011,6 +1012,7 @@ export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
     interest: 'Clean Nepal, Green Nepal (100K Tree Plantation & Chure Reforestation)',
     availability: 'Part-time (5-10 hours/week)',
     reason: 'Environmental science graduate and local green club youth mobilizer.',
+    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
     submittedAt: '2026-01-20',
     status: 'Approved'
   },
@@ -1025,6 +1027,7 @@ export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
     interest: 'Clothes Bank Nepal (Field Distribution & Cold Wave Relief)',
     availability: 'Full-time Field Volunteer',
     reason: 'Field emergency response coordinator in Musahar and Dalit settlements.',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
     submittedAt: '2026-02-01',
     status: 'Approved'
   },
@@ -1039,6 +1042,7 @@ export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
     interest: 'Skills & Business (Women Tailoring & Garment Making Trainer)',
     availability: 'Weekends (Saturday/Sunday)',
     reason: 'Vocational sewing and cutting instructor for women empowerment.',
+    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
     submittedAt: '2026-02-10',
     status: 'Approved'
   },
@@ -1053,6 +1057,7 @@ export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
     interest: 'Clean Nepal, Green Nepal (Bagmati River Cleanups & Plastic Reduction)',
     availability: 'Weekends (Saturday/Sunday)',
     reason: 'Youth river cleanup volunteer organizer and tree planter.',
+    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80',
     submittedAt: '2026-02-18',
     status: 'Approved'
   },
@@ -1067,6 +1072,7 @@ export const INITIAL_VOLUNTEERS: VolunteerRecord[] = [
     interest: 'Skills & Business (Youth Digital IT, Computer & Mobile Repair Trainer)',
     availability: 'Part-time (5-10 hours/week)',
     reason: 'Computer instructor volunteering for youth tech and digital literacy classes.',
+    imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=80',
     submittedAt: '2026-03-01',
     status: 'Approved'
   }

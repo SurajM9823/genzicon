@@ -198,9 +198,41 @@ class VolunteerAdmin(admin.ModelAdmin):
 @admin.register(DonationRecord)
 class DonationRecordAdmin(admin.ModelAdmin):
     save_on_top = True
-    list_display = ('receipt_number', 'donor_name', 'amount', 'currency', 'payment_method', 'status', 'created_at')
-    list_filter = ('status', 'payment_method')
-    search_fields = ('receipt_number', 'donor_name', 'donor_phone')
+    list_display = ('receipt_preview', 'receipt_number', 'donor_preview', 'donor_name', 'amount', 'currency', 'payment_method', 'donor_address', 'status', 'created_at')
+    list_editable = ('status',)
+    list_filter = ('status', 'payment_method', 'currency')
+    search_fields = ('receipt_number', 'donor_name', 'donor_phone', 'donor_email', 'donor_address')
+    readonly_fields = ('receipt_preview', 'donor_preview', 'created_at')
+    fieldsets = (
+        ('Donation Details', {
+            'fields': ('receipt_number', 'amount', 'currency', 'payment_method', 'status', 'project_name', 'is_public')
+        }),
+        ('Donor Identification', {
+            'fields': ('donor_name', 'donor_phone', 'donor_email', 'donor_address', 'donor_photo', 'donor_photo_url', 'donor_preview')
+        }),
+        ('Payment Slip / Bank Transfer Receipt', {
+            'fields': ('payment_slip', 'payment_slip_url', 'receipt_preview', 'note', 'created_at')
+        }),
+    )
+
+    def receipt_preview(self, obj):
+        url = obj.final_payment_slip_url
+        if url:
+            return format_html('<a href="{}" target="_blank"><img src="{}" style="max-height: 42px; border-radius: 3px; border: 1px solid #003c90;" /></a>', url, url)
+        return "-"
+    receipt_preview.short_description = "Slip / Receipt"
+
+    def donor_preview(self, obj):
+        url = obj.final_donor_photo_url
+        if url:
+            return format_html('<img src="{}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;" />', url)
+        return "-"
+    donor_preview.short_description = "Avatar"
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.status:
+            obj.status = 'Verified'
+        super().save_model(request, obj, form, change)
 
     def has_change_permission(self, request, obj=None):
         return True

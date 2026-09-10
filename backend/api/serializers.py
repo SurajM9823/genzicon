@@ -74,10 +74,29 @@ class VolunteerSerializer(serializers.ModelSerializer):
         return obj.image_url or ""
 
 class DonationRecordSerializer(serializers.ModelSerializer):
+    final_donor_photo_url = serializers.SerializerMethodField()
+    final_payment_slip_url = serializers.SerializerMethodField()
+
     class Meta:
         model = DonationRecord
         fields = '__all__'
         read_only_fields = ['receipt_number', 'created_at']
+
+    def get_final_donor_photo_url(self, obj):
+        request = self.context.get('request')
+        if obj.donor_photo:
+            if request is not None:
+                return request.build_absolute_uri(obj.donor_photo.url)
+            return obj.donor_photo.url
+        return obj.donor_photo_url or ""
+
+    def get_final_payment_slip_url(self, obj):
+        request = self.context.get('request')
+        if obj.payment_slip:
+            if request is not None:
+                return request.build_absolute_uri(obj.payment_slip.url)
+            return obj.payment_slip.url
+        return obj.payment_slip_url or ""
 
 class ContactInquirySerializer(serializers.ModelSerializer):
     class Meta:
