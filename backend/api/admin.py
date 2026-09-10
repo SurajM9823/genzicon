@@ -181,26 +181,32 @@ class ContactInquiryAdmin(admin.ModelAdmin):
 from django import forms
 
 class ClothesHubConfigAdminForm(forms.ModelForm):
+    map_embed_url = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'rows': 4,
+            'cols': 60,
+            'style': 'width: 100%; max-width: 750px;',
+            'placeholder': 'Paste Google Maps <iframe src="..."> code or direct https://www.google.com/maps/embed?... link here'
+        }),
+        required=False,
+        label="Google Maps Embed URL or iFrame Code",
+        help_text="You can paste the entire <iframe ...> code or direct embed link."
+    )
+    google_maps_directions_url = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'style': 'width: 100%; max-width: 750px;',
+            'placeholder': 'Paste Google Maps directions link (e.g. https://maps.app.goo.gl/...)'
+        }),
+        required=False,
+        label="Directions URL (Google Maps Link)"
+    )
+
     class Meta:
         model = ClothesHubConfig
         fields = '__all__'
-        widgets = {
-            'map_embed_url': forms.Textarea(attrs={
-                'rows': 3,
-                'style': 'width: 100%; max-width: 800px; font-family: monospace; font-size: 12px; padding: 8px;',
-                'placeholder': 'Paste Google Maps <iframe src="..."> code or direct https://www.google.com/maps/embed?... link here'
-            }),
-            'google_maps_directions_url': forms.TextInput(attrs={
-                'style': 'width: 100%; max-width: 800px; font-size: 13px; padding: 8px;',
-                'placeholder': 'Paste Google Maps link (e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=...)'
-            }),
-            'contact_note': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px; padding: 8px;'}),
-            'contact_note_np': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px; padding: 8px;'}),
-        }
 
     def clean_map_embed_url(self):
         url = self.cleaned_data.get('map_embed_url', '') or ''
-        # Automatically extract clean src URL if user pasted entire <iframe ...> tag
         trimmed = url.strip()
         if '<iframe' in trimmed.lower():
             import re
@@ -218,7 +224,7 @@ class ClothesHubConfigAdmin(admin.ModelAdmin):
     form = ClothesHubConfigAdminForm
     save_on_top = True
     list_display = ('hub_name', 'phone1', 'phone2', 'city', 'operating_hours', 'updated_at')
-    readonly_fields = ('updated_at', 'live_map_preview')
+    readonly_fields = ('updated_at',)
     fieldsets = (
         ('Hub Identity & Names', {
             'fields': ('hub_name', 'hub_name_np')
@@ -233,7 +239,7 @@ class ClothesHubConfigAdmin(admin.ModelAdmin):
             'fields': ('operating_hours', 'operating_hours_np')
         }),
         ('Google Maps Embed & Directions', {
-            'fields': ('map_embed_url', 'google_maps_directions_url', 'live_map_preview'),
+            'fields': ('map_embed_url', 'google_maps_directions_url'),
             'description': 'Paste Google Maps <iframe> code, direct embed link, or location URL into the boxes below.'
         }),
         ('Rider & Parcel Delivery Instructions', {
@@ -254,20 +260,4 @@ class ClothesHubConfigAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return True
 
-    def live_map_preview(self, obj):
-        if not obj or not obj.map_embed_url:
-            return "No Google Maps embed URL entered yet."
-        url = obj.map_embed_url.strip()
-        if '<iframe' in url.lower():
-            import re
-            match = re.search(r'src=["\']([^"\']+)["\']', url, re.IGNORECASE)
-            if match:
-                url = match.group(1)
-        return format_html(
-            '<div style="max-width: 650px; height: 240px; border-radius: 8px; overflow: hidden; border: 2px solid #003c90; margin-top: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">'
-            '<iframe src="{}" width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy"></iframe>'
-            '</div>',
-            url
-        )
-    live_map_preview.short_description = "Live Google Maps Embed Preview"
 
