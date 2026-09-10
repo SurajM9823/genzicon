@@ -178,22 +178,48 @@ class ContactInquiryAdmin(admin.ModelAdmin):
     def has_change_permission(self, request, obj=None):
         return True
 
+from django import forms
+
+class ClothesHubConfigAdminForm(forms.ModelForm):
+    class Meta:
+        model = ClothesHubConfig
+        fields = '__all__'
+        widgets = {
+            'map_embed_url': forms.Textarea(attrs={
+                'rows': 3,
+                'style': 'width: 100%; max-width: 800px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;',
+                'placeholder': 'Paste Google Maps <iframe src="..."> code or direct https://www.google.com/maps/embed?... link here'
+            }),
+            'google_maps_directions_url': forms.Textarea(attrs={
+                'rows': 2,
+                'style': 'width: 100%; max-width: 800px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;',
+                'placeholder': 'Paste Google Maps link (e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=...)'
+            }),
+            'contact_note': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px;'}),
+            'contact_note_np': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px;'}),
+        }
+
+    def clean_map_embed_url(self):
+        url = self.cleaned_data.get('map_embed_url', '') or ''
+        # Automatically extract clean src URL if user pasted entire <iframe ...> tag
+        trimmed = url.strip()
+        if '<iframe' in trimmed.lower():
+            import re
+            match = re.search(r'src=["\']([^"\']+)["\']', trimmed, re.IGNORECASE)
+            if match:
+                return match.group(1)
+        return trimmed
+
+    def clean_google_maps_directions_url(self):
+        url = self.cleaned_data.get('google_maps_directions_url', '') or ''
+        return url.strip()
+
 @admin.register(ClothesHubConfig)
 class ClothesHubConfigAdmin(admin.ModelAdmin):
+    form = ClothesHubConfigAdminForm
     save_on_top = True
     list_display = ('hub_name', 'phone1', 'phone2', 'city', 'operating_hours', 'updated_at')
     readonly_fields = ('updated_at', 'live_map_preview')
-    formfield_overrides = {
-        models.TextField: {
-            'widget': admin.widgets.AdminTextareaWidget(
-                attrs={
-                    'rows': 3,
-                    'style': 'width: 100%; max-width: 780px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;',
-                    'placeholder': 'Paste Google Maps <iframe src="..."> code or direct https://www.google.com/maps/embed?... URL here'
-                }
-            )
-        },
-    }
     fieldsets = (
         ('Hub Identity & Names', {
             'fields': ('hub_name', 'hub_name_np')
@@ -208,8 +234,8 @@ class ClothesHubConfigAdmin(admin.ModelAdmin):
             'fields': ('operating_hours', 'operating_hours_np')
         }),
         ('Google Maps Embed & Directions', {
-            'fields': ('map_embed_url', 'live_map_preview', 'google_maps_directions_url'),
-            'description': 'Paste Google Maps <iframe> code, direct embed link, or location URL into the box below.'
+            'fields': ('map_embed_url', 'google_maps_directions_url', 'live_map_preview'),
+            'description': 'Paste Google Maps <iframe> code, direct embed link, or location URL into the boxes below.'
         }),
         ('Rider & Parcel Delivery Instructions', {
             'fields': ('contact_note', 'contact_note_np')
