@@ -946,8 +946,8 @@ export const DEFAULT_CLOTHES_HUB_CONFIG: ClothesHubConfig = {
   email: 'clothes@genzicon.com',
   operatingHours: '8:00 AM – 6:00 PM Daily (Open Saturdays)',
   operatingHoursNp: 'बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)',
-  mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp',
-  googleMapsDirectionsUrl: 'https://maps.google.com/?q=Tinkune,Kathmandu,Nepal',
+  mapEmbedUrl: 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed',
+  googleMapsDirectionsUrl: 'https://maps.app.goo.gl/jzMPyppNjnAydjax8',
   contactNote: 'Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.',
   contactNoteNp: 'पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।',
 };

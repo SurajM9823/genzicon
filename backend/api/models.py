@@ -282,8 +282,8 @@ class ClothesHubConfig(models.Model):
     email = models.CharField(max_length=150, default="clothes@genzicon.com", blank=True, null=True, verbose_name="Hub Email")
     operating_hours = models.CharField(max_length=255, default="8:00 AM – 6:00 PM Daily (Open Saturdays)", blank=True, verbose_name="Operating Hours (English)")
     operating_hours_np = models.CharField(max_length=255, default="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)", blank=True, verbose_name="Operating Hours (Nepali)")
-    map_embed_url = models.TextField(default="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp", blank=True, null=True, verbose_name="Google Maps Embed URL or iFrame Code")
-    google_maps_directions_url = models.TextField(default="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal", blank=True, null=True, verbose_name="Directions URL (Google Maps Link)")
+    map_embed_url = models.TextField(default="https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed", blank=True, null=True, verbose_name="Google Maps Embed URL")
+    google_maps_directions_url = models.TextField(default="https://maps.app.goo.gl/jzMPyppNjnAydjax8", blank=True, null=True, verbose_name="Google Maps Location Link")
     contact_note = models.TextField(default="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.", blank=True, null=True, verbose_name="Delivery Note (English)")
     contact_note_np = models.TextField(default="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।", blank=True, null=True, verbose_name="Delivery Note (Nepali)")
     updated_at = models.DateTimeField(auto_now=True)
@@ -295,6 +295,7 @@ class ClothesHubConfig(models.Model):
     def save(self, *args, **kwargs):
         if self.google_maps_directions_url:
             raw = str(self.google_maps_directions_url).strip()
+            # If user pasted an iframe
             if '<iframe' in raw.lower():
                 import re
                 match = re.search(r'src=["\']([^"\']+)["\']', raw, re.IGNORECASE)
@@ -304,8 +305,36 @@ class ClothesHubConfig(models.Model):
                     self.map_embed_url = extracted
             elif '/maps/embed' in raw or 'output=embed' in raw:
                 self.map_embed_url = raw
+            elif 'jzMPyppNjnAydjax8' in raw:
+                self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed"
+            elif 'maps.app.goo.gl' in raw or 'goo.gl/maps' in raw:
+                try:
+                    import urllib.request
+                    import re
+                    req = urllib.request.Request(raw, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+                    with urllib.request.urlopen(req, timeout=3) as resp:
+                        resolved = resp.geturl()
+                        coord_match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', resolved)
+                        place_match = re.search(r'/place/([^/@?]+)', resolved)
+                        if coord_match:
+                            lat, lng = coord_match.group(1), coord_match.group(2)
+                            self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}&hl=en&z=16&output=embed"
+                        elif place_match:
+                            place_name = place_match.group(1).replace('+', ' ')
+                            self.map_embed_url = f"https://maps.google.com/maps?q={place_name}&hl=en&z=16&output=embed"
+                        else:
+                            self.map_embed_url = f"https://maps.google.com/maps?q=genzicon+Kathmandu+Nepal&hl=en&z=16&output=embed"
+                except Exception:
+                    self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed"
+            elif '@' in raw:
+                import re
+                coord_match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', raw)
+                if coord_match:
+                    lat, lng = coord_match.group(1), coord_match.group(2)
+                    self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}&hl=en&z=16&output=embed"
+
         if not self.map_embed_url:
-            self.map_embed_url = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp"
+            self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed"
         super().save(*args, **kwargs)
 
     def __str__(self):

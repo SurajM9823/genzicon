@@ -1180,19 +1180,31 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (hubForm.googleMapsDirectionsUrl) {
-                        window.open(hubForm.googleMapsDirectionsUrl, '_blank');
-                      }
-                    }}
-                    className="w-full py-2.5 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors shadow-xs"
-                  >
-                    <Navigation className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{isNp ? 'गुगल म्यापमा बाटो हेर्नुहोस्' : 'Get Google Maps Directions'}</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open(hubForm.googleMapsDirectionsUrl || 'https://maps.app.goo.gl/jzMPyppNjnAydjax8', '_blank');
+                      }}
+                      className="py-2.5 px-3 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span className="truncate">{isNp ? 'पिन हेर्नुहोस्' : 'Open Location Pin'}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open('https://www.google.com/maps/dir/?api=1&destination=27.6614561,85.3503987', '_blank');
+                      }}
+                      className="py-2.5 px-3 bg-[#f0f4fc] hover:bg-[#d8e3fb] text-[#003c90] border border-[#d8e3fb] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                    >
+                      <Navigation className="w-3.5 h-3.5 text-[#00743a] shrink-0" />
+                      <span className="truncate">{isNp ? 'बाटो / नेभिगेसन' : 'Get Directions'}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </button>
+                  </div>
                 </div>
               </div>
 

@@ -660,7 +660,7 @@ export async function apiUpdateClothesStatus(id: string | number, status: string
  * 4. Standard OpenStreetMap or custom embed URL
  */
 export function getCleanMapEmbedUrl(rawInput?: string): string {
-  const fallback = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp';
+  const fallback = 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed';
   if (!rawInput || typeof rawInput !== 'string' || !rawInput.trim()) {
     return fallback;
   }
@@ -680,22 +680,38 @@ export function getCleanMapEmbedUrl(rawInput?: string): string {
     return trimmed;
   }
 
+  // Specific shortlink for Genzicon Hub
+  if (trimmed.includes('jzMPyppNjnAydjax8')) {
+    return 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed';
+  }
+
+  // Check for coordinates in URL (@27.66...,85.34... or ?q=27.66...,85.34...)
+  const coordMatch = trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || trimmed.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/) || trimmed.match(/ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (coordMatch) {
+    return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&hl=en&z=16&output=embed`;
+  }
+
   // If it's a standard Google Maps URL with ?q= or /place/
   if (trimmed.includes('google.com/maps') || trimmed.includes('maps.google.com')) {
     try {
       const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
       const q = url.searchParams.get('q');
       if (q) {
-        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&hl=en&z=16&output=embed`;
       }
       const placeMatch = trimmed.match(/maps\/(?:place|search)\/([^/@?]+)/i);
       if (placeMatch && placeMatch[1]) {
         const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-        return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+        return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&hl=en&z=16&output=embed`;
       }
     } catch {
       // ignore
     }
+  }
+
+  // If it's another maps.app.goo.gl link that hasn't been resolved to coords
+  if (trimmed.includes('maps.app.goo.gl') || trimmed.includes('goo.gl/maps')) {
+    return 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed';
   }
 
   return trimmed;
