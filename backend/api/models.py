@@ -282,7 +282,7 @@ class ClothesHubConfig(models.Model):
     email = models.CharField(max_length=150, default="clothes@genzicon.com", blank=True, null=True, verbose_name="Hub Email")
     operating_hours = models.CharField(max_length=255, default="8:00 AM – 6:00 PM Daily (Open Saturdays)", blank=True, verbose_name="Operating Hours (English)")
     operating_hours_np = models.CharField(max_length=255, default="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)", blank=True, verbose_name="Operating Hours (Nepali)")
-    map_embed_url = models.TextField(default="https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed", blank=True, null=True, verbose_name="Google Maps Embed URL")
+    map_embed_url = models.TextField(default="https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed", blank=True, null=True, verbose_name="Google Maps Embed URL")
     google_maps_directions_url = models.TextField(default="https://maps.app.goo.gl/jzMPyppNjnAydjax8", blank=True, null=True, verbose_name="Google Maps Location Link")
     contact_note = models.TextField(default="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.", blank=True, null=True, verbose_name="Delivery Note (English)")
     contact_note_np = models.TextField(default="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।", blank=True, null=True, verbose_name="Delivery Note (Nepali)")
@@ -306,7 +306,7 @@ class ClothesHubConfig(models.Model):
             elif '/maps/embed' in raw or 'output=embed' in raw:
                 self.map_embed_url = raw
             elif 'jzMPyppNjnAydjax8' in raw:
-                self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed"
+                self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
             elif 'maps.app.goo.gl' in raw or 'goo.gl/maps' in raw:
                 try:
                     import urllib.request
@@ -318,23 +318,23 @@ class ClothesHubConfig(models.Model):
                         place_match = re.search(r'/place/([^/@?]+)', resolved)
                         if coord_match:
                             lat, lng = coord_match.group(1), coord_match.group(2)
-                            self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}&hl=en&z=16&output=embed"
+                            self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
                         elif place_match:
                             place_name = place_match.group(1).replace('+', ' ')
-                            self.map_embed_url = f"https://maps.google.com/maps?q={place_name}&hl=en&z=16&output=embed"
+                            self.map_embed_url = f"https://maps.google.com/maps?q={place_name}&t=&z=16&ie=UTF8&iwloc=B&output=embed"
                         else:
-                            self.map_embed_url = f"https://maps.google.com/maps?q=genzicon+Kathmandu+Nepal&hl=en&z=16&output=embed"
+                            self.map_embed_url = f"https://maps.google.com/maps?q=genzicon+Kathmandu+Nepal&t=&z=16&ie=UTF8&iwloc=B&output=embed"
                 except Exception:
-                    self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed"
+                    self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
             elif '@' in raw:
                 import re
                 coord_match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', raw)
                 if coord_match:
                     lat, lng = coord_match.group(1), coord_match.group(2)
-                    self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}&hl=en&z=16&output=embed"
+                    self.map_embed_url = f"https://maps.google.com/maps?q={lat},{lng}+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
 
         if not self.map_embed_url:
-            self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed"
+            self.map_embed_url = "https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
         super().save(*args, **kwargs)
 
     def __str__(self):

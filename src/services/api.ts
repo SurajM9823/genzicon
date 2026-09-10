@@ -660,7 +660,7 @@ export async function apiUpdateClothesStatus(id: string | number, status: string
  * 4. Standard OpenStreetMap or custom embed URL
  */
 export function getCleanMapEmbedUrl(rawInput?: string): string {
-  const fallback = 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed';
+  const fallback = 'https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed';
   if (!rawInput || typeof rawInput !== 'string' || !rawInput.trim()) {
     return fallback;
   }
@@ -675,20 +675,20 @@ export function getCleanMapEmbedUrl(rawInput?: string): string {
     }
   }
 
-  // If it's already an embed link (Google Maps embed or OSM embed)
-  if (trimmed.includes('/maps/embed') || trimmed.includes('output=embed')) {
+  // If it's already a full embed link
+  if (trimmed.includes('/maps/embed') || (trimmed.includes('output=embed') && trimmed.includes('maps.google.com'))) {
     return trimmed;
   }
 
   // Specific shortlink for Genzicon Hub
   if (trimmed.includes('jzMPyppNjnAydjax8')) {
-    return 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed';
+    return 'https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed';
   }
 
   // Check for coordinates in URL (@27.66...,85.34... or ?q=27.66...,85.34...)
   const coordMatch = trimmed.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || trimmed.match(/q=(-?\d+\.\d+),(-?\d+\.\d+)/) || trimmed.match(/ll=(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (coordMatch) {
-    return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&hl=en&z=16&output=embed`;
+    return `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed`;
   }
 
   // If it's a standard Google Maps URL with ?q= or /place/
@@ -697,24 +697,24 @@ export function getCleanMapEmbedUrl(rawInput?: string): string {
       const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
       const q = url.searchParams.get('q');
       if (q) {
-        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&hl=en&z=16&output=embed`;
+        return `https://maps.google.com/maps?q=${encodeURIComponent(q)}&t=&z=16&ie=UTF8&iwloc=B&output=embed`;
       }
       const placeMatch = trimmed.match(/maps\/(?:place|search)\/([^/@?]+)/i);
       if (placeMatch && placeMatch[1]) {
         const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
-        return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&hl=en&z=16&output=embed`;
+        return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=16&ie=UTF8&iwloc=B&output=embed`;
       }
     } catch {
       // ignore
     }
   }
 
-  // If it's another maps.app.goo.gl link that hasn't been resolved to coords
+  // If it's another maps.app.goo.gl link
   if (trimmed.includes('maps.app.goo.gl') || trimmed.includes('goo.gl/maps')) {
-    return 'https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed';
+    return 'https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed';
   }
 
-  return trimmed;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(trimmed)}&t=&z=16&ie=UTF8&iwloc=B&output=embed`;
 }
 
 export async function apiGetClothesHubConfig(): Promise<ClothesHubConfig | null> {

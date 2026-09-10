@@ -666,7 +666,7 @@ def ensure_default_hub_config():
             email="clothes@genzicon.com",
             operating_hours="8:00 AM – 6:00 PM Daily (Open Saturdays)",
             operating_hours_np="बिहान ८:०० देखि साँझ ६:०० सम्म (शनिबार पनि खुला)",
-            map_embed_url="https://maps.google.com/maps?q=27.6614561,85.3503987&hl=en&z=16&output=embed",
+            map_embed_url="https://maps.google.com/maps?q=27.6614561,85.3503987+(Genzicon+Central+Hub)&t=&z=16&ie=UTF8&iwloc=B&output=embed",
             google_maps_directions_url="https://maps.app.goo.gl/jzMPyppNjnAydjax8",
             contact_note="Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.",
             contact_note_np="पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।"

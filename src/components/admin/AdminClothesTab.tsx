@@ -1196,7 +1196,7 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        window.open('https://www.google.com/maps/dir/?api=1&destination=27.6614561,85.3503987', '_blank');
+                        window.open('https://www.google.com/maps/dir/?api=1&destination=genzicon+Kathmandu+Nepal&destination_place_id=ChIJCalqOEca6zkR8IBMmAz8yOE', '_blank');
                       }}
                       className="py-2.5 px-3 bg-[#f0f4fc] hover:bg-[#d8e3fb] text-[#003c90] border border-[#d8e3fb] text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-xs"
                     >
