@@ -187,16 +187,15 @@ class ClothesHubConfigAdminForm(forms.ModelForm):
         widgets = {
             'map_embed_url': forms.Textarea(attrs={
                 'rows': 3,
-                'style': 'width: 100%; max-width: 800px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;',
+                'style': 'width: 100%; max-width: 800px; font-family: monospace; font-size: 12px; padding: 8px;',
                 'placeholder': 'Paste Google Maps <iframe src="..."> code or direct https://www.google.com/maps/embed?... link here'
             }),
-            'google_maps_directions_url': forms.Textarea(attrs={
-                'rows': 2,
-                'style': 'width: 100%; max-width: 800px; font-family: monospace; font-size: 12px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;',
+            'google_maps_directions_url': forms.TextInput(attrs={
+                'style': 'width: 100%; max-width: 800px; font-size: 13px; padding: 8px;',
                 'placeholder': 'Paste Google Maps link (e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=...)'
             }),
-            'contact_note': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px;'}),
-            'contact_note_np': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px;'}),
+            'contact_note': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px; padding: 8px;'}),
+            'contact_note_np': forms.Textarea(attrs={'rows': 2, 'style': 'width: 100%; max-width: 800px; padding: 8px;'}),
         }
 
     def clean_map_embed_url(self):

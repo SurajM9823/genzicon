@@ -72,7 +72,7 @@
     background: #f8fafc !important;
     border-right: 1px solid #d8e3fb !important;
     box-sizing: border-box !important;
-    z-index: 50 !important;
+    z-index: 30 !important;
     padding-bottom: 40px !important;
   }
 
@@ -86,12 +86,16 @@
     overflow-x: auto !important;
     background: #ffffff !important;
     position: relative !important;
-    z-index: 10 !important;
+    z-index: 40 !important;
+    pointer-events: auto !important;
   }
 
   #content-main {
     max-width: 100% !important;
     padding-bottom: 80px !important;
+    position: relative !important;
+    z-index: 40 !important;
+    pointer-events: auto !important;
   }
 
   /* Responsive adjustment when sidebar is collapsed or on smaller viewports */
@@ -213,12 +217,17 @@
   .form-row {
     padding: 12px 14px !important;
     border-bottom: 1px solid #f0f3ff !important;
+    position: relative !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
   }
   fieldset.module {
     border: 1px solid #d8e3fb !important;
     border-radius: 4px !important;
     margin-bottom: 24px !important;
     background: #ffffff !important;
+    position: relative !important;
+    z-index: 45 !important;
   }
   fieldset.module h2 {
     background: #f0f4ff !important;
@@ -237,16 +246,25 @@
   textarea,
   select {
     padding: 8px 12px !important;
-    border: 1px solid #cbd5e1 !important;
+    border: 1px solid #94a3b8 !important;
     border-radius: 4px !important;
     font-size: 13px !important;
     box-sizing: border-box !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    cursor: text !important;
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 55 !important;
   }
   input[type="text"]:focus,
   textarea:focus,
   select:focus {
     border-color: #003c90 !important;
-    outline: 2px solid rgba(0, 60, 144, 0.2) !important;
+    outline: 2px solid rgba(0, 60, 144, 0.25) !important;
+    background-color: #ffffff !important;
   }
 </style>
 {% endblock %}
