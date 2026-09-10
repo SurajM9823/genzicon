@@ -151,13 +151,14 @@ class ClothesDonationAdmin(admin.ModelAdmin):
 @admin.register(Volunteer)
 class VolunteerAdmin(admin.ModelAdmin):
     save_on_top = True
-    list_display = ('volunteer_id', 'full_name', 'phone', 'district', 'province', 'interest', 'status', 'created_at')
+    list_display = ('image_preview', 'volunteer_id', 'full_name', 'phone', 'district', 'province', 'interest', 'status', 'created_at')
     list_editable = ('status',)
     list_filter = ('status', 'province')
     search_fields = ('volunteer_id', 'full_name', 'phone', 'email', 'district', 'skills')
+    readonly_fields = ('image_preview', 'created_at')
     fieldsets = (
-        ('Volunteer Identification', {
-            'fields': ('volunteer_id', 'full_name', 'status')
+        ('Volunteer Identification & Photo', {
+            'fields': ('volunteer_id', 'full_name', 'status', 'photo', 'image_url', 'image_preview')
         }),
         ('Contact Details', {
             'fields': ('phone', 'email')
@@ -169,9 +170,16 @@ class VolunteerAdmin(admin.ModelAdmin):
             'fields': ('interest', 'availability')
         }),
         ('Experience & Background Notes', {
-            'fields': ('skills',)
+            'fields': ('skills', 'created_at')
         }),
     )
+
+    def image_preview(self, obj):
+        url = obj.final_image_url
+        if url:
+            return format_html('<img src="{}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;" />', url)
+        return "-"
+    image_preview.short_description = "Photo"
 
     def save_model(self, request, obj, form, change):
         if not change and not obj.status:

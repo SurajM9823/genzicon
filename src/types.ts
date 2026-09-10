@@ -233,6 +233,8 @@ export interface VolunteerFormData {
   reason: string;
   experience?: string;
   agreeTerms?: boolean;
+  photoFile?: File | null;
+  imageUrl?: string;
 }
 
 export interface VolunteerRecord extends VolunteerFormData {
@@ -240,6 +242,7 @@ export interface VolunteerRecord extends VolunteerFormData {
   submittedAt: string;
   status: 'Pending' | 'Approved' | 'Contacted';
   volunteerId: string;
+  imageUrl?: string;
 }
 
 export interface DonationSubmission {

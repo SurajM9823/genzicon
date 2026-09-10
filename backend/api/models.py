@@ -201,8 +201,19 @@ class Volunteer(models.Model):
     interest = models.CharField(max_length=150)
     availability = models.CharField(max_length=100)
     skills = models.TextField(blank=True, null=True)
+    photo = models.ImageField(upload_to='volunteers/', null=True, blank=True, verbose_name="Volunteer Photo")
+    image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Photo URL")
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def final_image_url(self):
+        if self.photo:
+            try:
+                return self.photo.url
+            except Exception:
+                pass
+        return self.image_url or ""
 
     class Meta:
         ordering = ['-created_at']

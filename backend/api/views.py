@@ -1,9 +1,11 @@
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.db.models import Sum, Count
+from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
@@ -603,6 +605,7 @@ class ClothesDonorViewSet(viewsets.ModelViewSet):
 class ClothesDonationViewSet(viewsets.ModelViewSet):
     queryset = ClothesDonation.objects.all()
     serializer_class = ClothesDonationSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['donor_name', 'phone', 'city', 'district', 'ref_id']
 
@@ -626,6 +629,7 @@ def ensure_default_volunteers():
                 'interest': 'Clothes Bank Nepal (Collection, Sorting & Distribution)',
                 'availability': 'Weekends (Saturday/Sunday)',
                 'skills': 'Logistics coordination and youth volunteer team lead.',
+                'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=300&q=80',
                 'status': 'Approved',
             },
             {
@@ -638,6 +642,7 @@ def ensure_default_volunteers():
                 'interest': 'Clean Nepal, Green Nepal (100K Tree Plantation & Chure Reforestation)',
                 'availability': 'Part-time (5-10 hours/week)',
                 'skills': 'Environmental science graduate and local community mobilizer.',
+                'image_url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80',
                 'status': 'Approved',
             },
             {
@@ -650,6 +655,7 @@ def ensure_default_volunteers():
                 'interest': 'Clothes Bank Nepal (Field Distribution & Cold Wave Relief)',
                 'availability': 'Full-time Field Volunteer',
                 'skills': 'Disaster relief distribution lead in Musahar settlements.',
+                'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
                 'status': 'Approved',
             },
             {
@@ -662,6 +668,7 @@ def ensure_default_volunteers():
                 'interest': 'Skills & Business (Women Tailoring & Garment Making Trainer)',
                 'availability': 'Weekends (Saturday/Sunday)',
                 'skills': 'Master tailor and vocational mentor for women empowerment.',
+                'image_url': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=300&q=80',
                 'status': 'Approved',
             },
         ]
@@ -672,6 +679,7 @@ def ensure_default_volunteers():
 class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = Volunteer.objects.all()
     serializer_class = VolunteerSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['full_name', 'phone', 'district', 'volunteer_id', 'interest', 'province']
 
@@ -702,6 +710,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 class DonationRecordViewSet(viewsets.ModelViewSet):
     queryset = DonationRecord.objects.all()
     serializer_class = DonationRecordSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['receipt_number', 'donor_name', 'donor_phone']
 
@@ -714,6 +723,7 @@ class DonationRecordViewSet(viewsets.ModelViewSet):
 class ContactInquiryViewSet(viewsets.ModelViewSet):
     queryset = ContactInquiry.objects.all()
     serializer_class = ContactInquirySerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'email', 'phone', 'subject']
 
@@ -751,6 +761,7 @@ def ensure_default_hub_config():
 class ClothesHubConfigViewSet(viewsets.ModelViewSet):
     queryset = ClothesHubConfig.objects.all()
     serializer_class = ClothesHubConfigSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:

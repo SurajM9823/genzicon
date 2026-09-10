@@ -801,25 +801,51 @@ export async function apiSubmitVolunteer(data: {
   interest: string;
   availability: string;
   skills?: string;
+  photoFile?: File | null;
+  imageUrl?: string;
 }) {
   try {
-    const payload = {
-      full_name: data.fullName,
-      phone: data.phone,
-      email: data.email,
-      province: data.province,
-      district: data.district,
-      interest: data.interest,
-      availability: data.availability,
-      skills: data.skills || '',
-    };
+    let body: any;
+    let headers: Record<string, string> = {};
+
+    if (data.photoFile) {
+      const formData = new FormData();
+      formData.append('full_name', data.fullName);
+      formData.append('phone', data.phone);
+      formData.append('email', data.email);
+      formData.append('province', data.province);
+      formData.append('district', data.district);
+      formData.append('interest', data.interest);
+      formData.append('availability', data.availability);
+      formData.append('skills', data.skills || '');
+      formData.append('photo', data.photoFile);
+      if (data.imageUrl) formData.append('image_url', data.imageUrl);
+      body = formData;
+    } else {
+      headers['Content-Type'] = 'application/json';
+      body = JSON.stringify({
+        full_name: data.fullName,
+        phone: data.phone,
+        email: data.email,
+        province: data.province,
+        district: data.district,
+        interest: data.interest,
+        availability: data.availability,
+        skills: data.skills || '',
+        image_url: data.imageUrl || '',
+      });
+    }
+
     const res = await fetch(`${API_BASE}/volunteers/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      headers,
+      body,
     });
     if (res.ok) {
       return await res.json();
+    } else {
+      const errText = await res.text();
+      console.warn('Volunteer submit error response:', res.status, errText);
     }
   } catch (e) {
     console.warn('Failed to submit volunteer registration:', e);
@@ -847,6 +873,7 @@ export async function apiGetVolunteers() {
         availability: v.availability,
         reason: v.skills || 'Youth volunteer civic contribution',
         experience: '',
+        imageUrl: v.final_image_url || v.photo || v.image_url || '',
         submittedAt: v.created_at ? v.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
         status: v.status,
       }));

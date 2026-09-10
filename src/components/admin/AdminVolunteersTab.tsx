@@ -152,9 +152,22 @@ export const AdminVolunteersTab: React.FC<AdminVolunteersTabProps> = ({
           {filteredVolunteers.map((vol) => (
             <div key={vol.id} className="bg-white p-4 border border-[#d8e3fb] shadow-xs space-y-2.5">
               <div className="flex items-start justify-between gap-2">
-                <div>
-                  <span className="font-mono font-bold text-[#003c90] text-xs block">{vol.volunteerId}</span>
-                  <span className="font-bold text-[#111c2d] text-sm">{vol.fullName}</span>
+                <div className="flex items-center gap-2">
+                  {vol.imageUrl ? (
+                    <img
+                      src={vol.imageUrl}
+                      alt={vol.fullName}
+                      className="w-8 h-8 rounded-full object-cover border border-[#d8e3fb] shrink-0 bg-gray-100"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#003c90]/10 text-[#003c90] flex items-center justify-center font-bold text-[10px] shrink-0 border border-[#003c90]/20 font-mono">
+                      {vol.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-mono font-bold text-[#003c90] text-xs block">{vol.volunteerId}</span>
+                    <span className="font-bold text-[#111c2d] text-sm">{vol.fullName}</span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -234,9 +247,24 @@ export const AdminVolunteersTab: React.FC<AdminVolunteersTabProps> = ({
                   </td>
 
                   <td className="p-3 align-top">
-                    <span className="font-bold text-[#111c2d] block">{vol.fullName}</span>
-                    <span className="font-mono text-[11px] text-[#434653] block">{vol.phone}</span>
-                    <span className="text-[10px] text-[#737784]">{vol.email}</span>
+                    <div className="flex items-center gap-2.5">
+                      {vol.imageUrl ? (
+                        <img
+                          src={vol.imageUrl}
+                          alt={vol.fullName}
+                          className="w-8 h-8 rounded-full object-cover border border-[#d8e3fb] shrink-0 bg-gray-100"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-[#003c90]/10 text-[#003c90] flex items-center justify-center font-bold text-[10px] shrink-0 border border-[#003c90]/20 font-mono">
+                          {vol.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <span className="font-bold text-[#111c2d] block">{vol.fullName}</span>
+                        <span className="font-mono text-[11px] text-[#434653] block">{vol.phone}</span>
+                        <span className="text-[10px] text-[#737784]">{vol.email}</span>
+                      </div>
+                    </div>
                   </td>
 
                   <td className="p-3 align-top">
@@ -299,13 +327,26 @@ export const AdminVolunteersTab: React.FC<AdminVolunteersTabProps> = ({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white max-w-lg w-full p-6 border border-[#d8e3fb] shadow-xl">
             <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#d8e3fb]">
-              <div>
-                <span className="text-[10px] font-mono font-bold text-[#003c90] block">
-                  {selectedVolunteer.volunteerId}
-                </span>
-                <h3 className="text-sm font-bold text-[#111c2d] font-heading">
-                  {selectedVolunteer.fullName}
-                </h3>
+              <div className="flex items-center gap-3">
+                {selectedVolunteer.imageUrl ? (
+                  <img
+                    src={selectedVolunteer.imageUrl}
+                    alt={selectedVolunteer.fullName}
+                    className="w-12 h-12 rounded-xs object-cover border border-[#d8e3fb] bg-gray-100 shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xs bg-[#003c90]/10 text-[#003c90] flex items-center justify-center font-bold text-sm shrink-0 border border-[#003c90]/20 font-mono">
+                    {selectedVolunteer.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <span className="text-[10px] font-mono font-bold text-[#003c90] block">
+                    {selectedVolunteer.volunteerId}
+                  </span>
+                  <h3 className="text-base font-bold text-[#111c2d] font-heading">
+                    {selectedVolunteer.fullName}
+                  </h3>
+                </div>
               </div>
               <button onClick={() => setSelectedVolunteer(null)} className="p-1 hover:bg-[#f0f3ff]">
                 <X className="w-4 h-4 text-[#737784]" />

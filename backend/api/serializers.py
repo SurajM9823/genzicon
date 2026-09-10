@@ -58,10 +58,20 @@ class ClothesDonationSerializer(serializers.ModelSerializer):
         read_only_fields = ['ref_id', 'created_at']
 
 class VolunteerSerializer(serializers.ModelSerializer):
+    final_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Volunteer
         fields = '__all__'
         read_only_fields = ['volunteer_id', 'created_at']
+
+    def get_final_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.photo:
+            if request is not None:
+                return request.build_absolute_uri(obj.photo.url)
+            return obj.photo.url
+        return obj.image_url or ""
 
 class DonationRecordSerializer(serializers.ModelSerializer):
     class Meta:
