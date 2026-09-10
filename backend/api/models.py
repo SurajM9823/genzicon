@@ -292,5 +292,21 @@ class ClothesHubConfig(models.Model):
         verbose_name = "Clothes Hub Configuration"
         verbose_name_plural = "Clothes Hub Configuration"
 
+    def save(self, *args, **kwargs):
+        if self.google_maps_directions_url:
+            raw = str(self.google_maps_directions_url).strip()
+            if '<iframe' in raw.lower():
+                import re
+                match = re.search(r'src=["\']([^"\']+)["\']', raw, re.IGNORECASE)
+                if match:
+                    extracted = match.group(1)
+                    self.google_maps_directions_url = extracted
+                    self.map_embed_url = extracted
+            elif '/maps/embed' in raw or 'output=embed' in raw:
+                self.map_embed_url = raw
+        if not self.map_embed_url:
+            self.map_embed_url = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14130.857353982845!2d85.3400!3d27.6890!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb1997d4a46083%3A0x6b4502d99d14631e!2sTinkune%2C%20Kathmandu%2044600!5e0!3m2!1sen!2snp!4v1700000000000!5m2!1sen!2snp"
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.hub_name} ({self.phone1} / {self.phone2})"

@@ -181,43 +181,36 @@ class ContactInquiryAdmin(admin.ModelAdmin):
 from django import forms
 
 class ClothesHubConfigAdminForm(forms.ModelForm):
-    map_embed_url = forms.CharField(
-        widget=forms.Textarea(attrs={
-            'rows': 4,
-            'cols': 60,
-            'style': 'width: 100%; max-width: 750px;',
-            'placeholder': 'Paste Google Maps <iframe src="..."> code or direct https://www.google.com/maps/embed?... link here'
-        }),
-        required=False,
-        label="Google Maps Embed URL or iFrame Code",
-        help_text="You can paste the entire <iframe ...> code or direct embed link."
-    )
     google_maps_directions_url = forms.CharField(
         widget=forms.TextInput(attrs={
-            'style': 'width: 100%; max-width: 750px;',
-            'placeholder': 'Paste Google Maps directions link (e.g. https://maps.app.goo.gl/...)'
+            'style': 'width: 100%; max-width: 750px; padding: 6px 10px; font-size: 13px;',
+            'placeholder': 'Paste Google Maps link (e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=...)'
         }),
         required=False,
-        label="Directions URL (Google Maps Link)"
+        label="Google Maps Location Link",
+        help_text="Paste your Google Maps share link here (e.g. https://maps.app.goo.gl/...)."
     )
 
     class Meta:
         model = ClothesHubConfig
-        fields = '__all__'
+        fields = [
+            'hub_name', 'hub_name_np',
+            'phone1', 'phone2', 'email',
+            'address', 'address_np', 'landmark', 'landmark_np', 'city', 'district', 'province',
+            'operating_hours', 'operating_hours_np',
+            'google_maps_directions_url',
+            'contact_note', 'contact_note_np'
+        ]
 
-    def clean_map_embed_url(self):
-        url = self.cleaned_data.get('map_embed_url', '') or ''
+    def clean_google_maps_directions_url(self):
+        url = self.cleaned_data.get('google_maps_directions_url', '') or ''
         trimmed = url.strip()
         if '<iframe' in trimmed.lower():
             import re
             match = re.search(r'src=["\']([^"\']+)["\']', trimmed, re.IGNORECASE)
             if match:
-                return match.group(1)
+                trimmed = match.group(1)
         return trimmed
-
-    def clean_google_maps_directions_url(self):
-        url = self.cleaned_data.get('google_maps_directions_url', '') or ''
-        return url.strip()
 
 @admin.register(ClothesHubConfig)
 class ClothesHubConfigAdmin(admin.ModelAdmin):
@@ -238,9 +231,9 @@ class ClothesHubConfigAdmin(admin.ModelAdmin):
         ('Operating Hours', {
             'fields': ('operating_hours', 'operating_hours_np')
         }),
-        ('Google Maps Embed & Directions', {
-            'fields': ('map_embed_url', 'google_maps_directions_url'),
-            'description': 'Paste Google Maps <iframe> code, direct embed link, or location URL into the boxes below.'
+        ('Google Maps Link', {
+            'fields': ('google_maps_directions_url',),
+            'description': 'Paste your Google Maps link (e.g. https://maps.app.goo.gl/... or https://maps.google.com/?q=...)'
         }),
         ('Rider & Parcel Delivery Instructions', {
             'fields': ('contact_note', 'contact_note_np')

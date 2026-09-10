@@ -1040,71 +1040,59 @@ export const AdminClothesTab: React.FC<AdminClothesTabProps> = ({
                 </div>
               </div>
 
-              {/* Section 4: Google Maps Embed Code & Directions Link */}
+              {/* Section 4: Google Maps Link */}
               <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
                   <Map className="w-4 h-4 text-[#003c90]" />
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
-                    {isNp ? '४. गुगल म्याप एम्बेड कोड तथा डाइरेक्सन लिङ्क' : '4. Google Maps iFrame Embed & Directions Link'}
+                    {isNp ? '४. गुगल म्याप लोकेसन लिङ्क' : '4. Google Maps Location Link'}
                   </h4>
                 </div>
 
-                <div className="space-y-3.5 text-xs">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="font-bold text-[#111c2d] uppercase tracking-wider">
-                        {isNp ? 'गुगल म्याप iFrame Embed कोड वा लिङ्क *' : 'Google Maps iFrame Embed Code or URL *'}
-                      </label>
-                      <span className="text-[11px] text-[#003c90] font-bold">
-                        {isNp ? 'iFrame कोड सिधै पेस्ट गर्न सकिन्छ' : 'Accepts full <iframe ...> tag or URL'}
-                      </span>
-                    </div>
-
-                    <textarea
-                      rows={4}
-                      required
-                      value={hubForm.mapEmbedUrl}
-                      onChange={(e) => setHubForm({ ...hubForm, mapEmbedUrl: e.target.value })}
-                      placeholder='Paste <iframe src="https://www.google.com/maps/embed?..." ...></iframe> or direct Google Maps link'
-                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-mono text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
-                    />
-
-                    <div className="mt-2 p-2.5 bg-[#f0f4fc] border border-[#d8e3fb] text-[11px] text-[#434653] flex items-start gap-2">
-                      <HelpCircle className="w-4 h-4 text-[#003c90] shrink-0 mt-0.5" />
-                      <div>
-                        <strong>{isNp ? 'गुगल म्याप कसरी लिने?' : 'How to get Google Maps embed code:'}</strong>
-                        <p className="mt-0.5">
-                          {isNp 
-                            ? 'Google Maps मा आफ्नो कार्यालय खोल्नुहोस् > Share मा क्लिक गर्नुहोस् > Embed a map छान्नुहोस् > Copy HTML क्लिक गरेर यहाँ पेस्ट गर्नुहोस्।'
-                            : 'Open your location in Google Maps > Click "Share" > Select "Embed a map" tab > Click "Copy HTML" and paste the code right here.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
+                <div className="space-y-3 text-xs">
                   <div>
                     <label className="block font-bold text-[#111c2d] uppercase tracking-wider mb-1">
-                      {isNp ? 'गुगल म्याप डाइरेक्सन लिङ्क (Directions URL)' : 'Google Maps Directions URL (For navigation button)'}
+                      {isNp ? 'गुगल म्याप लिङ्क (Google Maps Link) *' : 'Google Maps Location Link *'}
                     </label>
                     <div className="flex gap-2">
                       <input
-                        type="url"
-                        value={hubForm.googleMapsDirectionsUrl}
-                        onChange={(e) => setHubForm({ ...hubForm, googleMapsDirectionsUrl: e.target.value })}
-                        placeholder="https://maps.google.com/?q=Tinkune,Kathmandu,Nepal"
-                        className="flex-1 px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                        type="text"
+                        required
+                        value={hubForm.googleMapsDirectionsUrl || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setHubForm({
+                            ...hubForm,
+                            googleMapsDirectionsUrl: val,
+                            mapEmbedUrl: val.includes('/maps/embed') || val.includes('<iframe') ? val : (hubForm.mapEmbedUrl || val)
+                          });
+                        }}
+                        placeholder="https://maps.app.goo.gl/... or https://maps.google.com/?q=..."
+                        className="flex-1 px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
                       />
                       {hubForm.googleMapsDirectionsUrl && (
                         <a
                           href={hubForm.googleMapsDirectionsUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-3 py-2 bg-[#f0f4fc] hover:bg-[#d8e3fb] text-[#003c90] font-bold text-xs flex items-center gap-1 border border-[#d8e3fb]"
+                          className="px-3 py-2 bg-[#f0f4fc] hover:bg-[#d8e3fb] text-[#003c90] font-bold text-xs flex items-center gap-1 border border-[#d8e3fb] shrink-0"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Test</span>
+                          <span>{isNp ? 'खोल्नुहोस्' : 'Test Link'}</span>
                         </a>
                       )}
+                    </div>
+
+                    <div className="mt-2.5 p-2.5 bg-[#f0f4fc] border border-[#d8e3fb] text-[11px] text-[#434653] flex items-start gap-2">
+                      <HelpCircle className="w-4 h-4 text-[#003c90] shrink-0 mt-0.5" />
+                      <div>
+                        <strong>{isNp ? 'गुगल म्याप लिङ्क कसरी लिने?' : 'How to get Google Maps link:'}</strong>
+                        <p className="mt-0.5">
+                          {isNp 
+                            ? 'Google Maps मा आफ्नो संकलन केन्द्र वा कार्यालय खोल्नुहोस् > "Share" मा क्लिक गर्नुहोस् > "Copy Link" गरेर सिधै यहाँ पेस्ट गर्नुहोस्।'
+                            : 'Search your hub location in Google Maps > Click "Share" > Click "Copy Link" and paste it right here.'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
