@@ -18,6 +18,7 @@ import {
 import { DEFAULT_BANK_QR_CONFIG } from '../data/mockData';
 import { Project, DonationSubmission, Language, BankAndQrConfig, DonationRecord } from '../types';
 import { apiSubmitDonation, apiGetDonations } from '../services/api';
+import { compressImage } from '../utils/imageCompress';
 
 interface DonateScreenProps {
   language: Language;
@@ -59,7 +60,7 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
   );
   const [note, setNote] = useState('');
 
-  // File Uploads
+  // File Uploads & Compression
   const [donorPhotoFile, setDonorPhotoFile] = useState<File | null>(null);
   const [donorPhotoPreview, setDonorPhotoPreview] = useState<string | null>(null);
   const [donorPhotoError, setDonorPhotoError] = useState<string | null>(null);
@@ -69,6 +70,7 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
   const [slipError, setSlipError] = useState<string | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [submittedModal, setSubmittedModal] = useState<DonationSubmission | null>(null);
 
   // Verified Donors List State
@@ -106,23 +108,28 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
     setTimeout(() => setCopiedLabel(null), 2000);
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setDonorPhotoError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 200 * 1024) {
-      setDonorPhotoError(isNp ? 'फोटो २०० KB भन्दा सानो हुनुपर्छ' : 'Photo must be under 200 KB');
-      if (photoInputRef.current) photoInputRef.current.value = '';
-      return;
+    try {
+      // Auto compress avatar image
+      const compressed = await compressImage(file, 800, 0.85);
+      setDonorPhotoFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDonorPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(compressed);
+    } catch {
+      setDonorPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setDonorPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-
-    setDonorPhotoFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setDonorPhotoPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   const removeDonorPhoto = () => {
@@ -132,23 +139,28 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
     if (photoInputRef.current) photoInputRef.current.value = '';
   };
 
-  const handleSlipUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSlipUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setSlipError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setSlipError(isNp ? 'रसिद फाइल ५ MB भन्दा सानो हुनुपर्छ' : 'Receipt file must be under 5 MB');
-      if (slipInputRef.current) slipInputRef.current.value = '';
-      return;
+    try {
+      // Auto compress payment voucher slip to avoid HTTP 413
+      const compressed = await compressImage(file, 1600, 0.82);
+      setSlipFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSlipPreview(reader.result as string);
+      };
+      reader.readAsDataURL(compressed);
+    } catch {
+      setSlipFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSlipPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-
-    setSlipFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSlipPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   const removeSlip = () => {
@@ -160,63 +172,83 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     const finalAmount = Number(amount) || 0;
-    if (finalAmount <= 0) return;
+    if (finalAmount <= 0) {
+      setFormError(isNp ? 'कृपया मान्य रकम प्रविष्ट गर्नुहोस्।' : 'Please enter a valid donation amount.');
+      return;
+    }
 
     setSubmitting(true);
-    const fallbackReceipt = `REC-GZ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
     try {
+      // Ensure images are compressed before sending
+      let finalPhoto = donorPhotoFile;
+      if (donorPhotoFile) {
+        finalPhoto = await compressImage(donorPhotoFile, 800, 0.85);
+      }
+      let finalSlip = slipFile;
+      if (slipFile) {
+        finalSlip = await compressImage(slipFile, 1600, 0.82);
+      }
+
       const res = await apiSubmitDonation({
-        donorName: donorName || (isNp ? 'शुभचिन्तक दाता' : 'Generous Donor'),
-        donorPhone: donorPhone,
-        donorEmail: donorEmail,
-        donorAddress: donorAddress,
+        donorName: donorName.trim() || (isNp ? 'शुभचिन्तक दाता' : 'Generous Donor'),
+        donorPhone: donorPhone.trim(),
+        donorEmail: donorEmail.trim(),
+        donorAddress: donorAddress.trim(),
         amount: finalAmount,
         currency: 'NPR',
         paymentMethod: paymentMethod,
         projectName: projectName,
-        note: note,
-        donorPhotoFile: donorPhotoFile,
-        paymentSlipFile: slipFile,
+        note: note.trim(),
+        donorPhotoFile: finalPhoto,
+        paymentSlipFile: finalSlip,
         donorPhotoUrl: donorPhotoPreview || '',
         paymentSlipUrl: slipPreview || '',
       });
 
-      const assignedReceipt = res?.receipt_number || fallbackReceipt;
+      if (!res.success) {
+        setFormError(res.error || (isNp ? 'रसिद पेश गर्दा त्रुटि भयो। कृपया फेरि प्रयास गर्नुहोस्।' : 'Failed to submit donation record to server. Please try again.'));
+        setSubmitting(false);
+        return;
+      }
+
+      const serverData = res.data || {};
+      const assignedReceipt = serverData.receipt_number || `REC-GZ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
       const submission: DonationSubmission = {
-        donorName: donorName || (isNp ? 'शुभचिन्तक दाता' : 'Generous Donor'),
-        donorPhone: donorPhone,
-        donorEmail: donorEmail,
-        donorAddress: donorAddress,
+        donorName: donorName.trim() || (isNp ? 'शुभचिन्तक दाता' : 'Generous Donor'),
+        donorPhone: donorPhone.trim(),
+        donorEmail: donorEmail.trim(),
+        donorAddress: donorAddress.trim(),
         amount: finalAmount,
         currency: 'NPR',
         paymentMethod: paymentMethod,
         projectName: projectName,
         receiptNumber: assignedReceipt,
-        note: note,
-        donorPhotoUrl: donorPhotoPreview || '',
-        paymentSlipUrl: slipPreview || '',
+        note: note.trim(),
+        donorPhotoUrl: serverData.final_donor_photo_url || donorPhotoPreview || '',
+        paymentSlipUrl: serverData.final_payment_slip_url || slipPreview || '',
         date: new Date().toISOString().split('T')[0],
       };
 
       // Store in local cache with Pending status
       const existing: DonationRecord[] = JSON.parse(localStorage.getItem('genzicon_admin_donations') || '[]');
       const newRec: DonationRecord = {
-        id: String(res?.id || `don-${Date.now()}`),
+        id: String(serverData.id || `don-${Date.now()}`),
         receiptNumber: assignedReceipt,
         donorName: submission.donorName,
-        donorPhone: donorPhone,
-        donorEmail: donorEmail,
-        donorAddress: donorAddress,
+        donorPhone: donorPhone.trim(),
+        donorEmail: donorEmail.trim(),
+        donorAddress: donorAddress.trim(),
         amount: finalAmount,
         currency: 'NPR',
         paymentMethod: paymentMethod,
         projectName: projectName,
-        note: note,
-        donorPhotoUrl: res?.final_donor_photo_url || donorPhotoPreview || '',
-        paymentSlipUrl: res?.final_payment_slip_url || slipPreview || '',
+        note: note.trim(),
+        donorPhotoUrl: serverData.final_donor_photo_url || donorPhotoPreview || '',
+        paymentSlipUrl: serverData.final_payment_slip_url || slipPreview || '',
         date: submission.date || '',
         status: 'Pending',
         isPublic: true,
@@ -226,7 +258,6 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
       window.dispatchEvent(new Event('genzicon_donations_updated'));
 
       setSubmittedModal(submission);
-      if (onDonateComplete) onDonateComplete(submission);
 
       // Reset form
       setDonorName('');
@@ -236,8 +267,9 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
       setNote('');
       removeDonorPhoto();
       removeSlip();
-    } catch (err) {
-      console.warn('Donation submit fallback error:', err);
+    } catch (err: any) {
+      console.warn('Donation submit error:', err);
+      setFormError(err?.message || (isNp ? 'अनपेक्षित त्रुटि भयो।' : 'An unexpected error occurred during submission.'));
     } finally {
       setSubmitting(false);
     }
@@ -279,7 +311,7 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                 {isNp ? '१. भुक्तानी माध्यम छान्नुहोस्' : '1. Payment Accounts & QR'}
               </h2>
               <span className="text-[10px] font-bold text-[#00743a] bg-emerald-50 px-2 py-0.5 border border-emerald-200">
-                SWC No: 54128
+                100% Direct & Transparent
               </span>
             </div>
 
@@ -496,6 +528,15 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-2.5">
+              {formError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <span className="font-bold block">{isNp ? 'त्रुटि (Error):' : 'Submission Error:'}</span>
+                    <span className="text-[11px]">{formError}</span>
+                  </div>
+                </div>
+              )}
               {/* Row 1: Donor Name & Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>

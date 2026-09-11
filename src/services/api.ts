@@ -842,15 +842,17 @@ export async function apiSubmitVolunteer(data: {
       body,
     });
     if (res.ok) {
-      return await res.json();
+      const json = await res.json();
+      return { success: true, data: json };
     } else {
       const errText = await res.text();
       console.warn('Volunteer submit error response:', res.status, errText);
+      return { success: false, status: res.status, error: errText || `Error ${res.status}` };
     }
-  } catch (e) {
+  } catch (e: any) {
     console.warn('Failed to submit volunteer registration:', e);
+    return { success: false, error: e?.message || 'Network error connecting to server' };
   }
-  return null;
 }
 
 export async function apiGetVolunteers() {
@@ -959,15 +961,17 @@ export async function apiSubmitDonation(data: {
       body,
     });
     if (res.ok) {
-      return await res.json();
+      const json = await res.json();
+      return { success: true, data: json };
     } else {
       const errText = await res.text();
       console.warn('Donation submit error response:', res.status, errText);
+      return { success: false, status: res.status, error: errText || `Error ${res.status}` };
     }
-  } catch (e) {
+  } catch (e: any) {
     console.warn('Failed to submit donation record to backend:', e);
+    return { success: false, error: e?.message || 'Network connection failed' };
   }
-  return null;
 }
 
 export async function apiGetDonations() {

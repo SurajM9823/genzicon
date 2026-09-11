@@ -59,8 +59,8 @@ export const Footer: React.FC<FooterProps> = ({ language, onSelectTab }) => {
                   : 'A registered non-profit NGO operating Clothes Bank Nepal, reforestation campaigns, and vocational training across 77 districts.'}
               </p>
               <div className="text-[10px] text-emerald-400 bg-white/5 p-2 border border-white/10 space-y-0.5 font-mono">
-                <div>SWC Affiliation: <strong>No. 54128</strong></div>
-                <div>PAN: <strong>609823451</strong></div>
+                <div>Registration: <strong>Non-Profit NGO</strong></div>
+                <div>Status: <strong>Active & Verified</strong></div>
               </div>
             </div>
 
@@ -236,10 +236,10 @@ export const Footer: React.FC<FooterProps> = ({ language, onSelectTab }) => {
               {activeModal === 'terms' && (
                 <>
                   <p>
-                    Genzicon Foundation operates as an affiliated non-profit entity under the Social Welfare Council Act of Nepal (Affiliation No. 54128, PAN: 609823451).
+                    Genzicon Foundation operates as a non-profit non-governmental organization dedicated to community service, youth empowerment, and grassroots disaster relief in Nepal.
                   </p>
                   <p>
-                    All public financial contributions are acknowledged with verifiable digital donation receipts and audited annually.
+                    All public financial contributions are acknowledged with verifiable digital donation records and audited annually for complete transparency.
                   </p>
                 </>
               )}

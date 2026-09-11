@@ -78,7 +78,7 @@ export const VolunteerSuccessModal: React.FC<VolunteerSuccessModalProps> = ({
 
           <div className="text-[9px] text-emerald-300 font-semibold flex items-center gap-1 pt-1.5 border-t border-white/10">
             <ShieldCheck className="w-3 h-3" />
-            <span>SWC Affiliation No: 54128 • Genzicon Civic Youth Registry</span>
+            <span>Genzicon Civic Youth Taskforce Registry</span>
           </div>
         </div>
 

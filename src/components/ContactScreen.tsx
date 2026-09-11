@@ -105,7 +105,7 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
                   <h3 className="font-bold text-xs sm:text-sm text-[#111c2d]">
                     {isNp ? 'केन्द्रीय कार्यालय (काठमाडौँ)' : 'Central Head Office (Kathmandu)'}
                   </h3>
-                  <span className="text-[10px] text-[#00743a] font-semibold">SWC Affiliation No. 54128</span>
+                  <span className="text-[10px] text-[#00743a] font-semibold">Genzicon Foundation Central HQ</span>
                 </div>
               </div>
 

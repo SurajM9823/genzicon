@@ -42,7 +42,7 @@ export const DonationReceiptModal: React.FC<DonationReceiptModalProps> = ({
             {isNp ? 'सहयोगका लागि धन्यवाद!' : 'Thank You for Your Contribution!'}
           </h2>
           <p className="text-[11px] text-[#434653] mt-0.5">
-            {isNp ? 'कर छुट योग्य आधिकारिक रसिद जारी भएको छ।' : 'Official Tax Exemption Receipt • SWC Reg: 54128'}
+            {isNp ? 'आधिकारिक भुक्तानी तथा सहयोग रसिद दर्ता भएको छ।' : 'Official Non-Profit Contribution Receipt'}
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export const DonationReceiptModal: React.FC<DonationReceiptModalProps> = ({
         <div className="bg-[#f9f9ff] border border-[#d8e3fb] rounded-none p-3.5 space-y-1.5 text-xs mb-4">
           <div className="flex justify-between border-b border-[#e7eeff] pb-1.5">
             <span className="text-[#737784]">{isNp ? 'रसिद नम्बर:' : 'Receipt No:'}</span>
-            <span className="font-mono font-bold text-[#003c90]">{donation.receiptNumber || 'REC-GZ-2025-4819'}</span>
+            <span className="font-mono font-bold text-[#003c90]">{donation.receiptNumber || 'REC-GZ-2026-4819'}</span>
           </div>
           <div className="flex justify-between border-b border-[#e7eeff] pb-1.5">
             <span className="text-[#737784]">{isNp ? 'मिति:' : 'Date:'}</span>
@@ -74,15 +74,17 @@ export const DonationReceiptModal: React.FC<DonationReceiptModalProps> = ({
             <span className="text-[#111c2d] font-bold text-xs">{isNp ? 'सहयोग रकम:' : 'Total Amount:'}</span>
             <span className="text-base font-bold text-[#00743a]">
               {donation.currency === 'NPR' ? `रू ${donation.amount.toLocaleString()}` : `$${donation.amount.toLocaleString()}`}
-              <span className="text-[10px] uppercase font-semibold text-[#737784] ml-1">({donation.frequency})</span>
+              {donation.frequency ? (
+                <span className="text-[10px] uppercase font-semibold text-[#737784] ml-1">({donation.frequency})</span>
+              ) : null}
             </span>
           </div>
         </div>
 
-        {/* SWC & Tax Note */}
+        {/* Verification Note */}
         <div className="p-2 bg-emerald-50 rounded-none text-[10px] text-emerald-900 font-semibold mb-4 flex items-center gap-1.5 border border-emerald-200">
           <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-[#00743a]" />
-          <span>PAN: 609823451 • SWC Reg: 54128 • Tax Exemption Eligible</span>
+          <span>Genzicon Foundation Nepal • 100% Direct Grassroots Execution</span>
         </div>
 
         <div className="flex gap-2">

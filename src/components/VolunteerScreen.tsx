@@ -3,17 +3,18 @@ import {
   Users, 
   CheckCircle2, 
   Send, 
-  MapPin,
-  Search,
-  Sparkles,
-  Clock,
-  Upload,
-  X,
-  UserCheck,
-  AlertCircle
+  MapPin, 
+  Search, 
+  Sparkles, 
+  Clock, 
+  Upload, 
+  X, 
+  UserCheck, 
+  AlertCircle 
 } from 'lucide-react';
 import { Language, VolunteerFormData, VolunteerRecord } from '../types';
 import { apiSubmitVolunteer, apiGetVolunteers } from '../services/api';
+import { compressImage } from '../utils/imageCompress';
 import { INITIAL_VOLUNTEERS } from '../data/mockData';
 
 interface VolunteerScreenProps {
@@ -45,6 +46,7 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Active Approved Volunteers State
@@ -117,26 +119,32 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
     'Logistics, Warehousing & Vehicle Transportation'
   ];
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhotoError(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check 200KB limit (200 * 1024 bytes)
-    if (file.size > 200 * 1024) {
-      setPhotoError(isNp ? 'फोटो २०० KB भन्दा सानो हुनुपर्छ' : 'Photo must be under 200 KB');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
+    try {
+      // Auto compress photo to 800px max JPEG
+      const compressed = await compressImage(file, 800, 0.85);
+      setFormData(prev => ({ ...prev, photoFile: compressed }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPhotoPreview(result);
+        setFormData(prev => ({ ...prev, imageUrl: result }));
+      };
+      reader.readAsDataURL(compressed);
+    } catch {
+      setFormData(prev => ({ ...prev, photoFile: file }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPhotoPreview(result);
+        setFormData(prev => ({ ...prev, imageUrl: result }));
+      };
+      reader.readAsDataURL(file);
     }
-
-    setFormData(prev => ({ ...prev, photoFile: file }));
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      setPhotoPreview(result);
-      setFormData(prev => ({ ...prev, imageUrl: result }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const removePhoto = () => {
@@ -148,39 +156,55 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setLoading(true);
 
     try {
+      let finalPhoto = formData.photoFile;
+      if (finalPhoto) {
+        finalPhoto = await compressImage(finalPhoto, 800, 0.85);
+      }
+
       const res = await apiSubmitVolunteer({
-        fullName: formData.fullName,
-        phone: formData.phone,
-        email: formData.email,
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
         province: formData.province,
-        district: formData.district,
+        district: formData.district.trim(),
         interest: formData.interest,
         availability: formData.availability,
         skills: formData.reason || formData.experience || '',
-        photoFile: formData.photoFile,
+        photoFile: finalPhoto,
         imageUrl: formData.imageUrl,
       });
+
+      if (!res.success) {
+        setFormError(res.error || (isNp ? 'स्वयंसेवक दर्ता गर्दा त्रुटि भयो। कृपया फेरि प्रयास गर्नुहोस्।' : 'Failed to submit volunteer application. Please check your details and try again.'));
+        setLoading(false);
+        return;
+      }
+
+      const serverData = res.data || {};
 
       // Save to local cache with status = Pending
       const existing: VolunteerRecord[] = JSON.parse(localStorage.getItem('genzicon_admin_volunteers') || '[]');
       const newRec: VolunteerRecord = {
         ...formData,
-        id: String(res?.id || `VOL-${Date.now()}`),
-        volunteerId: res?.volunteer_id || `VOL-${Math.floor(1000 + Math.random() * 9000)}`,
-        imageUrl: res?.final_image_url || res?.photo || formData.imageUrl || '',
+        id: String(serverData.id || `VOL-${Date.now()}`),
+        volunteerId: serverData.volunteer_id || `VOL-${Math.floor(1000 + Math.random() * 9000)}`,
+        imageUrl: serverData.final_image_url || serverData.photo || formData.imageUrl || '',
         submittedAt: new Date().toISOString().split('T')[0],
         status: 'Pending'
       };
       localStorage.setItem('genzicon_admin_volunteers', JSON.stringify([newRec, ...existing.filter(v => v.id !== newRec.id)]));
       window.dispatchEvent(new Event('genzicon_volunteers_updated'));
-    } catch (err) {
-      console.warn('Volunteer API submit fallback:', err);
+
+      onSuccess(formData);
+    } catch (err: any) {
+      console.warn('Volunteer API submit error:', err);
+      setFormError(err?.message || (isNp ? 'अनपेक्षित त्रुटि भयो।' : 'An unexpected error occurred.'));
     } finally {
       setLoading(false);
-      onSuccess(formData);
     }
   };
 
@@ -243,6 +267,15 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-2.5">
+            {formError && (
+              <div className="p-2.5 bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span className="font-bold block">{isNp ? 'त्रुटि (Error):' : 'Application Error:'}</span>
+                  <span className="text-[11px]">{formError}</span>
+                </div>
+              </div>
+            )}
             {/* Row 1: 5 Columns (Full Name, Phone, Email, Province, District) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
               <div>
