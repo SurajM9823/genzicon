@@ -58,12 +58,21 @@ class ClothesDonationSerializer(serializers.ModelSerializer):
         read_only_fields = ['ref_id', 'created_at']
 
 class VolunteerSerializer(serializers.ModelSerializer):
+    image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     final_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Volunteer
         fields = '__all__'
         read_only_fields = ['volunteer_id', 'created_at']
+
+    def validate_image_url(self, value):
+        if not value:
+            return ""
+        # If client sends base64 data URL, ignore it so it doesn't fail URL validation
+        if value.startswith("data:"):
+            return ""
+        return value[:500]
 
     def get_final_image_url(self, obj):
         request = self.context.get('request')
@@ -74,6 +83,8 @@ class VolunteerSerializer(serializers.ModelSerializer):
         return obj.image_url or ""
 
 class DonationRecordSerializer(serializers.ModelSerializer):
+    donor_photo_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    payment_slip_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     final_donor_photo_url = serializers.SerializerMethodField()
     final_payment_slip_url = serializers.SerializerMethodField()
 
@@ -81,6 +92,20 @@ class DonationRecordSerializer(serializers.ModelSerializer):
         model = DonationRecord
         fields = '__all__'
         read_only_fields = ['receipt_number', 'created_at']
+
+    def validate_donor_photo_url(self, value):
+        if not value:
+            return ""
+        if value.startswith("data:"):
+            return ""
+        return value[:500]
+
+    def validate_payment_slip_url(self, value):
+        if not value:
+            return ""
+        if value.startswith("data:"):
+            return ""
+        return value[:500]
 
     def get_final_donor_photo_url(self, obj):
         request = self.context.get('request')

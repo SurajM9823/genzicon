@@ -204,8 +204,6 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
         note: note.trim(),
         donorPhotoFile: finalPhoto,
         paymentSlipFile: finalSlip,
-        donorPhotoUrl: donorPhotoPreview || '',
-        paymentSlipUrl: slipPreview || '',
       });
 
       if (!res.success) {

@@ -792,6 +792,33 @@ export async function apiSaveClothesHubConfig(config: ClothesHubConfig): Promise
 // --------------------------------------------------------------------------
 // 6. Youth Volunteer Registrations
 // --------------------------------------------------------------------------
+function isValidHttpUrl(url?: string): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  return (trimmed.startsWith('http://') || trimmed.startsWith('https://')) && !trimmed.startsWith('data:');
+}
+
+function parseApiError(errText: string, status: number): string {
+  try {
+    const parsed = JSON.parse(errText);
+    if (typeof parsed === 'string') return parsed;
+    if (parsed.detail) return String(parsed.detail);
+    if (parsed.error) return String(parsed.error);
+    if (typeof parsed === 'object') {
+      const messages: string[] = [];
+      for (const [key, val] of Object.entries(parsed)) {
+        if (Array.isArray(val)) {
+          messages.push(`${key}: ${val.join(', ')}`);
+        } else if (typeof val === 'string') {
+          messages.push(`${key}: ${val}`);
+        }
+      }
+      if (messages.length > 0) return messages.join('; ');
+    }
+  } catch {}
+  return errText || `Server Error ${status}`;
+}
+
 export async function apiSubmitVolunteer(data: {
   fullName: string;
   phone: string;
@@ -819,11 +846,11 @@ export async function apiSubmitVolunteer(data: {
       formData.append('availability', data.availability);
       formData.append('skills', data.skills || '');
       formData.append('photo', data.photoFile);
-      if (data.imageUrl) formData.append('image_url', data.imageUrl);
+      if (isValidHttpUrl(data.imageUrl)) formData.append('image_url', data.imageUrl!.trim());
       body = formData;
     } else {
       headers['Content-Type'] = 'application/json';
-      body = JSON.stringify({
+      const payload: Record<string, any> = {
         full_name: data.fullName,
         phone: data.phone,
         email: data.email,
@@ -832,8 +859,11 @@ export async function apiSubmitVolunteer(data: {
         interest: data.interest,
         availability: data.availability,
         skills: data.skills || '',
-        image_url: data.imageUrl || '',
-      });
+      };
+      if (isValidHttpUrl(data.imageUrl)) {
+        payload.image_url = data.imageUrl!.trim();
+      }
+      body = JSON.stringify(payload);
     }
 
     const res = await fetch(`${API_BASE}/volunteers/`, {
@@ -847,7 +877,7 @@ export async function apiSubmitVolunteer(data: {
     } else {
       const errText = await res.text();
       console.warn('Volunteer submit error response:', res.status, errText);
-      return { success: false, status: res.status, error: errText || `Error ${res.status}` };
+      return { success: false, status: res.status, error: parseApiError(errText, res.status) };
     }
   } catch (e: any) {
     console.warn('Failed to submit volunteer registration:', e);
@@ -934,13 +964,13 @@ export async function apiSubmitDonation(data: {
       if (data.donorAddress) formData.append('donor_address', data.donorAddress);
       if (data.note) formData.append('note', data.note);
       if (data.donorPhotoFile) formData.append('donor_photo', data.donorPhotoFile);
-      if (data.donorPhotoUrl) formData.append('donor_photo_url', data.donorPhotoUrl);
+      if (isValidHttpUrl(data.donorPhotoUrl)) formData.append('donor_photo_url', data.donorPhotoUrl!.trim());
       if (data.paymentSlipFile) formData.append('payment_slip', data.paymentSlipFile);
-      if (data.paymentSlipUrl) formData.append('payment_slip_url', data.paymentSlipUrl);
+      if (isValidHttpUrl(data.paymentSlipUrl)) formData.append('payment_slip_url', data.paymentSlipUrl!.trim());
       body = formData;
     } else {
       headers['Content-Type'] = 'application/json';
-      body = JSON.stringify({
+      const payload: Record<string, any> = {
         donor_name: data.donorName,
         donor_email: data.donorEmail || '',
         donor_phone: data.donorPhone || '',
@@ -950,9 +980,14 @@ export async function apiSubmitDonation(data: {
         project_name: data.projectName || 'General Fund',
         payment_method: data.paymentMethod,
         note: data.note || '',
-        donor_photo_url: data.donorPhotoUrl || '',
-        payment_slip_url: data.paymentSlipUrl || '',
-      });
+      };
+      if (isValidHttpUrl(data.donorPhotoUrl)) {
+        payload.donor_photo_url = data.donorPhotoUrl!.trim();
+      }
+      if (isValidHttpUrl(data.paymentSlipUrl)) {
+        payload.payment_slip_url = data.paymentSlipUrl!.trim();
+      }
+      body = JSON.stringify(payload);
     }
 
     const res = await fetch(`${API_BASE}/donations/`, {
@@ -966,7 +1001,7 @@ export async function apiSubmitDonation(data: {
     } else {
       const errText = await res.text();
       console.warn('Donation submit error response:', res.status, errText);
-      return { success: false, status: res.status, error: errText || `Error ${res.status}` };
+      return { success: false, status: res.status, error: parseApiError(errText, res.status) };
     }
   } catch (e: any) {
     console.warn('Failed to submit donation record to backend:', e);

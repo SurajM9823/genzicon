@@ -175,7 +175,7 @@ export const VolunteerScreen: React.FC<VolunteerScreenProps> = ({
         availability: formData.availability,
         skills: formData.reason || formData.experience || '',
         photoFile: finalPhoto,
-        imageUrl: formData.imageUrl,
+        imageUrl: (formData.imageUrl && !formData.imageUrl.startsWith('data:')) ? formData.imageUrl : undefined,
       });
 
       if (!res.success) {
