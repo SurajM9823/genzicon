@@ -392,11 +392,6 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     }
   };
 
-  const handleSaveBankQrConfig = (updated: BankAndQrConfig) => {
-    setBankQrConfig(updated);
-    localStorage.setItem('genzicon_bank_qr_config', JSON.stringify(updated));
-    window.dispatchEvent(new Event('genzicon_bank_qr_updated'));
-  };
 
   // Auth Handling
   const handleLogin = async (e: React.FormEvent) => {
