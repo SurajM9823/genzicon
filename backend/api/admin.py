@@ -152,6 +152,7 @@ class ClothesDonationAdmin(admin.ModelAdmin):
 class VolunteerAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = ('image_preview', 'volunteer_id', 'full_name', 'phone', 'district', 'province', 'interest', 'status', 'created_at')
+    list_display_links = ('volunteer_id', 'full_name')
     list_editable = ('status',)
     list_filter = ('status', 'province')
     search_fields = ('volunteer_id', 'full_name', 'phone', 'email', 'district', 'skills')
@@ -199,6 +200,7 @@ class VolunteerAdmin(admin.ModelAdmin):
 class DonationRecordAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = ('receipt_preview', 'receipt_number', 'donor_preview', 'donor_name', 'amount', 'currency', 'payment_method', 'donor_address', 'status', 'created_at')
+    list_display_links = ('receipt_number', 'donor_name')
     list_editable = ('status',)
     list_filter = ('status', 'payment_method', 'currency')
     search_fields = ('receipt_number', 'donor_name', 'donor_phone', 'donor_email', 'donor_address')
