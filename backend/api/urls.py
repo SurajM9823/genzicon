@@ -4,10 +4,11 @@ from .views import (
     admin_login, dashboard_overview,
     SiteContentViewSet, ImpactStatViewSet, ProjectViewSet, ClothesDonorViewSet,
     ClothesDonationViewSet, VolunteerViewSet, DonationRecordViewSet, ContactInquiryViewSet,
-    ClothesHubConfigViewSet
+    ClothesHubConfigViewSet, SiteSettingsViewSet
 )
 
 router = DefaultRouter()
+router.register(r'site-settings', SiteSettingsViewSet, basename='site-settings')
 router.register(r'site-content', SiteContentViewSet, basename='site-content')
 router.register(r'impact-stats', ImpactStatViewSet, basename='impact-stats')
 router.register(r'projects', ProjectViewSet, basename='projects')

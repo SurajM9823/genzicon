@@ -12,7 +12,9 @@ import { FloatingSocialSidebar } from './components/FloatingSocialSidebar';
 import { ProjectDetailModal } from './components/ProjectDetailModal';
 import { DonationReceiptModal } from './components/DonationReceiptModal';
 import { VolunteerSuccessModal } from './components/VolunteerSuccessModal';
-import { NavTab, Project, DonationSubmission, VolunteerFormData, Language } from './types';
+import { NavTab, Project, DonationSubmission, VolunteerFormData, Language, SiteSettingsConfig } from './types';
+import { DEFAULT_SITE_SETTINGS } from './data/mockData';
+import { apiGetSiteSettings } from './services/api';
 
 // Helper to parse path from pathname or legacy hash
 function parseUrlState(): { tab: NavTab; slug: string | null } {
@@ -57,6 +59,16 @@ export default function App() {
   const [lastDonation, setLastDonation] = useState<DonationSubmission | null>(null);
   const [volunteerSuccessData, setVolunteerSuccessData] = useState<VolunteerFormData | null>(null);
 
+  // Global Site Settings State (Branding, Logo, Offices, Socials, Hotline)
+  const [siteSettings, setSiteSettings] = useState<SiteSettingsConfig>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_site_settings');
+      return saved ? JSON.parse(saved) : DEFAULT_SITE_SETTINGS;
+    } catch {
+      return DEFAULT_SITE_SETTINGS;
+    }
+  });
+
   // Sync with browser back/forward buttons (popstate) and hash changes
   useEffect(() => {
     const handleLocationChange = () => {
@@ -69,6 +81,30 @@ export default function App() {
       window.removeEventListener('popstate', handleLocationChange);
       window.removeEventListener('hashchange', handleLocationChange);
     };
+  }, []);
+
+  // Fetch live site settings from backend API
+  useEffect(() => {
+    apiGetSiteSettings().then((res) => {
+      if (res && res.orgName) {
+        setSiteSettings(res);
+        localStorage.setItem('genzicon_site_settings', JSON.stringify(res));
+      }
+    });
+
+    const handleSettingsUpdate = () => {
+      try {
+        const saved = localStorage.getItem('genzicon_site_settings');
+        if (saved) {
+          setSiteSettings(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.warn('Error reading updated settings:', e);
+      }
+    };
+
+    window.addEventListener('genzicon_settings_updated', handleSettingsUpdate);
+    return () => window.removeEventListener('genzicon_settings_updated', handleSettingsUpdate);
   }, []);
 
   const handleSelectTab = (tab: NavTab) => {
@@ -113,7 +149,7 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#f9f9ff] text-[#111c2d] relative">
       {/* Floating Left-Side WhatsApp & Facebook NGO Quick Connect Dock (Public site only) */}
-      {!isAdmin && <FloatingSocialSidebar />}
+      {!isAdmin && <FloatingSocialSidebar siteSettings={siteSettings} />}
 
       {/* Fixed Sticky Header Navigation (Public site only) */}
       {!isAdmin && (
@@ -122,6 +158,7 @@ export default function App() {
           language={language}
           onSelectTab={handleSelectTab}
           onOpenDonate={() => handleOpenDonate()}
+          siteSettings={siteSettings}
         />
       )}
 
@@ -160,6 +197,7 @@ export default function App() {
           <ContactScreen
             language={language}
             onSelectTab={handleSelectTab}
+            siteSettings={siteSettings}
           />
         )}
 
@@ -192,6 +230,7 @@ export default function App() {
         <Footer
           language={language}
           onSelectTab={handleSelectTab}
+          siteSettings={siteSettings}
         />
       )}
 

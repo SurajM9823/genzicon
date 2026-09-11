@@ -1,5 +1,5 @@
 // Django REST Framework API Client for Genzicon Foundation
-import { Project, ClothesHubConfig } from '../types';
+import { Project, ClothesHubConfig, SiteSettingsConfig } from '../types';
 
 const API_BASE = (typeof window !== 'undefined' && (window as any).VITE_API_URL) 
   ? (window as any).VITE_API_URL 
@@ -1119,3 +1119,180 @@ export async function apiUpdateContactStatus(id: string | number, status: string
     return false;
   }
 }
+
+// --------------------------------------------------------------------------
+// 9. Site Settings & Organization Configuration
+// --------------------------------------------------------------------------
+export async function apiGetSiteSettings(): Promise<SiteSettingsConfig | null> {
+  try {
+    const res = await fetch(`${API_BASE}/site-settings/`);
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        orgName: data.org_name || 'Genzicon Foundation Nepal',
+        orgNameNp: data.org_name_np || 'जेन्जिकन फाउन्डेशन नेपाल',
+        tagline: data.tagline || '',
+        taglineNp: data.tagline_np || '',
+        logoUrl: data.final_logo_url || data.logo || data.logo_url || '',
+        aboutText: data.about_text || '',
+        aboutTextNp: data.about_text_np || '',
+        headOfficeTitle: data.head_office_title || 'Central Head Office (Kathmandu)',
+        headOfficeTitleNp: data.head_office_title_np || 'केन्द्रीय कार्यालय (काठमाडौँ)',
+        headOfficeSubtitle: data.head_office_subtitle || 'Genzicon Foundation Central HQ',
+        headOfficeSubtitleNp: data.head_office_subtitle_np || 'जेन्जिकन फाउन्डेशन मुख्य कार्यालय',
+        headOfficeAddress: data.head_office_address || 'Putalisadak, Ward No. 28, Kathmandu 44600, Nepal',
+        headOfficeAddressNp: data.head_office_address_np || 'पुतलीसडक, वडा नं. २८, काठमाडौँ ४४६००, नेपाल',
+        headOfficePhone: data.head_office_phone || '+977 1-4240000 / 9823000000',
+        headOfficeEmail: data.head_office_email || 'info@genzicon.org',
+        headOfficeHours: data.head_office_hours || 'Sun - Fri: 9:30 AM – 5:30 PM (NPT)',
+        headOfficeHoursNp: data.head_office_hours_np || 'आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म',
+        regionalOfficeTitle: data.regional_office_title || 'Madhesh Regional Office (Janakpur)',
+        regionalOfficeTitleNp: data.regional_office_title_np || 'मधेस प्रदेश क्षेत्रीय कार्यालय (जनकपुर)',
+        regionalOfficeSubtitle: data.regional_office_subtitle || 'Field & Clothes Bank Operations',
+        regionalOfficeSubtitleNp: data.regional_office_subtitle_np || 'मैदानी तथा कपडा बैंक सञ्चालन',
+        regionalOfficeAddress: data.regional_office_address || 'Station Road, Ward No. 4, Janakpurdham, Dhanusha',
+        regionalOfficeAddressNp: data.regional_office_address_np || 'स्टेशन रोड, वडा नं. ४, जनकपुरधाम, धनुषा',
+        regionalOfficePhone: data.regional_office_phone || '+977 41-520000',
+        regionalOfficeEmail: data.regional_office_email || 'janakpur@genzicon.org',
+        regionalOfficeHours: data.regional_office_hours || 'Sun - Fri: 9:30 AM – 5:30 PM (NPT)',
+        regionalOfficeHoursNp: data.regional_office_hours_np || 'आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म',
+        hotlineTitle: data.hotline_title || 'Direct Clothes Donation Help',
+        hotlineTitleNp: data.hotline_title_np || 'तत्काल कपडा दान तथा सोधपुछ',
+        hotlinePhone: data.hotline_phone || '9823000000',
+        hotlineText: data.hotline_text || '',
+        hotlineTextNp: data.hotline_text_np || '',
+        whatsappNumber: data.whatsapp_number || '+977 9823000000',
+        whatsappMessage: data.whatsapp_message || 'Namaste Genzicon Foundation, I would like to connect.',
+        facebookUrl: data.facebook_url || 'https://facebook.com',
+        instagramUrl: data.instagram_url || '',
+        youtubeUrl: data.youtube_url || '',
+        linkedinUrl: data.linkedin_url || '',
+        twitterUrl: data.twitter_url || '',
+        footerOfficesSummary: data.footer_offices_summary || 'Putalisadak, Kathmandu & Station Rd, Janakpur',
+        footerOfficesSummaryNp: data.footer_offices_summary_np || 'पुतलीसडक, काठमाडौँ र स्टेशन रोड, जनकपुर',
+      };
+    }
+  } catch (e) {
+    console.warn('Could not fetch site settings from backend:', e);
+  }
+  return null;
+}
+
+export async function apiSaveSiteSettings(data: Partial<SiteSettingsConfig>, logoFile?: File | null) {
+  try {
+    let body: any;
+    let headers: Record<string, string> = {};
+
+    if (logoFile) {
+      const formData = new FormData();
+      formData.append('logo', logoFile);
+      if (data.orgName) formData.append('org_name', data.orgName);
+      if (data.orgNameNp) formData.append('org_name_np', data.orgNameNp);
+      if (data.tagline) formData.append('tagline', data.tagline);
+      if (data.taglineNp) formData.append('tagline_np', data.taglineNp);
+      if (data.logoUrl && isValidHttpUrl(data.logoUrl)) formData.append('logo_url', data.logoUrl.trim());
+      if (data.aboutText) formData.append('about_text', data.aboutText);
+      if (data.aboutTextNp) formData.append('about_text_np', data.aboutTextNp);
+      if (data.headOfficeTitle) formData.append('head_office_title', data.headOfficeTitle);
+      if (data.headOfficeTitleNp) formData.append('head_office_title_np', data.headOfficeTitleNp);
+      if (data.headOfficeSubtitle) formData.append('head_office_subtitle', data.headOfficeSubtitle);
+      if (data.headOfficeSubtitleNp) formData.append('head_office_subtitle_np', data.headOfficeSubtitleNp);
+      if (data.headOfficeAddress) formData.append('head_office_address', data.headOfficeAddress);
+      if (data.headOfficeAddressNp) formData.append('head_office_address_np', data.headOfficeAddressNp);
+      if (data.headOfficePhone) formData.append('head_office_phone', data.headOfficePhone);
+      if (data.headOfficeEmail) formData.append('head_office_email', data.headOfficeEmail);
+      if (data.headOfficeHours) formData.append('head_office_hours', data.headOfficeHours);
+      if (data.headOfficeHoursNp) formData.append('head_office_hours_np', data.headOfficeHoursNp);
+      if (data.regionalOfficeTitle) formData.append('regional_office_title', data.regionalOfficeTitle);
+      if (data.regionalOfficeTitleNp) formData.append('regional_office_title_np', data.regionalOfficeTitleNp);
+      if (data.regionalOfficeSubtitle) formData.append('regional_office_subtitle', data.regionalOfficeSubtitle);
+      if (data.regionalOfficeSubtitleNp) formData.append('regional_office_subtitle_np', data.regionalOfficeSubtitleNp);
+      if (data.regionalOfficeAddress) formData.append('regional_office_address', data.regionalOfficeAddress);
+      if (data.regionalOfficeAddressNp) formData.append('regional_office_address_np', data.regionalOfficeAddressNp);
+      if (data.regionalOfficePhone) formData.append('regional_office_phone', data.regionalOfficePhone);
+      if (data.regionalOfficeEmail) formData.append('regional_office_email', data.regionalOfficeEmail);
+      if (data.regionalOfficeHours) formData.append('regional_office_hours', data.regionalOfficeHours);
+      if (data.regionalOfficeHoursNp) formData.append('regional_office_hours_np', data.regionalOfficeHoursNp);
+      if (data.hotlineTitle) formData.append('hotline_title', data.hotlineTitle);
+      if (data.hotlineTitleNp) formData.append('hotline_title_np', data.hotlineTitleNp);
+      if (data.hotlinePhone) formData.append('hotline_phone', data.hotlinePhone);
+      if (data.hotlineText) formData.append('hotline_text', data.hotlineText);
+      if (data.hotlineTextNp) formData.append('hotline_text_np', data.hotlineTextNp);
+      if (data.whatsappNumber) formData.append('whatsapp_number', data.whatsappNumber);
+      if (data.whatsappMessage) formData.append('whatsapp_message', data.whatsappMessage);
+      if (data.facebookUrl) formData.append('facebook_url', data.facebookUrl);
+      if (data.instagramUrl !== undefined) formData.append('instagram_url', data.instagramUrl);
+      if (data.youtubeUrl !== undefined) formData.append('youtube_url', data.youtubeUrl);
+      if (data.linkedinUrl !== undefined) formData.append('linkedin_url', data.linkedinUrl);
+      if (data.twitterUrl !== undefined) formData.append('twitter_url', data.twitterUrl);
+      if (data.footerOfficesSummary) formData.append('footer_offices_summary', data.footerOfficesSummary);
+      if (data.footerOfficesSummaryNp) formData.append('footer_offices_summary_np', data.footerOfficesSummaryNp);
+      body = formData;
+    } else {
+      headers['Content-Type'] = 'application/json';
+      const payload: Record<string, any> = {};
+      if (data.orgName !== undefined) payload.org_name = data.orgName;
+      if (data.orgNameNp !== undefined) payload.org_name_np = data.orgNameNp;
+      if (data.tagline !== undefined) payload.tagline = data.tagline;
+      if (data.taglineNp !== undefined) payload.tagline_np = data.taglineNp;
+      if (data.logoUrl !== undefined && isValidHttpUrl(data.logoUrl)) payload.logo_url = data.logoUrl.trim();
+      if (data.aboutText !== undefined) payload.about_text = data.aboutText;
+      if (data.aboutTextNp !== undefined) payload.about_text_np = data.aboutTextNp;
+      if (data.headOfficeTitle !== undefined) payload.head_office_title = data.headOfficeTitle;
+      if (data.headOfficeTitleNp !== undefined) payload.head_office_title_np = data.headOfficeTitleNp;
+      if (data.headOfficeSubtitle !== undefined) payload.head_office_subtitle = data.headOfficeSubtitle;
+      if (data.headOfficeSubtitleNp !== undefined) payload.head_office_subtitle_np = data.headOfficeSubtitleNp;
+      if (data.headOfficeAddress !== undefined) payload.head_office_address = data.headOfficeAddress;
+      if (data.headOfficeAddressNp !== undefined) payload.head_office_address_np = data.headOfficeAddressNp;
+      if (data.headOfficePhone !== undefined) payload.head_office_phone = data.headOfficePhone;
+      if (data.headOfficeEmail !== undefined) payload.head_office_email = data.headOfficeEmail;
+      if (data.headOfficeHours !== undefined) payload.head_office_hours = data.headOfficeHours;
+      if (data.headOfficeHoursNp !== undefined) payload.head_office_hours_np = data.headOfficeHoursNp;
+      if (data.regionalOfficeTitle !== undefined) payload.regional_office_title = data.regionalOfficeTitle;
+      if (data.regionalOfficeTitleNp !== undefined) payload.regional_office_title_np = data.regionalOfficeTitleNp;
+      if (data.regionalOfficeSubtitle !== undefined) payload.regional_office_subtitle = data.regionalOfficeSubtitle;
+      if (data.regionalOfficeSubtitleNp !== undefined) payload.regional_office_subtitle_np = data.regionalOfficeSubtitleNp;
+      if (data.regionalOfficeAddress !== undefined) payload.regional_office_address = data.regionalOfficeAddress;
+      if (data.regionalOfficeAddressNp !== undefined) payload.regional_office_address_np = data.regionalOfficeAddressNp;
+      if (data.regionalOfficePhone !== undefined) payload.regional_office_phone = data.regionalOfficePhone;
+      if (data.regionalOfficeEmail !== undefined) payload.regional_office_email = data.regionalOfficeEmail;
+      if (data.regionalOfficeHours !== undefined) payload.regional_office_hours = data.regionalOfficeHours;
+      if (data.regionalOfficeHoursNp !== undefined) payload.regional_office_hours_np = data.regionalOfficeHoursNp;
+      if (data.hotlineTitle !== undefined) payload.hotline_title = data.hotlineTitle;
+      if (data.hotlineTitleNp !== undefined) payload.hotline_title_np = data.hotlineTitleNp;
+      if (data.hotlinePhone !== undefined) payload.hotline_phone = data.hotlinePhone;
+      if (data.hotlineText !== undefined) payload.hotline_text = data.hotlineText;
+      if (data.hotlineTextNp !== undefined) payload.hotline_text_np = data.hotlineTextNp;
+      if (data.whatsappNumber !== undefined) payload.whatsapp_number = data.whatsappNumber;
+      if (data.whatsappMessage !== undefined) payload.whatsapp_message = data.whatsappMessage;
+      if (data.facebookUrl !== undefined) payload.facebook_url = data.facebookUrl;
+      if (data.instagramUrl !== undefined) payload.instagram_url = data.instagramUrl;
+      if (data.youtubeUrl !== undefined) payload.youtube_url = data.youtubeUrl;
+      if (data.linkedinUrl !== undefined) payload.linkedin_url = data.linkedinUrl;
+      if (data.twitterUrl !== undefined) payload.twitter_url = data.twitterUrl;
+      if (data.footerOfficesSummary !== undefined) payload.footer_offices_summary = data.footerOfficesSummary;
+      if (data.footerOfficesSummaryNp !== undefined) payload.footer_offices_summary_np = data.footerOfficesSummaryNp;
+      body = JSON.stringify(payload);
+    }
+
+    const authHeaders = getAuthHeaders();
+    Object.assign(headers, authHeaders);
+
+    const res = await fetch(`${API_BASE}/site-settings/`, {
+      method: 'POST',
+      headers,
+      body,
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return { success: true, data: json };
+    } else {
+      const errText = await res.text();
+      return { success: false, error: parseApiError(errText, res.status) };
+    }
+  } catch (e: any) {
+    console.warn('Failed to save site settings:', e);
+    return { success: false, error: e?.message || 'Network error' };
+  }
+}
+

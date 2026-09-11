@@ -368,3 +368,79 @@ class ClothesHubConfig(models.Model):
 
     def __str__(self):
         return f"{self.hub_name} ({self.phone1} / {self.phone2})"
+
+
+class SiteSettings(models.Model):
+    """Global Organization Information, Office Addresses, Social Links, Hotline & Logo"""
+    # Organization Identity & Logo
+    org_name = models.CharField(max_length=255, default="Genzicon Foundation Nepal", blank=True, verbose_name="Organization Name (English)")
+    org_name_np = models.CharField(max_length=255, default="जेन्जिकन फाउन्डेशन नेपाल", blank=True, verbose_name="Organization Name (Nepali)")
+    tagline = models.CharField(max_length=255, default="Grassroots Youth-Led Transformation Across Nepal", blank=True, verbose_name="Tagline (English)")
+    tagline_np = models.CharField(max_length=255, default="नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण", blank=True, verbose_name="Tagline (Nepali)")
+    logo = models.ImageField(upload_to='site_logos/', blank=True, null=True, verbose_name="Upload Logo Image")
+    logo_url = models.CharField(max_length=500, blank=True, null=True, verbose_name="Or External Logo URL")
+    about_text = models.TextField(default="A registered non-profit NGO operating Clothes Bank Nepal, reforestation campaigns, and vocational training across 77 districts.", blank=True, verbose_name="About Summary (English)")
+    about_text_np = models.TextField(default="कपडा बैंक नेपाल, सफा तथा हरित नेपाल वृक्षारोपण, र महिला तथा युवा सीप एवं उद्यमशीलता प्रवर्द्धनमा समर्पित गैरसरकारी संस्था।", blank=True, verbose_name="About Summary (Nepali)")
+
+    # Central Head Office (Kathmandu)
+    head_office_title = models.CharField(max_length=255, default="Central Head Office (Kathmandu)", blank=True, verbose_name="Head Office Title (English)")
+    head_office_title_np = models.CharField(max_length=255, default="केन्द्रीय कार्यालय (काठमाडौँ)", blank=True, verbose_name="Head Office Title (Nepali)")
+    head_office_subtitle = models.CharField(max_length=255, default="Genzicon Foundation Central HQ", blank=True, verbose_name="Head Office Subtitle (English)")
+    head_office_subtitle_np = models.CharField(max_length=255, default="जेन्जिकन फाउन्डेशन मुख्य कार्यालय", blank=True, verbose_name="Head Office Subtitle (Nepali)")
+    head_office_address = models.CharField(max_length=255, default="Putalisadak, Ward No. 28, Kathmandu 44600, Nepal", blank=True, verbose_name="Head Office Address (English)")
+    head_office_address_np = models.CharField(max_length=255, default="पुतलीसडक, वडा नं. २८, काठमाडौँ ४४६००, नेपाल", blank=True, verbose_name="Head Office Address (Nepali)")
+    head_office_phone = models.CharField(max_length=100, default="+977 1-4240000 / 9823000000", blank=True, verbose_name="Head Office Phone(s)")
+    head_office_email = models.CharField(max_length=150, default="info@genzicon.org", blank=True, verbose_name="Head Office Email")
+    head_office_hours = models.CharField(max_length=255, default="Sun - Fri: 9:30 AM – 5:30 PM (NPT)", blank=True, verbose_name="Head Office Hours (English)")
+    head_office_hours_np = models.CharField(max_length=255, default="आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म", blank=True, verbose_name="Head Office Hours (Nepali)")
+
+    # Madhesh Regional Office (Janakpur)
+    regional_office_title = models.CharField(max_length=255, default="Madhesh Regional Office (Janakpur)", blank=True, verbose_name="Regional Office Title (English)")
+    regional_office_title_np = models.CharField(max_length=255, default="मधेस प्रदेश क्षेत्रीय कार्यालय (जनकपुर)", blank=True, verbose_name="Regional Office Title (Nepali)")
+    regional_office_subtitle = models.CharField(max_length=255, default="Field & Clothes Bank Operations", blank=True, verbose_name="Regional Office Subtitle (English)")
+    regional_office_subtitle_np = models.CharField(max_length=255, default="मैदानी तथा कपडा बैंक सञ्चालन", blank=True, verbose_name="Regional Office Subtitle (Nepali)")
+    regional_office_address = models.CharField(max_length=255, default="Station Road, Ward No. 4, Janakpurdham, Dhanusha", blank=True, verbose_name="Regional Office Address (English)")
+    regional_office_address_np = models.CharField(max_length=255, default="स्टेशन रोड, वडा नं. ४, जनकपुरधाम, धनुषा", blank=True, verbose_name="Regional Office Address (Nepali)")
+    regional_office_phone = models.CharField(max_length=100, default="+977 41-520000", blank=True, verbose_name="Regional Office Phone")
+    regional_office_email = models.CharField(max_length=150, default="janakpur@genzicon.org", blank=True, verbose_name="Regional Office Email")
+    regional_office_hours = models.CharField(max_length=255, default="Sun - Fri: 9:30 AM – 5:30 PM (NPT)", blank=True, verbose_name="Regional Office Hours (English)")
+    regional_office_hours_np = models.CharField(max_length=255, default="आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म", blank=True, verbose_name="Regional Office Hours (Nepali)")
+
+    # Direct Clothes Donation Help / Urgent Hotline
+    hotline_title = models.CharField(max_length=255, default="Direct Clothes Donation Help", blank=True, verbose_name="Hotline Title (English)")
+    hotline_title_np = models.CharField(max_length=255, default="तत्काल कपडा दान तथा सोधपुछ", blank=True, verbose_name="Hotline Title (Nepali)")
+    hotline_phone = models.CharField(max_length=50, default="9823000000", blank=True, verbose_name="Hotline Phone / WhatsApp")
+    hotline_text = models.TextField(default="For urgent clothes pickup or emergency cold-wave support, call our hotline at 9823000000 or chat on WhatsApp.", blank=True, verbose_name="Hotline Description (English)")
+    hotline_text_np = models.TextField(default="कपडा दान संकलन वा वितरण सहायताका लागि हाम्रो हटलाइन ९८२३०००००० मा सिधै सम्पर्क गर्न सक्नुहुन्छ।", blank=True, verbose_name="Hotline Description (Nepali)")
+
+    # Social Media & Floating Connect
+    whatsapp_number = models.CharField(max_length=50, default="+977 9823000000", blank=True, verbose_name="WhatsApp Number (e.g. +977 9823000000 or 9823000000)")
+    whatsapp_message = models.CharField(max_length=255, default="Namaste Genzicon Foundation, I would like to connect.", blank=True, verbose_name="WhatsApp Default Message")
+    facebook_url = models.CharField(max_length=500, default="https://facebook.com", blank=True, verbose_name="Facebook Page Link")
+    instagram_url = models.CharField(max_length=500, blank=True, default="", verbose_name="Instagram Profile Link")
+    youtube_url = models.CharField(max_length=500, blank=True, default="", verbose_name="YouTube Channel Link")
+    linkedin_url = models.CharField(max_length=500, blank=True, default="", verbose_name="LinkedIn Profile Link")
+    twitter_url = models.CharField(max_length=500, blank=True, default="", verbose_name="Twitter / X Profile Link")
+
+    # Footer Offices Summary
+    footer_offices_summary = models.CharField(max_length=255, default="Putalisadak, Kathmandu & Station Rd, Janakpur", blank=True, verbose_name="Footer Offices Summary (English)")
+    footer_offices_summary_np = models.CharField(max_length=255, default="पुतलीसडक, काठमाडौँ र स्टेशन रोड, जनकपुर", blank=True, verbose_name="Footer Offices Summary (Nepali)")
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Organization & Site Settings"
+        verbose_name_plural = "Organization & Site Settings"
+
+    @property
+    def final_logo_url(self):
+        if self.logo:
+            try:
+                return self.logo.url
+            except Exception:
+                pass
+        return self.logo_url or ""
+
+    def __str__(self):
+        return f"{self.org_name} Settings"
+

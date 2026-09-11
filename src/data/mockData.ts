@@ -12,6 +12,7 @@ import {
   SiteContentConfig,
   BankAndQrConfig,
   ClothesHubConfig,
+  SiteSettingsConfig,
   ContactMessage
 } from '../types';
 
@@ -950,6 +951,60 @@ export const DEFAULT_CLOTHES_HUB_CONFIG: ClothesHubConfig = {
   googleMapsDirectionsUrl: 'https://maps.app.goo.gl/jzMPyppNjnAydjax8',
   contactNote: 'Direct phone contact for rider delivery (Pathao/InDrive) and cargo parcel coordination.',
   contactNoteNp: 'पठाओ, इनड्राइभ राइडर वा कुरियर पार्सल आइपुग्दा माथिको फोनमा सम्पर्क गर्न भन्नुहोला।',
+};
+
+export const DEFAULT_SITE_SETTINGS: SiteSettingsConfig = {
+  orgName: 'Genzicon Foundation Nepal',
+  orgNameNp: 'जेन्जिकन फाउन्डेशन नेपाल',
+  tagline: 'Grassroots Youth-Led Transformation Across Nepal',
+  taglineNp: 'नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण',
+  logoUrl: '',
+  aboutText: 'A registered non-profit NGO operating Clothes Bank Nepal, reforestation campaigns, and vocational training across 77 districts.',
+  aboutTextNp: 'कपडा बैंक नेपाल, सफा तथा हरित नेपाल वृक्षारोपण, र महिला तथा युवा सीप एवं उद्यमशीलता प्रवर्द्धनमा समर्पित गैरसरकारी संस्था।',
+
+  // Central Head Office (Kathmandu)
+  headOfficeTitle: 'Central Head Office (Kathmandu)',
+  headOfficeTitleNp: 'केन्द्रीय कार्यालय (काठमाडौँ)',
+  headOfficeSubtitle: 'Genzicon Foundation Central HQ',
+  headOfficeSubtitleNp: 'जेन्जिकन फाउन्डेशन मुख्य कार्यालय',
+  headOfficeAddress: 'Putalisadak, Ward No. 28, Kathmandu 44600, Nepal',
+  headOfficeAddressNp: 'पुतलीसडक, वडा नं. २८, काठमाडौँ ४४६००, नेपाल',
+  headOfficePhone: '+977 1-4240000 / 9823000000',
+  headOfficeEmail: 'info@genzicon.org',
+  headOfficeHours: 'Sun - Fri: 9:30 AM – 5:30 PM (NPT)',
+  headOfficeHoursNp: 'आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म',
+
+  // Madhesh Regional Office (Janakpur)
+  regionalOfficeTitle: 'Madhesh Regional Office (Janakpur)',
+  regionalOfficeTitleNp: 'मधेस प्रदेश क्षेत्रीय कार्यालय (जनकपुर)',
+  regionalOfficeSubtitle: 'Field & Clothes Bank Operations',
+  regionalOfficeSubtitleNp: 'मैदानी तथा कपडा बैंक सञ्चालन',
+  regionalOfficeAddress: 'Station Road, Ward No. 4, Janakpurdham, Dhanusha',
+  regionalOfficeAddressNp: 'स्टेशन रोड, वडा नं. ४, जनकपुरधाम, धनुषा',
+  regionalOfficePhone: '+977 41-520000',
+  regionalOfficeEmail: 'janakpur@genzicon.org',
+  regionalOfficeHours: 'Sun - Fri: 9:30 AM – 5:30 PM (NPT)',
+  regionalOfficeHoursNp: 'आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म',
+
+  // Direct Clothes Donation Help & Urgent Hotline
+  hotlineTitle: 'Direct Clothes Donation Help',
+  hotlineTitleNp: 'तत्काल कपडा दान तथा सोधपुछ',
+  hotlinePhone: '9823000000',
+  hotlineText: 'For urgent clothes pickup or emergency cold-wave support, call our hotline at 9823000000 or chat on WhatsApp.',
+  hotlineTextNp: 'कपडा दान संकलन वा वितरण सहायताका लागि हाम्रो हटलाइन ९८२३०००००० मा सिधै सम्पर्क गर्न सक्नुहुन्छ।',
+
+  // Social Media & Floating Connect
+  whatsappNumber: '+977 9823000000',
+  whatsappMessage: 'Namaste Genzicon Foundation, I would like to connect.',
+  facebookUrl: 'https://facebook.com',
+  instagramUrl: '',
+  youtubeUrl: '',
+  linkedinUrl: '',
+  twitterUrl: '',
+
+  // Footer Offices Summary
+  footerOfficesSummary: 'Putalisadak, Kathmandu & Station Rd, Janakpur',
+  footerOfficesSummaryNp: 'पुतलीसडक, काठमाडौँ र स्टेशन रोड, जनकपुर'
 };
 
 export const INITIAL_CONTACT_MESSAGES: ContactMessage[] = [

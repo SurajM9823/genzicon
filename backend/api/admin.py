@@ -3,7 +3,7 @@ from django.db import models
 from django.utils.html import format_html
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings
 )
 
 @admin.register(SiteContent)
@@ -323,5 +323,82 @@ class ClothesHubConfigAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return True
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = ('org_name', 'head_office_phone', 'whatsapp_number', 'facebook_url', 'logo_preview', 'updated_at')
+    readonly_fields = ('logo_preview', 'updated_at')
+    fieldsets = (
+        ('Organization Identity & Official Logo', {
+            'fields': (
+                'org_name', 'org_name_np',
+                'tagline', 'tagline_np',
+                'logo', 'logo_url', 'logo_preview',
+                'about_text', 'about_text_np'
+            ),
+            'description': 'Upload your official Genzicon Foundation logo (file or URL) to appear in the Navbar and Footer.'
+        }),
+        ('Central Head Office (Kathmandu)', {
+            'fields': (
+                'head_office_title', 'head_office_title_np',
+                'head_office_subtitle', 'head_office_subtitle_np',
+                'head_office_address', 'head_office_address_np',
+                'head_office_phone', 'head_office_email',
+                'head_office_hours', 'head_office_hours_np'
+            )
+        }),
+        ('Madhesh Regional Office (Janakpur)', {
+            'fields': (
+                'regional_office_title', 'regional_office_title_np',
+                'regional_office_subtitle', 'regional_office_subtitle_np',
+                'regional_office_address', 'regional_office_address_np',
+                'regional_office_phone', 'regional_office_email',
+                'regional_office_hours', 'regional_office_hours_np'
+            )
+        }),
+        ('Direct Clothes Donation Help & Urgent Hotline', {
+            'fields': (
+                'hotline_title', 'hotline_title_np',
+                'hotline_phone',
+                'hotline_text', 'hotline_text_np'
+            )
+        }),
+        ('Social Media Links & Floating Action Buttons', {
+            'fields': (
+                'whatsapp_number', 'whatsapp_message',
+                'facebook_url', 'instagram_url', 'youtube_url',
+                'linkedin_url', 'twitter_url'
+            ),
+            'description': 'Configure the WhatsApp Number and Facebook Page link used by the floating quick connect buttons.'
+        }),
+        ('Footer Offices Summary & System Timestamps', {
+            'fields': (
+                'footer_offices_summary', 'footer_offices_summary_np',
+                'updated_at'
+            )
+        }),
+    )
+
+    def logo_preview(self, obj):
+        url = obj.final_logo_url
+        if url:
+            return format_html('<img src="{}" style="max-height: 48px; max-width: 140px; object-fit: contain; background: #111c2d; padding: 4px; border-radius: 4px;" />', url)
+        return "No Logo Set (Using Default Icon)"
+    logo_preview.short_description = "Logo Preview"
+
+    def has_change_permission(self, request, obj=None):
+        return True
+
+    def has_add_permission(self, request):
+        # Only allow 1 singleton instance
+        if SiteSettings.objects.count() >= 1:
+            return False
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 

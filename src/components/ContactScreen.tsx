@@ -9,16 +9,36 @@ import {
   CheckCircle2,
   MessageSquare
 } from 'lucide-react';
-import { NavTab, Language, ContactMessage } from '../types';
+import { NavTab, Language, ContactMessage, SiteSettingsConfig } from '../types';
 import { apiSubmitContact } from '../services/api';
 
 interface ContactScreenProps {
   language: Language;
   onSelectTab: (tab: NavTab) => void;
+  siteSettings?: SiteSettingsConfig;
 }
 
-export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelectTab }) => {
+export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelectTab, siteSettings }) => {
   const isNp = language === 'np';
+
+  // Dynamic Contact info
+  const headTitle = isNp ? (siteSettings?.headOfficeTitleNp || 'केन्द्रीय कार्यालय (काठमाडौँ)') : (siteSettings?.headOfficeTitle || 'Central Head Office (Kathmandu)');
+  const headSub = isNp ? (siteSettings?.headOfficeSubtitleNp || 'Genzicon Foundation Central HQ') : (siteSettings?.headOfficeSubtitle || 'Genzicon Foundation Central HQ');
+  const headAddr = isNp ? (siteSettings?.headOfficeAddressNp || siteSettings?.headOfficeAddress || 'Putalisadak, Ward No. 28, Kathmandu 44600, Nepal') : (siteSettings?.headOfficeAddress || 'Putalisadak, Ward No. 28, Kathmandu 44600, Nepal');
+  const headPhone = siteSettings?.headOfficePhone || '+977 1-4240000 / 9823000000';
+  const headEmail = siteSettings?.headOfficeEmail || 'info@genzicon.org';
+  const headHours = isNp ? (siteSettings?.headOfficeHoursNp || 'आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म') : (siteSettings?.headOfficeHours || 'Sun - Fri: 9:30 AM – 5:30 PM (NPT)');
+
+  const regTitle = isNp ? (siteSettings?.regionalOfficeTitleNp || 'मधेस प्रदेश क्षेत्रीय कार्यालय (जनकपुर)') : (siteSettings?.regionalOfficeTitle || 'Madhesh Regional Office (Janakpur)');
+  const regSub = isNp ? (siteSettings?.regionalOfficeSubtitleNp || 'Field & Clothes Bank Operations') : (siteSettings?.regionalOfficeSubtitle || 'Field & Clothes Bank Operations');
+  const regAddr = isNp ? (siteSettings?.regionalOfficeAddressNp || siteSettings?.regionalOfficeAddress || 'Station Road, Ward No. 4, Janakpurdham, Dhanusha') : (siteSettings?.regionalOfficeAddress || 'Station Road, Ward No. 4, Janakpurdham, Dhanusha');
+  const regPhone = siteSettings?.regionalOfficePhone || '+977 41-520000';
+  const regEmail = siteSettings?.regionalOfficeEmail || 'janakpur@genzicon.org';
+
+  const hotlineTitle = isNp ? (siteSettings?.hotlineTitleNp || 'तत्काल कपडा दान तथा सोधपुछ') : (siteSettings?.hotlineTitle || 'Direct Clothes Donation Help');
+  const hotlineDesc = isNp
+    ? (siteSettings?.hotlineTextNp || 'कपडा दान संकलन वा वितरण सहायताका लागि हाम्रो हटलाइन ९८२३०००००० मा सिधै सम्पर्क गर्न सक्नुहुन्छ।')
+    : (siteSettings?.hotlineText || 'For urgent clothes pickup or emergency cold-wave support, call our hotline at 9823000000 or chat on WhatsApp.');
 
   // Contact Form State
   const [formData, setFormData] = useState({
@@ -103,28 +123,28 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
                 </div>
                 <div>
                   <h3 className="font-bold text-xs sm:text-sm text-[#111c2d]">
-                    {isNp ? 'केन्द्रीय कार्यालय (काठमाडौँ)' : 'Central Head Office (Kathmandu)'}
+                    {headTitle}
                   </h3>
-                  <span className="text-[10px] text-[#00743a] font-semibold">Genzicon Foundation Central HQ</span>
+                  <span className="text-[10px] text-[#00743a] font-semibold">{headSub}</span>
                 </div>
               </div>
 
               <div className="space-y-2 text-xs text-[#434653]">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-3.5 h-3.5 text-[#003c90] shrink-0 mt-0.5" />
-                  <span>Putalisadak, Ward No. 28, Kathmandu 44600, Nepal</span>
+                  <span>{headAddr}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-[#003c90] shrink-0" />
-                  <a href="tel:+97714240000" className="hover:text-[#003c90] font-medium">+977 1-4240000 / 9823000000</a>
+                  <a href={`tel:${headPhone.split('/')[0].trim()}`} className="hover:text-[#003c90] font-medium">{headPhone}</a>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-3.5 h-3.5 text-[#003c90] shrink-0" />
-                  <a href="mailto:info@genzicon.org" className="hover:text-[#003c90] font-medium">info@genzicon.org</a>
+                  <a href={`mailto:${headEmail}`} className="hover:text-[#003c90] font-medium">{headEmail}</a>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-[#003c90] shrink-0" />
-                  <span>Sun - Fri: 9:30 AM – 5:30 PM (NPT)</span>
+                  <span>{headHours}</span>
                 </div>
               </div>
             </div>
@@ -137,21 +157,27 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
                 </div>
                 <div>
                   <h3 className="font-bold text-xs sm:text-sm text-[#111c2d]">
-                    {isNp ? 'मधेस प्रदेश क्षेत्रीय कार्यालय (जनकपुर)' : 'Madhesh Regional Office (Janakpur)'}
+                    {regTitle}
                   </h3>
-                  <span className="text-[10px] text-[#003c90] font-semibold">Field & Clothes Bank Operations</span>
+                  <span className="text-[10px] text-[#003c90] font-semibold">{regSub}</span>
                 </div>
               </div>
 
               <div className="space-y-2 text-xs text-[#434653]">
                 <div className="flex items-start gap-2">
                   <MapPin className="w-3.5 h-3.5 text-[#00743a] shrink-0 mt-0.5" />
-                  <span>Station Road, Ward No. 4, Janakpurdham, Dhanusha</span>
+                  <span>{regAddr}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="w-3.5 h-3.5 text-[#00743a] shrink-0" />
-                  <a href="tel:+97741520000" className="hover:text-[#00743a] font-medium">+977 41-520000</a>
+                  <a href={`tel:${regPhone.split('/')[0].trim()}`} className="hover:text-[#00743a] font-medium">{regPhone}</a>
                 </div>
+                {regEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-3.5 h-3.5 text-[#00743a] shrink-0" />
+                    <a href={`mailto:${regEmail}`} className="hover:text-[#00743a] font-medium">{regEmail}</a>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -160,13 +186,11 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
               <div className="flex items-center gap-2 mb-1">
                 <MessageSquare className="w-4 h-4 text-[#003c90]" />
                 <span className="text-xs font-bold text-[#003c90]">
-                  {isNp ? 'तत्काल कपडा दान तथा सोधपुछ' : 'Direct Clothes Donation Help'}
+                  {hotlineTitle}
                 </span>
               </div>
               <p className="text-[11px] text-[#434653] leading-relaxed">
-                {isNp
-                  ? 'कपडा दान संकलन वा वितरण सहायताका लागि हाम्रो हटलाइन ९८२३०००००० मा सिधै सम्पर्क गर्न सक्नुहुन्छ।'
-                  : 'For urgent clothes pickup or emergency cold-wave support, call our hotline at 9823000000 or chat on WhatsApp.'}
+                {hotlineDesc}
               </p>
             </div>
           </div>

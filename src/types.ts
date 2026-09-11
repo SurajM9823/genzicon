@@ -357,3 +357,58 @@ export interface ClothesHubConfig {
   contactNoteNp: string;
 }
 
+export interface SiteSettingsConfig {
+  orgName: string;
+  orgNameNp: string;
+  tagline: string;
+  taglineNp: string;
+  logoUrl?: string;
+  aboutText: string;
+  aboutTextNp: string;
+
+  // Central Head Office (Kathmandu)
+  headOfficeTitle: string;
+  headOfficeTitleNp: string;
+  headOfficeSubtitle: string;
+  headOfficeSubtitleNp: string;
+  headOfficeAddress: string;
+  headOfficeAddressNp: string;
+  headOfficePhone: string;
+  headOfficeEmail: string;
+  headOfficeHours: string;
+  headOfficeHoursNp: string;
+
+  // Madhesh Regional Office (Janakpur)
+  regionalOfficeTitle: string;
+  regionalOfficeTitleNp: string;
+  regionalOfficeSubtitle: string;
+  regionalOfficeSubtitleNp: string;
+  regionalOfficeAddress: string;
+  regionalOfficeAddressNp: string;
+  regionalOfficePhone: string;
+  regionalOfficeEmail?: string;
+  regionalOfficeHours?: string;
+  regionalOfficeHoursNp?: string;
+
+  // Direct Clothes Donation Help & Urgent Hotline
+  hotlineTitle: string;
+  hotlineTitleNp: string;
+  hotlinePhone: string;
+  hotlineText: string;
+  hotlineTextNp: string;
+
+  // Social Media & Floating Connect
+  whatsappNumber: string;
+  whatsappMessage?: string;
+  facebookUrl: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
+  linkedinUrl?: string;
+  twitterUrl?: string;
+
+  // Footer Offices Summary
+  footerOfficesSummary: string;
+  footerOfficesSummaryNp?: string;
+}
+
+

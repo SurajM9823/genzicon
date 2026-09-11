@@ -19,11 +19,13 @@ import {
   SiteContentConfig,
   BankAndQrConfig,
   Language,
-  ClothesHubConfig
+  ClothesHubConfig,
+  SiteSettingsConfig
 } from '../types';
 import { 
   DEFAULT_SITE_CONTENT, 
   DEFAULT_BANK_QR_CONFIG, 
+  DEFAULT_SITE_SETTINGS,
   PROJECTS_DATA, 
   INITIAL_VOLUNTEER_RECORDS, 
   INITIAL_DONATION_RECORDS, 
@@ -45,7 +47,9 @@ import {
   apiGetDonations,
   apiGetContacts,
   apiGetClothesHubConfig,
-  apiSaveClothesHubConfig
+  apiSaveClothesHubConfig,
+  apiGetSiteSettings,
+  apiSaveSiteSettings
 } from '../services/api';
 import { AdminHeader, AdminTabType } from './admin/AdminHeader';
 import { AdminOverviewTab } from './admin/AdminOverviewTab';
@@ -174,6 +178,16 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     }
   });
 
+  // 9. Site Settings (Organization Identity, Logo, Offices, Socials, Hotline)
+  const [siteSettings, setSiteSettings] = useState<SiteSettingsConfig>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_site_settings');
+      return saved ? JSON.parse(saved) : DEFAULT_SITE_SETTINGS;
+    } catch {
+      return DEFAULT_SITE_SETTINGS;
+    }
+  });
+
   // Synchronize state changes to localStorage and backend API
   useEffect(() => {
     // Listen for real-time clothes donations, volunteer registrations, and other updates
@@ -251,7 +265,8 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           liveVolunteers,
           liveDonations,
           liveContacts,
-          liveHubConfig
+          liveHubConfig,
+          liveSiteSettings
         ] = await Promise.all([
           apiGetSiteContent(),
           apiGetProjects(),
@@ -260,6 +275,7 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           apiGetDonations(),
           apiGetContacts(),
           apiGetClothesHubConfig(),
+          apiGetSiteSettings(),
         ]);
 
         if (liveContent) setSiteContent(prev => ({ ...prev, ...liveContent }));
@@ -283,6 +299,10 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
         if (liveHubConfig && liveHubConfig.hubName) {
           setHubConfig(liveHubConfig);
           localStorage.setItem('genzicon_clothes_hub_config', JSON.stringify(liveHubConfig));
+        }
+        if (liveSiteSettings && liveSiteSettings.orgName) {
+          setSiteSettings(liveSiteSettings);
+          localStorage.setItem('genzicon_site_settings', JSON.stringify(liveSiteSettings));
         }
       } catch (err) {
         console.warn('Backend sync in Admin:', err);
@@ -354,6 +374,28 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     localStorage.setItem('genzicon_clothes_hub_config', JSON.stringify(updated));
     window.dispatchEvent(new Event('genzicon_clothes_hub_updated'));
     await apiSaveClothesHubConfig(updated);
+  };
+
+  const handleSaveSiteSettings = async (updated: SiteSettingsConfig, logoFile?: File | null) => {
+    setSiteSettings(updated);
+    localStorage.setItem('genzicon_site_settings', JSON.stringify(updated));
+    window.dispatchEvent(new Event('genzicon_settings_updated'));
+    const res = await apiSaveSiteSettings(updated, logoFile);
+    if (res?.success && res.data) {
+      const liveUpdated: SiteSettingsConfig = {
+        ...updated,
+        logoUrl: res.data.final_logo_url || res.data.logo || updated.logoUrl || '',
+      };
+      setSiteSettings(liveUpdated);
+      localStorage.setItem('genzicon_site_settings', JSON.stringify(liveUpdated));
+      window.dispatchEvent(new Event('genzicon_settings_updated'));
+    }
+  };
+
+  const handleSaveBankQrConfig = (updated: BankAndQrConfig) => {
+    setBankQrConfig(updated);
+    localStorage.setItem('genzicon_bank_qr_config', JSON.stringify(updated));
+    window.dispatchEvent(new Event('genzicon_bank_qr_updated'));
   };
 
   // Auth Handling
@@ -587,6 +629,8 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
         {activeTab === 'settings' && (
           <AdminSettingsTab
             language={language}
+            siteSettings={siteSettings}
+            onSaveSiteSettings={handleSaveSiteSettings}
             bankQrConfig={bankQrConfig}
             onSaveBankQrConfig={handleSaveBankQrConfig}
           />

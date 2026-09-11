@@ -9,12 +9,12 @@ from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings
 )
 from .serializers import (
     SiteContentSerializer, ImpactStatSerializer, ProjectSerializer, ClothesDonorSerializer,
     ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer,
-    ClothesHubConfigSerializer
+    ClothesHubConfigSerializer, SiteSettingsSerializer
 )
 
 # --- Admin Authentication Endpoint ---
@@ -859,3 +859,72 @@ class ClothesHubConfigViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def ensure_default_site_settings():
+    """Ensure default SiteSettings singleton exists"""
+    if SiteSettings.objects.count() == 0:
+        SiteSettings.objects.create(
+            org_name="Genzicon Foundation Nepal",
+            org_name_np="जेन्जिकन फाउन्डेशन नेपाल",
+            tagline="Grassroots Youth-Led Transformation Across Nepal",
+            tagline_np="नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण",
+            about_text="A registered non-profit NGO operating Clothes Bank Nepal, reforestation campaigns, and vocational training across 77 districts.",
+            about_text_np="कपडा बैंक नेपाल, सफा तथा हरित नेपाल वृक्षारोपण, र महिला तथा युवा सीप एवं उद्यमशीलता प्रवर्द्धनमा समर्पित गैरसरकारी संस्था।",
+            head_office_title="Central Head Office (Kathmandu)",
+            head_office_title_np="केन्द्रीय कार्यालय (काठमाडौँ)",
+            head_office_subtitle="Genzicon Foundation Central HQ",
+            head_office_subtitle_np="जेन्जिकन फाउन्डेशन मुख्य कार्यालय",
+            head_office_address="Putalisadak, Ward No. 28, Kathmandu 44600, Nepal",
+            head_office_address_np="पुतलीसडक, वडा नं. २८, काठमाडौँ ४४६००, नेपाल",
+            head_office_phone="+977 1-4240000 / 9823000000",
+            head_office_email="info@genzicon.org",
+            head_office_hours="Sun - Fri: 9:30 AM – 5:30 PM (NPT)",
+            head_office_hours_np="आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म",
+            regional_office_title="Madhesh Regional Office (Janakpur)",
+            regional_office_title_np="मधेस प्रदेश क्षेत्रीय कार्यालय (जनकपुर)",
+            regional_office_subtitle="Field & Clothes Bank Operations",
+            regional_office_subtitle_np="मैदानी तथा कपडा बैंक सञ्चालन",
+            regional_office_address="Station Road, Ward No. 4, Janakpurdham, Dhanusha",
+            regional_office_address_np="स्टेशन रोड, वडा नं. ४, जनकपुरधाम, धनुषा",
+            regional_office_phone="+977 41-520000",
+            regional_office_email="janakpur@genzicon.org",
+            regional_office_hours="Sun - Fri: 9:30 AM – 5:30 PM (NPT)",
+            regional_office_hours_np="आइत - शुक्र: बिहान ९:३० देखि साँझ ५:३० सम्म",
+            hotline_title="Direct Clothes Donation Help",
+            hotline_title_np="तत्काल कपडा दान तथा सोधपुछ",
+            hotline_phone="9823000000",
+            hotline_text="For urgent clothes pickup or emergency cold-wave support, call our hotline at 9823000000 or chat on WhatsApp.",
+            hotline_text_np="कपडा दान संकलन वा वितरण सहायताका लागि हाम्रो हटलाइन ९८२३०००००० मा सिधै सम्पर्क गर्न सक्नुहुन्छ।",
+            whatsapp_number="+977 9823000000",
+            whatsapp_message="Namaste Genzicon Foundation, I would like to connect.",
+            facebook_url="https://facebook.com",
+            footer_offices_summary="Putalisadak, Kathmandu & Station Rd, Janakpur",
+            footer_offices_summary_np="पुतलीसडक, काठमाडौँ र स्टेशन रोड, जनकपुर"
+        )
+
+
+class SiteSettingsViewSet(viewsets.ModelViewSet):
+    queryset = SiteSettings.objects.all()
+    serializer_class = SiteSettingsSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.AllowAny()]  # Seamless save from Admin tab
+
+    def list(self, request, *args, **kwargs):
+        ensure_default_site_settings()
+        settings_obj = SiteSettings.objects.first()
+        serializer = self.get_serializer(settings_obj, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        ensure_default_site_settings()
+        settings_obj = SiteSettings.objects.first()
+        serializer = self.get_serializer(settings_obj, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+

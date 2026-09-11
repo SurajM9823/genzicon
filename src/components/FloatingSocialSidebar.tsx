@@ -1,6 +1,21 @@
 import React from 'react';
+import { SiteSettingsConfig } from '../types';
 
-export const FloatingSocialSidebar: React.FC = () => {
+interface FloatingSocialSidebarProps {
+  siteSettings?: SiteSettingsConfig;
+}
+
+export const FloatingSocialSidebar: React.FC<FloatingSocialSidebarProps> = ({ siteSettings }) => {
+  // Format WhatsApp number for wa.me link
+  const rawNumber = (siteSettings?.whatsappNumber || '9823000000').trim();
+  let cleanNum = rawNumber.replace(/[^0-9]/g, '');
+  if (cleanNum.length === 10 && cleanNum.startsWith('98')) {
+    cleanNum = '977' + cleanNum;
+  }
+  const defaultMsg = siteSettings?.whatsappMessage || 'Namaste Genzicon Foundation, I would like to connect.';
+  const whatsappUrl = `https://wa.me/${cleanNum}?text=${encodeURIComponent(defaultMsg)}`;
+  const facebookUrl = siteSettings?.facebookUrl || 'https://facebook.com';
+
   return (
     <div
       id="floating-social-sidebar"
@@ -9,10 +24,10 @@ export const FloatingSocialSidebar: React.FC = () => {
     >
       {/* WhatsApp Button with Left-to-Right Subtle 3D Slide Animation */}
       <a
-        href="https://wa.me/9779823000000?text=Namaste%20Genzicon%20Foundation,%20I%20would%20like%20to%20connect."
+        href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        title="Chat on WhatsApp (+977 9823000000)"
+        title={`Chat on WhatsApp (${rawNumber})`}
         className="group flex items-center bg-[#25D366] text-white p-2.5 rounded-r-md shadow-md hover:shadow-lg transition-all duration-300 ease-out hover:translate-x-1 border-r-2 border-y-2 border-emerald-600/40 transform -translate-x-1 hover:translate-x-0"
         style={{
           boxShadow: '2px 4px 10px rgba(37, 211, 102, 0.28)'
@@ -37,7 +52,7 @@ export const FloatingSocialSidebar: React.FC = () => {
 
       {/* Facebook Button with Left-to-Right Subtle 3D Slide Animation */}
       <a
-        href="https://facebook.com"
+        href={facebookUrl}
         target="_blank"
         rel="noopener noreferrer"
         title="Follow Genzicon Foundation on Facebook"
@@ -65,3 +80,4 @@ export const FloatingSocialSidebar: React.FC = () => {
     </div>
   );
 };
+

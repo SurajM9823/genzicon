@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings
 )
 
 class ImpactStatSerializer(serializers.ModelSerializer):
@@ -134,3 +134,27 @@ class ClothesHubConfigSerializer(serializers.ModelSerializer):
         model = ClothesHubConfig
         fields = '__all__'
         read_only_fields = ['updated_at']
+
+class SiteSettingsSerializer(serializers.ModelSerializer):
+    final_logo_url = serializers.SerializerMethodField()
+    logo_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    class Meta:
+        model = SiteSettings
+        fields = '__all__'
+        read_only_fields = ['updated_at']
+
+    def validate_logo_url(self, value):
+        if not value:
+            return ""
+        if value.startswith("data:"):
+            return ""
+        return value[:500]
+
+    def get_final_logo_url(self, obj):
+        request = self.context.get('request')
+        if obj.logo:
+            if request is not None:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return obj.logo_url or ""
