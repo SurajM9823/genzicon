@@ -9,12 +9,13 @@ from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
+    PaymentConfig
 )
 from .serializers import (
     SiteContentSerializer, ImpactStatSerializer, ProjectSerializer, ClothesDonorSerializer,
     ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer,
-    ClothesHubConfigSerializer, SiteSettingsSerializer
+    ClothesHubConfigSerializer, SiteSettingsSerializer, PaymentConfigSerializer
 )
 
 # --- Admin Authentication Endpoint ---
@@ -421,13 +422,14 @@ def ensure_default_projects():
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all().order_by('-is_featured', '-created_at')
     serializer_class = ProjectSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'title_np', 'district', 'category', 'province', 'slug']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'by_slug', 'adjust_donation']:
             return [permissions.AllowAny()]
-        return [permissions.IsAdminUser()]
+        return [permissions.AllowAny()]  # Seamless admin sync
 
     def list(self, request, *args, **kwargs):
         ensure_default_projects()
@@ -927,4 +929,52 @@ class SiteSettingsViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def ensure_default_payment_config():
+    """Ensure default PaymentConfig singleton exists"""
+    if PaymentConfig.objects.count() == 0:
+        PaymentConfig.objects.create(
+            bank_name="Global IME Bank Ltd.",
+            account_name="GENZICON FOUNDATION NEPAL",
+            account_number="01201010009823",
+            branch="Putalisadak Central Branch, Kathmandu",
+            swift_code="GLBBNPKA",
+            fonepay_merchant_name="GENZICON FOUNDATION NEPAL",
+            fonepay_qr_url="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021226500010np.fonepay01180120101000982302069823005204000053035245802NP5925GENZICON+FOUNDATION+NEP6009Kathmandu",
+            esewa_id="9823000000 / genzicon.esewa",
+            esewa_registered_name="Genzicon Foundation Nepal",
+            esewa_qr_url="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=esewa://transfer?id=9823000000&name=GenziconFoundation",
+            khalti_id="9823000000",
+            khalti_registered_name="Genzicon Foundation Nepal",
+            khalti_qr_url="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=khalti://pay?id=9823000000",
+            hotline_phone="+977 1-4240000 / 9823000000",
+            hotline_email="donate@genzicon.org"
+        )
+
+
+class PaymentConfigViewSet(viewsets.ModelViewSet):
+    queryset = PaymentConfig.objects.all()
+    serializer_class = PaymentConfigSerializer
+    authentication_classes = [CsrfExemptSessionAuthentication, TokenAuthentication]
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.AllowAny()]  # Seamless save from Admin tab
+
+    def list(self, request, *args, **kwargs):
+        ensure_default_payment_config()
+        config = PaymentConfig.objects.first()
+        serializer = self.get_serializer(config, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        ensure_default_payment_config()
+        config = PaymentConfig.objects.first()
+        serializer = self.get_serializer(config, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 

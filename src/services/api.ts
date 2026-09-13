@@ -1,5 +1,4 @@
-// Django REST Framework API Client for Genzicon Foundation
-import { Project, ClothesHubConfig, SiteSettingsConfig } from '../types';
+import { Project, ClothesHubConfig, SiteSettingsConfig, BankAndQrConfig } from '../types';
 
 const API_BASE = (typeof window !== 'undefined' && (window as any).VITE_API_URL) 
   ? (window as any).VITE_API_URL 
@@ -248,7 +247,7 @@ export function formatProjectFromBackend(p: any): Project {
     donorCount: Number(p.donor_count) || (raisedNpr > 0 ? Math.max(1, Math.round(raisedNpr / 4500)) : 0),
     location: p.province ? `${p.district}, ${p.province}` : (p.district || 'Nepal'),
     beneficiaries: p.beneficiaries_count || '1,000+ Citizens',
-    imageUrl: p.image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200',
+    imageUrl: p.final_image_url || p.image || p.image_url || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200',
     imageAlt: p.title || 'Field Program',
   };
 }
@@ -282,36 +281,72 @@ export async function apiGetProjectBySlug(slug: string): Promise<Project | null>
   return null;
 }
 
-export async function apiCreateProject(projectData: Partial<Project>) {
+export async function apiCreateProject(projectData: Partial<Project>, imageFile?: File | null) {
   try {
     const locParts = (projectData.location || 'Kathmandu, Bagmati').split(',');
-    const payload = {
-      slug: projectData.slug || undefined,
-      title: projectData.title,
-      title_np: projectData.titleNp || projectData.title,
-      category: projectData.category || 'Clothes Bank Nepal',
-      category_np: projectData.categoryNp || projectData.category,
-      district: locParts[0]?.trim() || 'Kathmandu',
-      province: locParts[1]?.trim() || 'Bagmati Province',
-      status: projectData.status || 'Active',
-      target_amount: projectData.goalAmountNpr || 500000,
-      raised_amount: projectData.raisedAmountNpr || 0,
-      donor_count: projectData.donorCount || 0,
-      beneficiaries_count: projectData.beneficiaries || '1,000+ Citizens',
-      image_url: projectData.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200',
-      description: projectData.description || '',
-      description_np: projectData.descriptionNp || projectData.description || '',
-      full_description: projectData.fullDescription || projectData.description || '',
-      full_description_np: projectData.fullDescriptionNp || projectData.descriptionNp || '',
-      is_featured: true,
-    };
-    const res = await fetch(`${API_BASE}/projects/`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      return await res.json();
+
+    if (imageFile) {
+      const formData = new FormData();
+      if (projectData.slug) formData.append('slug', projectData.slug);
+      if (projectData.title) formData.append('title', projectData.title);
+      if (projectData.titleNp || projectData.title) formData.append('title_np', projectData.titleNp || projectData.title || '');
+      if (projectData.category) formData.append('category', projectData.category);
+      if (projectData.categoryNp || projectData.category) formData.append('category_np', projectData.categoryNp || projectData.category || '');
+      formData.append('district', locParts[0]?.trim() || 'Kathmandu');
+      formData.append('province', locParts[1]?.trim() || 'Bagmati Province');
+      formData.append('status', projectData.status || 'Active');
+      formData.append('target_amount', String(projectData.goalAmountNpr || 500000));
+      formData.append('raised_amount', String(projectData.raisedAmountNpr || 0));
+      formData.append('donor_count', String(projectData.donorCount || 0));
+      formData.append('beneficiaries_count', projectData.beneficiaries || '1,000+ Citizens');
+      if (projectData.imageUrl && isValidHttpUrl(projectData.imageUrl)) formData.append('image_url', projectData.imageUrl.trim());
+      formData.append('description', projectData.description || '');
+      formData.append('description_np', projectData.descriptionNp || projectData.description || '');
+      formData.append('full_description', projectData.fullDescription || projectData.description || '');
+      formData.append('full_description_np', projectData.fullDescriptionNp || projectData.descriptionNp || '');
+      formData.append('is_featured', 'true');
+      formData.append('image', imageFile);
+
+      const token = localStorage.getItem('genzicon_admin_token');
+      const headers: HeadersInit = token ? { 'Authorization': `Token ${token}` } : {};
+
+      const res = await fetch(`${API_BASE}/projects/`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } else {
+      const payload = {
+        slug: projectData.slug || undefined,
+        title: projectData.title,
+        title_np: projectData.titleNp || projectData.title,
+        category: projectData.category || 'Clothes Bank Nepal',
+        category_np: projectData.categoryNp || projectData.category,
+        district: locParts[0]?.trim() || 'Kathmandu',
+        province: locParts[1]?.trim() || 'Bagmati Province',
+        status: projectData.status || 'Active',
+        target_amount: projectData.goalAmountNpr || 500000,
+        raised_amount: projectData.raisedAmountNpr || 0,
+        donor_count: projectData.donorCount || 0,
+        beneficiaries_count: projectData.beneficiaries || '1,000+ Citizens',
+        image_url: projectData.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200',
+        description: projectData.description || '',
+        description_np: projectData.descriptionNp || projectData.description || '',
+        full_description: projectData.fullDescription || projectData.description || '',
+        full_description_np: projectData.fullDescriptionNp || projectData.descriptionNp || '',
+        is_featured: true,
+      };
+      const res = await fetch(`${API_BASE}/projects/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
     }
   } catch (e) {
     console.warn('Could not create project on backend:', e);
@@ -319,35 +354,70 @@ export async function apiCreateProject(projectData: Partial<Project>) {
   return null;
 }
 
-export async function apiUpdateProject(id: string | number, projectData: Partial<Project>) {
+export async function apiUpdateProject(id: string | number, projectData: Partial<Project>, imageFile?: File | null) {
   try {
     const locParts = (projectData.location || '').split(',');
-    const payload: any = {};
-    if (projectData.title !== undefined) payload.title = projectData.title;
-    if (projectData.titleNp !== undefined) payload.title_np = projectData.titleNp;
-    if (projectData.slug !== undefined) payload.slug = projectData.slug;
-    if (projectData.category !== undefined) payload.category = projectData.category;
-    if (projectData.categoryNp !== undefined) payload.category_np = projectData.categoryNp;
-    if (projectData.status !== undefined) payload.status = projectData.status;
-    if (projectData.goalAmountNpr !== undefined) payload.target_amount = projectData.goalAmountNpr;
-    if (projectData.raisedAmountNpr !== undefined) payload.raised_amount = projectData.raisedAmountNpr;
-    if (projectData.donorCount !== undefined) payload.donor_count = projectData.donorCount;
-    if (projectData.beneficiaries !== undefined) payload.beneficiaries_count = projectData.beneficiaries;
-    if (projectData.imageUrl !== undefined) payload.image_url = projectData.imageUrl;
-    if (projectData.description !== undefined) payload.description = projectData.description;
-    if (projectData.descriptionNp !== undefined) payload.description_np = projectData.descriptionNp;
-    if (projectData.fullDescription !== undefined) payload.full_description = projectData.fullDescription;
-    if (projectData.fullDescriptionNp !== undefined) payload.full_description_np = projectData.fullDescriptionNp;
-    if (locParts.length > 0 && locParts[0].trim()) payload.district = locParts[0].trim();
-    if (locParts.length > 1 && locParts[1].trim()) payload.province = locParts[1].trim();
 
-    const res = await fetch(`${API_BASE}/projects/${id}/`, {
-      method: 'PATCH',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
-    if (res.ok) {
-      return await res.json();
+    if (imageFile) {
+      const formData = new FormData();
+      if (projectData.title !== undefined) formData.append('title', projectData.title);
+      if (projectData.titleNp !== undefined) formData.append('title_np', projectData.titleNp);
+      if (projectData.slug !== undefined) formData.append('slug', projectData.slug);
+      if (projectData.category !== undefined) formData.append('category', projectData.category);
+      if (projectData.categoryNp !== undefined) formData.append('category_np', projectData.categoryNp);
+      if (projectData.status !== undefined) formData.append('status', projectData.status);
+      if (projectData.goalAmountNpr !== undefined) formData.append('target_amount', String(projectData.goalAmountNpr));
+      if (projectData.raisedAmountNpr !== undefined) formData.append('raised_amount', String(projectData.raisedAmountNpr));
+      if (projectData.donorCount !== undefined) formData.append('donor_count', String(projectData.donorCount));
+      if (projectData.beneficiaries !== undefined) formData.append('beneficiaries_count', projectData.beneficiaries);
+      if (projectData.imageUrl !== undefined && isValidHttpUrl(projectData.imageUrl)) formData.append('image_url', projectData.imageUrl.trim());
+      if (projectData.description !== undefined) formData.append('description', projectData.description);
+      if (projectData.descriptionNp !== undefined) formData.append('description_np', projectData.descriptionNp);
+      if (projectData.fullDescription !== undefined) formData.append('full_description', projectData.fullDescription);
+      if (projectData.fullDescriptionNp !== undefined) formData.append('full_description_np', projectData.fullDescriptionNp);
+      if (locParts.length > 0 && locParts[0].trim()) formData.append('district', locParts[0].trim());
+      if (locParts.length > 1 && locParts[1].trim()) formData.append('province', locParts[1].trim());
+      formData.append('image', imageFile);
+
+      const token = localStorage.getItem('genzicon_admin_token');
+      const headers: HeadersInit = token ? { 'Authorization': `Token ${token}` } : {};
+
+      const res = await fetch(`${API_BASE}/projects/${id}/`, {
+        method: 'PATCH',
+        headers,
+        body: formData,
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } else {
+      const payload: any = {};
+      if (projectData.title !== undefined) payload.title = projectData.title;
+      if (projectData.titleNp !== undefined) payload.title_np = projectData.titleNp;
+      if (projectData.slug !== undefined) payload.slug = projectData.slug;
+      if (projectData.category !== undefined) payload.category = projectData.category;
+      if (projectData.categoryNp !== undefined) payload.category_np = projectData.categoryNp;
+      if (projectData.status !== undefined) payload.status = projectData.status;
+      if (projectData.goalAmountNpr !== undefined) payload.target_amount = projectData.goalAmountNpr;
+      if (projectData.raisedAmountNpr !== undefined) payload.raised_amount = projectData.raisedAmountNpr;
+      if (projectData.donorCount !== undefined) payload.donor_count = projectData.donorCount;
+      if (projectData.beneficiaries !== undefined) payload.beneficiaries_count = projectData.beneficiaries;
+      if (projectData.imageUrl !== undefined) payload.image_url = projectData.imageUrl;
+      if (projectData.description !== undefined) payload.description = projectData.description;
+      if (projectData.descriptionNp !== undefined) payload.description_np = projectData.descriptionNp;
+      if (projectData.fullDescription !== undefined) payload.full_description = projectData.fullDescription;
+      if (projectData.fullDescriptionNp !== undefined) payload.full_description_np = projectData.fullDescriptionNp;
+      if (locParts.length > 0 && locParts[0].trim()) payload.district = locParts[0].trim();
+      if (locParts.length > 1 && locParts[1].trim()) payload.province = locParts[1].trim();
+
+      const res = await fetch(`${API_BASE}/projects/${id}/`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
     }
   } catch (e) {
     console.warn(`Could not update project ${id}:`, e);
@@ -1295,4 +1365,141 @@ export async function apiSaveSiteSettings(data: Partial<SiteSettingsConfig>, log
     return { success: false, error: e?.message || 'Network error' };
   }
 }
+
+// --------------------------------------------------------------------------
+// 10. Payment Gateways & Official Bank Configuration
+// --------------------------------------------------------------------------
+export async function apiGetPaymentConfig(): Promise<BankAndQrConfig | null> {
+  try {
+    const res = await fetch(`${API_BASE}/payment-config/`);
+    if (res.ok) {
+      const data = await res.json();
+      const item = Array.isArray(data) ? (data[0] || null) : data;
+      if (item && (item.bank_name || item.account_number || item.account_name)) {
+        const config: BankAndQrConfig = {
+          bankName: item.bank_name || '',
+          accountName: item.account_name || '',
+          accountNumber: item.account_number || '',
+          branch: item.branch || '',
+          swiftCode: item.swift_code || '',
+          fonepayMerchantName: item.fonepay_merchant_name || '',
+          fonepayQrImage: item.final_fonepay_qr_url || item.fonepay_qr || item.fonepay_qr_url || '',
+          esewaId: item.esewa_id || '',
+          esewaRegisteredName: item.esewa_registered_name || item.account_name || '',
+          esewaQrImage: item.final_esewa_qr_url || item.esewa_qr || item.esewa_qr_url || '',
+          khaltiId: item.khalti_id || '',
+          khaltiRegisteredName: item.khalti_registered_name || item.account_name || '',
+          khaltiQrImage: item.final_khalti_qr_url || item.khalti_qr || item.khalti_qr_url || '',
+          hotlinePhone: item.hotline_phone || '',
+          hotlineEmail: item.hotline_email || '',
+        };
+        try {
+          localStorage.setItem('genzicon_bank_qr_config', JSON.stringify(config));
+        } catch {}
+        return config;
+      }
+    }
+  } catch (e) {
+    console.warn('Could not fetch payment config from backend:', e);
+  }
+  return null;
+}
+
+export async function apiSavePaymentConfig(
+  config: Partial<BankAndQrConfig>,
+  qrFiles?: {
+    fonepayQrFile?: File | null;
+    esewaQrFile?: File | null;
+    khaltiQrFile?: File | null;
+  }
+): Promise<boolean> {
+  try {
+    const hasFiles = qrFiles && (qrFiles.fonepayQrFile || qrFiles.esewaQrFile || qrFiles.khaltiQrFile);
+    let body: any;
+    let headers: Record<string, string> = {};
+
+    if (hasFiles) {
+      const formData = new FormData();
+      if (config.bankName !== undefined) formData.append('bank_name', config.bankName);
+      if (config.accountName !== undefined) formData.append('account_name', config.accountName);
+      if (config.accountNumber !== undefined) formData.append('account_number', config.accountNumber);
+      if (config.branch !== undefined) formData.append('branch', config.branch);
+      if (config.swiftCode !== undefined) formData.append('swift_code', config.swiftCode);
+      if (config.fonepayMerchantName !== undefined) formData.append('fonepay_merchant_name', config.fonepayMerchantName);
+      if (config.fonepayQrImage !== undefined && isValidHttpUrl(config.fonepayQrImage)) formData.append('fonepay_qr_url', config.fonepayQrImage.trim());
+      if (config.esewaId !== undefined) formData.append('esewa_id', config.esewaId);
+      if (config.esewaRegisteredName !== undefined) formData.append('esewa_registered_name', config.esewaRegisteredName);
+      if (config.esewaQrImage !== undefined && isValidHttpUrl(config.esewaQrImage)) formData.append('esewa_qr_url', config.esewaQrImage.trim());
+      if (config.khaltiId !== undefined) formData.append('khalti_id', config.khaltiId);
+      if (config.khaltiRegisteredName !== undefined) formData.append('khalti_registered_name', config.khaltiRegisteredName);
+      if (config.khaltiQrImage !== undefined && isValidHttpUrl(config.khaltiQrImage)) formData.append('khalti_qr_url', config.khaltiQrImage.trim());
+      if (config.hotlinePhone !== undefined) formData.append('hotline_phone', config.hotlinePhone);
+      if (config.hotlineEmail !== undefined) formData.append('hotline_email', config.hotlineEmail);
+
+      if (qrFiles?.fonepayQrFile) formData.append('fonepay_qr', qrFiles.fonepayQrFile);
+      if (qrFiles?.esewaQrFile) formData.append('esewa_qr', qrFiles.esewaQrFile);
+      if (qrFiles?.khaltiQrFile) formData.append('khalti_qr', qrFiles.khaltiQrFile);
+
+      body = formData;
+    } else {
+      headers['Content-Type'] = 'application/json';
+      const payload: Record<string, any> = {};
+      if (config.bankName !== undefined) payload.bank_name = config.bankName;
+      if (config.accountName !== undefined) payload.account_name = config.accountName;
+      if (config.accountNumber !== undefined) payload.account_number = config.accountNumber;
+      if (config.branch !== undefined) payload.branch = config.branch;
+      if (config.swiftCode !== undefined) payload.swift_code = config.swiftCode;
+      if (config.fonepayMerchantName !== undefined) payload.fonepay_merchant_name = config.fonepayMerchantName;
+      if (config.fonepayQrImage !== undefined) payload.fonepay_qr_url = config.fonepayQrImage;
+      if (config.esewaId !== undefined) payload.esewa_id = config.esewaId;
+      if (config.esewaRegisteredName !== undefined) payload.esewa_registered_name = config.esewaRegisteredName;
+      if (config.esewaQrImage !== undefined) payload.esewa_qr_url = config.esewaQrImage;
+      if (config.khaltiId !== undefined) payload.khalti_id = config.khaltiId;
+      if (config.khaltiRegisteredName !== undefined) payload.khalti_registered_name = config.khaltiRegisteredName;
+      if (config.khaltiQrImage !== undefined) payload.khalti_qr_url = config.khaltiQrImage;
+      if (config.hotlinePhone !== undefined) payload.hotline_phone = config.hotlinePhone;
+      if (config.hotlineEmail !== undefined) payload.hotline_email = config.hotlineEmail;
+
+      body = JSON.stringify(payload);
+    }
+
+    const authHeaders = getAuthHeaders();
+    Object.assign(headers, authHeaders);
+
+    const res = await fetch(`${API_BASE}/payment-config/`, {
+      method: 'POST',
+      headers,
+      body,
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      const newConfig: BankAndQrConfig = {
+        bankName: updated.bank_name || config.bankName || '',
+        accountName: updated.account_name || config.accountName || '',
+        accountNumber: updated.account_number || config.accountNumber || '',
+        branch: updated.branch || config.branch || '',
+        swiftCode: updated.swift_code || config.swiftCode || '',
+        fonepayMerchantName: updated.fonepay_merchant_name || config.fonepayMerchantName || '',
+        fonepayQrImage: updated.final_fonepay_qr_url || updated.fonepay_qr || updated.fonepay_qr_url || config.fonepayQrImage || '',
+        esewaId: updated.esewa_id || config.esewaId || '',
+        esewaRegisteredName: updated.esewa_registered_name || config.esewaRegisteredName || '',
+        esewaQrImage: updated.final_esewa_qr_url || updated.esewa_qr || updated.esewa_qr_url || config.esewaQrImage || '',
+        khaltiId: updated.khalti_id || config.khaltiId || '',
+        khaltiRegisteredName: updated.khalti_registered_name || config.khaltiRegisteredName || '',
+        khaltiQrImage: updated.final_khalti_qr_url || updated.khalti_qr || updated.khalti_qr_url || config.khaltiQrImage || '',
+        hotlinePhone: updated.hotline_phone || config.hotlinePhone || '',
+        hotlineEmail: updated.hotline_email || config.hotlineEmail || '',
+      };
+      try {
+        localStorage.setItem('genzicon_bank_qr_config', JSON.stringify(newConfig));
+      } catch {}
+      window.dispatchEvent(new Event('genzicon_bank_qr_updated'));
+      return true;
+    }
+  } catch (e) {
+    console.warn('Could not save payment config to backend:', e);
+  }
+  return false;
+}
+
 

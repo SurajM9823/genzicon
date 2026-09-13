@@ -64,30 +64,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           id="brand-logo-btn"
           onClick={() => handleLinkClick('impact')}
-          className="flex items-center gap-2.5 text-left focus:outline-none group"
+          className="flex items-center focus:outline-none group py-0.5"
+          aria-label={siteSettings?.orgName || 'Genzicon Foundation'}
         >
           {siteSettings?.logoUrl ? (
             <img
               src={siteSettings.logoUrl}
               alt={siteSettings.orgName || 'Genzicon Foundation'}
-              className="h-8 max-h-9 w-auto max-w-[150px] object-contain rounded-xs"
+              className="h-9 sm:h-10 max-h-11 w-auto max-w-[180px] object-contain rounded-xs"
             />
           ) : (
-            <div className="w-8 h-8 bg-[#003c90] flex items-center justify-center text-white shadow-xs group-hover:bg-[#002660] transition-colors">
-              <Globe className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 bg-[#003c90] flex items-center justify-center text-white shadow-xs group-hover:bg-[#002660] transition-colors">
+              <Globe className="w-5 h-5 text-white" />
             </div>
           )}
-          <div>
-            <span
-              className="font-bold text-base sm:text-lg text-[#003c90] tracking-tight block leading-none"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              {isNp ? (siteSettings?.orgNameNp ? 'जेन्जिकन' : 'Genzicon') : (siteSettings?.orgName?.split(' ')[0] || 'Genzicon')}
-            </span>
-            <span className="text-[9px] uppercase font-bold tracking-widest text-[#00743a] block leading-tight">
-              {isNp ? (siteSettings?.orgNameNp || 'नेपाल फाउन्डेशन') : (siteSettings?.orgName ? siteSettings.orgName.replace(/^[^\s]+\s*/, '') : 'Foundation Nepal')}
-            </span>
-          </div>
         </button>
 
         {/* Desktop Navigation Links */}

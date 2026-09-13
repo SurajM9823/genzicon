@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
+    PaymentConfig
 )
 
 class ImpactStatSerializer(serializers.ModelSerializer):
@@ -26,6 +27,7 @@ class SiteContentSerializer(serializers.ModelSerializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.SerializerMethodField()
+    final_image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Project
@@ -35,6 +37,14 @@ class ProjectSerializer(serializers.ModelSerializer):
         if obj.target_amount > 0:
             return round(min((float(obj.raised_amount) / float(obj.target_amount)) * 100, 100), 1)
         return 0
+
+    def get_final_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return obj.image_url or "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200"
 
 class ClothesDonorSerializer(serializers.ModelSerializer):
     final_image_url = serializers.SerializerMethodField()
@@ -158,3 +168,39 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.logo.url)
             return obj.logo.url
         return obj.logo_url or ""
+
+
+class PaymentConfigSerializer(serializers.ModelSerializer):
+    final_fonepay_qr_url = serializers.SerializerMethodField()
+    final_esewa_qr_url = serializers.SerializerMethodField()
+    final_khalti_qr_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PaymentConfig
+        fields = '__all__'
+        read_only_fields = ['updated_at']
+
+    def get_final_fonepay_qr_url(self, obj):
+        request = self.context.get('request')
+        if obj.fonepay_qr:
+            if request is not None:
+                return request.build_absolute_uri(obj.fonepay_qr.url)
+            return obj.fonepay_qr.url
+        return obj.fonepay_qr_url or ""
+
+    def get_final_esewa_qr_url(self, obj):
+        request = self.context.get('request')
+        if obj.esewa_qr:
+            if request is not None:
+                return request.build_absolute_uri(obj.esewa_qr.url)
+            return obj.esewa_qr.url
+        return obj.esewa_qr_url or ""
+
+    def get_final_khalti_qr_url(self, obj):
+        request = self.context.get('request')
+        if obj.khalti_qr:
+            if request is not None:
+                return request.build_absolute_uri(obj.khalti_qr.url)
+            return obj.khalti_qr.url
+        return obj.khalti_qr_url or ""
+

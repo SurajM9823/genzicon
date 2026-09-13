@@ -1,5 +1,8 @@
 from django.core.management.base import BaseCommand
-from api.models import SiteContent, ImpactStat, Project, ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig
+from api.models import (
+    SiteContent, ImpactStat, Project, ClothesDonation, Volunteer,
+    DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings, PaymentConfig
+)
 
 class Command(BaseCommand):
     help = 'Seeds initial demo and live database records for Genzicon Foundation'
@@ -110,4 +113,42 @@ class Command(BaseCommand):
             }
         )
 
+        # 6. Payment & Bank Config
+        PaymentConfig.objects.get_or_create(
+            id=1,
+            defaults={
+                'bank_name': "Global IME Bank Ltd.",
+                'account_name': "GENZICON FOUNDATION NEPAL",
+                'account_number': "01201010009823",
+                'branch': "Putalisadak Central Branch, Kathmandu",
+                'swift_code': "GLBBNPKA",
+                'fonepay_merchant_name': "GENZICON FOUNDATION NEPAL",
+                'fonepay_qr_url': "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021226500010np.fonepay01180120101000982302069823005204000053035245802NP5925GENZICON+FOUNDATION+NEP6009Kathmandu",
+                'esewa_id': "9823000000 / genzicon.esewa",
+                'esewa_registered_name': "Genzicon Foundation Nepal",
+                'esewa_qr_url': "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=esewa://transfer?id=9823000000&name=GenziconFoundation",
+                'khalti_id': "9823000000",
+                'khalti_registered_name': "Genzicon Foundation Nepal",
+                'khalti_qr_url': "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=khalti://pay?id=9823000000",
+                'hotline_phone': "+977 1-4240000 / 9823000000",
+                'hotline_email': "donate@genzicon.org"
+            }
+        )
+
+        # 7. Site Settings
+        SiteSettings.objects.get_or_create(
+            id=1,
+            defaults={
+                'org_name': "Genzicon Foundation Nepal",
+                'org_name_np': "जेन्जिकन फाउन्डेशन नेपाल",
+                'tagline': "Grassroots Youth-Led Transformation Across Nepal",
+                'tagline_np': "नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण",
+                'head_office_title': "Central Head Office (Kathmandu)",
+                'head_office_phone': "+977 1-4240000 / 9823000000",
+                'head_office_email': "info@genzicon.org",
+                'hotline_phone': "9823000000"
+            }
+        )
+
         self.stdout.write(self.style.SUCCESS("Successfully seeded Genzicon Foundation initial data!"))
+

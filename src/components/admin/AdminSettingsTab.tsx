@@ -16,7 +16,8 @@ import {
   Clock,
   MessageSquare,
   Share2,
-  Sparkles
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
 import { BankAndQrConfig, SiteSettingsConfig, Language } from '../../types';
 import { DEFAULT_BANK_QR_CONFIG, DEFAULT_SITE_SETTINGS } from '../../data/mockData';
@@ -27,7 +28,14 @@ interface AdminSettingsTabProps {
   siteSettings: SiteSettingsConfig;
   onSaveSiteSettings: (settings: SiteSettingsConfig, logoFile?: File | null) => Promise<boolean | void>;
   bankQrConfig: BankAndQrConfig;
-  onSaveBankQrConfig: (config: BankAndQrConfig) => void;
+  onSaveBankQrConfig: (
+    config: BankAndQrConfig,
+    qrFiles?: {
+      fonepayQrFile?: File | null;
+      esewaQrFile?: File | null;
+      khaltiQrFile?: File | null;
+    }
+  ) => Promise<void> | void;
 }
 
 export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
@@ -48,6 +56,19 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
   // Bank & QR Form State
   const [bankForm, setBankForm] = useState<BankAndQrConfig>(bankQrConfig);
+  const [fonepayQrFile, setFonepayQrFile] = useState<File | null>(null);
+  const [fonepayQrPreview, setFonepayQrPreview] = useState<string | null>(bankQrConfig.fonepayQrImage || null);
+  const fonepayQrInputRef = useRef<HTMLInputElement>(null);
+
+  const [esewaQrFile, setEsewaQrFile] = useState<File | null>(null);
+  const [esewaQrPreview, setEsewaQrPreview] = useState<string | null>(bankQrConfig.esewaQrImage || null);
+  const esewaQrInputRef = useRef<HTMLInputElement>(null);
+
+  const [khaltiQrFile, setKhaltiQrFile] = useState<File | null>(null);
+  const [khaltiQrPreview, setKhaltiQrPreview] = useState<string | null>(bankQrConfig.khaltiQrImage || null);
+  const khaltiQrInputRef = useRef<HTMLInputElement>(null);
+
+  const [previewTab, setPreviewTab] = useState<'bank' | 'esewa' | 'khalti'>('bank');
 
   const [saving, setSaving] = useState(false);
   const [saveToast, setSaveToast] = useState(false);
@@ -62,6 +83,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
 
   React.useEffect(() => {
     setBankForm(bankQrConfig);
+    if (!fonepayQrFile) setFonepayQrPreview(bankQrConfig.fonepayQrImage || null);
+    if (!esewaQrFile) setEsewaQrPreview(bankQrConfig.esewaQrImage || null);
+    if (!khaltiQrFile) setKhaltiQrPreview(bankQrConfig.khaltiQrImage || null);
   }, [bankQrConfig]);
 
   const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,12 +117,67 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
     if (logoInputRef.current) logoInputRef.current.value = '';
   };
 
+  const handleFonepayQrFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 800, 0.9);
+      setFonepayQrFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => setFonepayQrPreview(reader.result as string);
+      reader.readAsDataURL(compressed);
+    } catch {
+      setFonepayQrFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setFonepayQrPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEsewaQrFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 800, 0.9);
+      setEsewaQrFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => setEsewaQrPreview(reader.result as string);
+      reader.readAsDataURL(compressed);
+    } catch {
+      setEsewaQrFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setEsewaQrPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleKhaltiQrFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressed = await compressImage(file, 800, 0.9);
+      setKhaltiQrFile(compressed);
+      const reader = new FileReader();
+      reader.onloadend = () => setKhaltiQrPreview(reader.result as string);
+      reader.readAsDataURL(compressed);
+    } catch {
+      setKhaltiQrFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setKhaltiQrPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
       await onSaveSiteSettings(settingsForm, logoFile);
-      onSaveBankQrConfig(bankForm);
+      await onSaveBankQrConfig(bankForm, {
+        fonepayQrFile,
+        esewaQrFile,
+        khaltiQrFile,
+      });
       setSaveToast(true);
       setTimeout(() => setSaveToast(false), 3500);
     } finally {
@@ -112,7 +191,16 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
       setBankForm(DEFAULT_BANK_QR_CONFIG);
       setLogoFile(null);
       setLogoPreview(null);
+      setFonepayQrFile(null);
+      setFonepayQrPreview(null);
+      setEsewaQrFile(null);
+      setEsewaQrPreview(null);
+      setKhaltiQrFile(null);
+      setKhaltiQrPreview(null);
       if (logoInputRef.current) logoInputRef.current.value = '';
+      if (fonepayQrInputRef.current) fonepayQrInputRef.current.value = '';
+      if (esewaQrInputRef.current) esewaQrInputRef.current.value = '';
+      if (khaltiQrInputRef.current) khaltiQrInputRef.current.value = '';
     }
   };
 
@@ -840,7 +928,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                   value={bankForm.bankName}
                   onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
                   placeholder="e.g. Global IME Bank Ltd."
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white font-medium"
                 />
               </div>
 
@@ -903,12 +991,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
               </div>
             </div>
 
-            {/* Section 2: Fonepay QR & Mobile Wallets */}
+            {/* Section 2: Fonepay & Bank QR */}
             <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
-                <QrCode className="w-4 h-4 text-[#00743a]" />
+                <QrCode className="w-4 h-4 text-[#003c90]" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
-                  2. Fonepay QR Merchant & Mobile Wallet Display
+                  2. Fonepay & Bank QR Code
                 </h3>
               </div>
 
@@ -925,42 +1013,300 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                  Fonepay QR Image URL
-                </label>
-                <input
-                  type="text"
-                  value={bankForm.fonepayQrImage}
-                  onChange={(e) => setBankForm({ ...bankForm, fonepayQrImage: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
-                />
+              {/* Fonepay QR File Picker + URL */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Choose Fonepay QR (File)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={fonepayQrInputRef}
+                      onChange={handleFonepayQrFileChange}
+                      accept="image/*"
+                      className="hidden"
+                      id="fonepay-qr-file-input"
+                    />
+                    <label
+                      htmlFor="fonepay-qr-file-input"
+                      className="cursor-pointer px-3 py-1.5 bg-[#e7eeff] hover:bg-[#d8e3fb] text-[#003c90] text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{fonepayQrFile ? 'Change File' : 'Choose Image'}</span>
+                    </label>
+                    {fonepayQrFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFonepayQrFile(null);
+                          setFonepayQrPreview(bankForm.fonepayQrImage || null);
+                          if (fonepayQrInputRef.current) fonepayQrInputRef.current.value = '';
+                        }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 transition-colors"
+                        title="Remove file"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {fonepayQrFile && (
+                    <span className="text-[10px] text-[#00743a] font-medium block mt-1">
+                      Selected: {fonepayQrFile.name} ({(fonepayQrFile.size / 1024).toFixed(0)} KB)
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Or Fonepay QR URL
+                  </label>
+                  <input
+                    type="text"
+                    value={bankForm.fonepayQrImage}
+                    onChange={(e) => {
+                      setBankForm({ ...bankForm, fonepayQrImage: e.target.value });
+                      if (!fonepayQrFile) setFonepayQrPreview(e.target.value || null);
+                    }}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: eSewa Gateway */}
+            <div className="bg-white p-5 border border-emerald-200 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-emerald-100">
+                <Smartphone className="w-4 h-4 text-[#00743a]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#00743a]">
+                  3. eSewa Direct Wallet Details & QR Code
+                </h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    eSewa ID / Mobile Number
+                    eSewa Registered Name
                   </label>
                   <input
                     type="text"
-                    value={bankForm.esewaId}
-                    onChange={(e) => setBankForm({ ...bankForm, esewaId: e.target.value })}
-                    placeholder="9823000000"
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                    value={bankForm.esewaRegisteredName || bankForm.accountName}
+                    onChange={(e) => setBankForm({ ...bankForm, esewaRegisteredName: e.target.value })}
+                    placeholder="e.g. Genzicon Foundation Nepal"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#00743a] focus:bg-white font-medium"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Khalti ID / Mobile Number
+                    eSewa ID / Mobile Number *
                   </label>
                   <input
                     type="text"
+                    required
+                    value={bankForm.esewaId}
+                    onChange={(e) => setBankForm({ ...bankForm, esewaId: e.target.value })}
+                    placeholder="9823000000 / genzicon.esewa"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-mono font-bold text-[#00743a] focus:outline-none focus:border-[#00743a] focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* eSewa QR File Picker + URL */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-1">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Choose eSewa QR (File)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={esewaQrInputRef}
+                      onChange={handleEsewaQrFileChange}
+                      accept="image/*"
+                      className="hidden"
+                      id="esewa-qr-file-input"
+                    />
+                    <label
+                      htmlFor="esewa-qr-file-input"
+                      className="cursor-pointer px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-[#00743a] text-xs font-bold inline-flex items-center gap-1.5 transition-colors border border-emerald-200"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{esewaQrFile ? 'Change File' : 'Choose Image'}</span>
+                    </label>
+                    {esewaQrFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEsewaQrFile(null);
+                          setEsewaQrPreview(bankForm.esewaQrImage || null);
+                          if (esewaQrInputRef.current) esewaQrInputRef.current.value = '';
+                        }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 transition-colors"
+                        title="Remove file"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {esewaQrFile && (
+                    <span className="text-[10px] text-[#00743a] font-medium block mt-1">
+                      Selected: {esewaQrFile.name} ({(esewaQrFile.size / 1024).toFixed(0)} KB)
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Or eSewa QR URL
+                  </label>
+                  <input
+                    type="text"
+                    value={bankForm.esewaQrImage}
+                    onChange={(e) => {
+                      setBankForm({ ...bankForm, esewaQrImage: e.target.value });
+                      if (!esewaQrFile) setEsewaQrPreview(e.target.value || null);
+                    }}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#00743a] focus:bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Khalti Gateway */}
+            <div className="bg-white p-5 border border-purple-200 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-purple-100">
+                <Smartphone className="w-4 h-4 text-purple-700" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-800">
+                  4. Khalti Wallet Details & QR Code
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Khalti Registered Name
+                  </label>
+                  <input
+                    type="text"
+                    value={bankForm.khaltiRegisteredName || bankForm.accountName}
+                    onChange={(e) => setBankForm({ ...bankForm, khaltiRegisteredName: e.target.value })}
+                    placeholder="e.g. Genzicon Foundation Nepal"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-purple-600 focus:bg-white font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Khalti ID / Mobile Number *
+                  </label>
+                  <input
+                    type="text"
+                    required
                     value={bankForm.khaltiId}
                     onChange={(e) => setBankForm({ ...bankForm, khaltiId: e.target.value })}
                     placeholder="9823000000"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs font-mono font-bold text-purple-800 focus:outline-none focus:border-purple-600 focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Khalti QR File Picker + URL */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start pt-1">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Choose Khalti QR (File)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={khaltiQrInputRef}
+                      onChange={handleKhaltiQrFileChange}
+                      accept="image/*"
+                      className="hidden"
+                      id="khalti-qr-file-input"
+                    />
+                    <label
+                      htmlFor="khalti-qr-file-input"
+                      className="cursor-pointer px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors border border-purple-200"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{khaltiQrFile ? 'Change File' : 'Choose Image'}</span>
+                    </label>
+                    {khaltiQrFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setKhaltiQrFile(null);
+                          setKhaltiQrPreview(bankForm.khaltiQrImage || null);
+                          if (khaltiQrInputRef.current) khaltiQrInputRef.current.value = '';
+                        }}
+                        className="p-1.5 text-red-600 hover:bg-red-50 transition-colors"
+                        title="Remove file"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {khaltiQrFile && (
+                    <span className="text-[10px] text-purple-700 font-medium block mt-1">
+                      Selected: {khaltiQrFile.name} ({(khaltiQrFile.size / 1024).toFixed(0)} KB)
+                    </span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Or Khalti QR URL
+                  </label>
+                  <input
+                    type="text"
+                    value={bankForm.khaltiQrImage}
+                    onChange={(e) => {
+                      setBankForm({ ...bankForm, khaltiQrImage: e.target.value });
+                      if (!khaltiQrFile) setKhaltiQrPreview(e.target.value || null);
+                    }}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-purple-600 focus:bg-white"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Donation Hotline */}
+            <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-[#f0f3ff]">
+                <Phone className="w-4 h-4 text-[#003c90]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
+                  5. Donation & Finance Hotline
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Hotline Phone
+                  </label>
+                  <input
+                    type="text"
+                    value={bankForm.hotlinePhone}
+                    onChange={(e) => setBankForm({ ...bankForm, hotlinePhone: e.target.value })}
+                    placeholder="+977 1-4240000 / 9823000000"
+                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                    Hotline Email
+                  </label>
+                  <input
+                    type="email"
+                    value={bankForm.hotlineEmail}
+                    onChange={(e) => setBankForm({ ...bankForm, hotlineEmail: e.target.value })}
+                    placeholder="donate@genzicon.org"
                     className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
                   />
                 </div>
@@ -968,49 +1314,168 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({
             </div>
           </div>
 
-          {/* Right: Live Preview Box for Bank Details */}
+          {/* Right: Live Preview Box for Donate Screen */}
           <div className="lg:col-span-5 space-y-5">
-            <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d] mb-3 flex items-center gap-1.5 pb-2 border-b border-[#f0f3ff]">
-                <span>Donate Page Bank Display Preview</span>
+            <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs sticky top-20">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d] mb-3 flex items-center justify-between pb-2 border-b border-[#f0f3ff]">
+                <span>Donate Page Preview</span>
+                <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 border border-emerald-200">Live Mirror</span>
               </h3>
 
-              <div className="bg-[#f0f3ff] p-4 border border-[#003c90]/20 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-[#003c90]" />
-                  <div>
-                    <h4 className="font-bold text-sm text-[#111c2d]">{bankForm.bankName}</h4>
-                    <p className="text-[11px] text-[#00743a] font-semibold">{bankForm.branch || 'Central Branch'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 text-xs text-[#434653] pt-2 border-t border-[#003c90]/10">
-                  <div>
-                    <span className="text-[10px] uppercase text-[#737784] block">Account Name</span>
-                    <strong className="text-[#111c2d]">{bankForm.accountName}</strong>
-                  </div>
-                  <div>
-                    <span className="text-[10px] uppercase text-[#737784] block">Account Number</span>
-                    <strong className="font-mono text-sm text-[#003c90]">{bankForm.accountNumber}</strong>
-                  </div>
-                  {bankForm.swiftCode && (
-                    <div>
-                      <span className="text-[10px] uppercase text-[#737784] block">SWIFT Code</span>
-                      <span className="font-mono">{bankForm.swiftCode}</span>
-                    </div>
-                  )}
-                </div>
+              {/* Preview Tabs */}
+              <div className="flex border border-[#d8e3fb] p-0.5 bg-[#f0f3ff] mb-4">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('bank')}
+                  className={`flex-1 py-1.5 text-[11px] font-bold transition-all ${
+                    previewTab === 'bank' ? 'bg-[#003c90] text-white shadow-xs' : 'text-[#434653] hover:text-[#003c90]'
+                  }`}
+                >
+                  Bank Transfer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('esewa')}
+                  className={`flex-1 py-1.5 text-[11px] font-bold transition-all ${
+                    previewTab === 'esewa' ? 'bg-[#00743a] text-white shadow-xs' : 'text-[#434653] hover:text-[#00743a]'
+                  }`}
+                >
+                  eSewa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewTab('khalti')}
+                  className={`flex-1 py-1.5 text-[11px] font-bold transition-all ${
+                    previewTab === 'khalti' ? 'bg-purple-800 text-white shadow-xs' : 'text-[#434653] hover:text-purple-800'
+                  }`}
+                >
+                  Khalti
+                </button>
               </div>
 
-              {bankForm.fonepayQrImage && (
-                <div className="mt-4 text-center p-3 bg-[#f9f9ff] border border-[#d8e3fb]">
-                  <span className="text-[11px] font-bold text-[#111c2d] block mb-2">Fonepay QR Merchant</span>
-                  <img
-                    src={bankForm.fonepayQrImage}
-                    alt="Fonepay QR"
-                    className="w-36 h-36 mx-auto object-contain border border-white shadow-xs"
-                  />
-                  <span className="text-[10px] text-[#737784] block mt-1">{bankForm.fonepayMerchantName}</span>
+              {/* PREVIEW: Bank Transfer */}
+              {previewTab === 'bank' && (
+                <div className="space-y-3 animate-fadeIn">
+                  <div className="bg-[#f0f3ff] p-3.5 border border-[#003c90]/20 space-y-2.5">
+                    <div className="flex items-center gap-2 border-b border-[#003c90]/10 pb-2">
+                      <Building2 className="w-4 h-4 text-[#003c90]" />
+                      <div>
+                        <h4 className="font-bold text-xs text-[#111c2d]">{bankForm.bankName || 'Bank Name'}</h4>
+                        <p className="text-[10px] text-[#00743a] font-semibold">{bankForm.branch || 'Branch'}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-[#434653]">
+                      <div>
+                        <span className="text-[9px] uppercase text-[#737784] block font-bold">Account Name</span>
+                        <strong className="text-[#111c2d] text-[11px]">{bankForm.accountName}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase text-[#737784] block font-bold">Account Number</span>
+                        <strong className="font-mono text-xs text-[#003c90]">{bankForm.accountNumber}</strong>
+                      </div>
+                      {bankForm.swiftCode && (
+                        <div>
+                          <span className="text-[9px] uppercase text-[#737784] block font-bold">SWIFT Code</span>
+                          <span className="font-mono text-[11px]">{bankForm.swiftCode}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="text-center p-3 bg-white border border-[#d8e3fb]">
+                    <span className="text-[11px] font-bold text-[#003c90] block mb-2">Fonepay / Banking QR</span>
+                    {fonepayQrPreview ? (
+                      <img
+                        src={fonepayQrPreview}
+                        alt="Fonepay QR"
+                        className="w-32 h-32 mx-auto object-contain border border-[#d8e3fb] p-1 bg-white"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 mx-auto bg-gray-100 flex items-center justify-center border border-dashed border-gray-300 text-gray-400 text-xs">
+                        No QR Image
+                      </div>
+                    )}
+                    <span className="text-[10px] text-[#737784] block mt-1">{bankForm.fonepayMerchantName}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* PREVIEW: eSewa */}
+              {previewTab === 'esewa' && (
+                <div className="space-y-3 animate-fadeIn">
+                  <div className="bg-emerald-50/70 p-3.5 border border-emerald-200 space-y-2.5">
+                    <div className="flex items-center gap-2 border-b border-emerald-100 pb-2">
+                      <Smartphone className="w-4 h-4 text-[#00743a]" />
+                      <h4 className="font-bold text-xs text-[#00743a]">eSewa Direct Wallet</h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-[#434653]">
+                      <div>
+                        <span className="text-[9px] uppercase text-[#737784] block font-bold">Registered Name</span>
+                        <strong className="text-[#111c2d] text-[11px]">{bankForm.esewaRegisteredName || bankForm.accountName}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase text-[#737784] block font-bold">eSewa ID</span>
+                        <strong className="font-mono text-xs text-[#00743a]">{bankForm.esewaId}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-center p-3 bg-white border border-emerald-200">
+                    <span className="text-[11px] font-bold text-[#00743a] block mb-2">eSewa Scan & Pay QR</span>
+                    {esewaQrPreview ? (
+                      <img
+                        src={esewaQrPreview}
+                        alt="eSewa QR"
+                        className="w-32 h-32 mx-auto object-contain border border-emerald-200 p-1 bg-white"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 mx-auto bg-gray-100 flex items-center justify-center border border-dashed border-gray-300 text-gray-400 text-xs">
+                        No QR Image
+                      </div>
+                    )}
+                    <span className="text-[10px] text-[#737784] block mt-1">{bankForm.esewaRegisteredName || bankForm.accountName}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* PREVIEW: Khalti */}
+              {previewTab === 'khalti' && (
+                <div className="space-y-3 animate-fadeIn">
+                  <div className="bg-purple-50/70 p-3.5 border border-purple-200 space-y-2.5">
+                    <div className="flex items-center gap-2 border-b border-purple-100 pb-2">
+                      <Smartphone className="w-4 h-4 text-purple-700" />
+                      <h4 className="font-bold text-xs text-purple-800">Khalti Wallet Transfer</h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-[#434653]">
+                      <div>
+                        <span className="text-[9px] uppercase text-[#737784] block font-bold">Registered Name</span>
+                        <strong className="text-[#111c2d] text-[11px]">{bankForm.khaltiRegisteredName || bankForm.accountName}</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] uppercase text-[#737784] block font-bold">Khalti ID</span>
+                        <strong className="font-mono text-xs text-purple-800">{bankForm.khaltiId}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-center p-3 bg-white border border-purple-200">
+                    <span className="text-[11px] font-bold text-purple-800 block mb-2">Khalti Scan & Pay QR</span>
+                    {khaltiQrPreview ? (
+                      <img
+                        src={khaltiQrPreview}
+                        alt="Khalti QR"
+                        className="w-32 h-32 mx-auto object-contain border border-purple-200 p-1 bg-white"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 mx-auto bg-gray-100 flex items-center justify-center border border-dashed border-gray-300 text-gray-400 text-xs">
+                        No QR Image
+                      </div>
+                    )}
+                    <span className="text-[10px] text-[#737784] block mt-1">{bankForm.khaltiRegisteredName || bankForm.accountName}</span>
+                  </div>
                 </div>
               )}
             </div>

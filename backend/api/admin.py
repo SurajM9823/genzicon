@@ -3,7 +3,8 @@ from django.db import models
 from django.utils.html import format_html
 from .models import (
     SiteContent, ImpactStat, Project, ClothesDonor,
-    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings
+    ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
+    PaymentConfig
 )
 
 @admin.register(SiteContent)
@@ -80,7 +81,7 @@ class ImpactStatAdmin(admin.ModelAdmin):
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
     save_on_top = True
-    list_display = ('title', 'category', 'district', 'raised_amount', 'target_amount', 'donor_count', 'status', 'is_featured', 'created_at')
+    list_display = ('title', 'category', 'district', 'image_preview', 'raised_amount', 'target_amount', 'donor_count', 'status', 'is_featured', 'created_at')
     list_editable = ('raised_amount', 'target_amount', 'donor_count', 'status', 'is_featured')
     list_filter = ('status', 'category', 'province', 'is_featured')
     search_fields = ('title', 'title_np', 'district', 'province', 'slug', 'description')
@@ -95,13 +96,21 @@ class ProjectAdmin(admin.ModelAdmin):
         ('Donation Goals & Live Tracking', {
             'fields': ('target_amount', 'raised_amount', 'donor_count', 'status')
         }),
-        ('Media & Visuals', {
-            'fields': ('image_url',)
+        ('Media & Visuals (Upload Image File OR Paste URL)', {
+            'fields': ('image', 'image_url'),
+            'description': 'Upload a program image from your device OR paste an external image URL.'
         }),
         ('Story & Operational Detail', {
             'fields': ('description', 'description_np', 'full_description', 'full_description_np')
         }),
     )
+
+    def image_preview(self, obj):
+        url = obj.final_image_url
+        if not url:
+            return "-"
+        return format_html('<img src="{}" style="width: 60px; height: 38px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;" />', url)
+    image_preview.short_description = "Image"
 
     def has_change_permission(self, request, obj=None):
         return True
@@ -399,6 +408,38 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(PaymentConfig)
+class PaymentConfigAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = ('bank_name', 'account_number', 'account_name', 'esewa_id', 'khalti_id', 'updated_at')
+    fieldsets = (
+        ('Commercial Bank Account Details (Bank Transfer)', {
+            'fields': ('bank_name', 'account_name', 'account_number', 'branch', 'swift_code')
+        }),
+        ('Fonepay & Mobile Banking QR', {
+            'fields': ('fonepay_merchant_name', 'fonepay_qr', 'fonepay_qr_url')
+        }),
+        ('eSewa Wallet Details & QR', {
+            'fields': ('esewa_registered_name', 'esewa_id', 'esewa_qr', 'esewa_qr_url')
+        }),
+        ('Khalti Wallet Details & QR', {
+            'fields': ('khalti_registered_name', 'khalti_id', 'khalti_qr', 'khalti_qr_url')
+        }),
+        ('Donation & Finance Hotline Support', {
+            'fields': ('hotline_phone', 'hotline_email')
+        }),
+    )
+
+    def has_add_permission(self, request):
+        if PaymentConfig.objects.count() >= 1:
+            return False
+        return True
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 
 

@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.utils.crypto import get_random_string
 from django.utils import timezone
@@ -84,9 +85,10 @@ class Project(models.Model):
     raised_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, verbose_name="Donations Raised (NPR)")
     donor_count = models.PositiveIntegerField(default=0, verbose_name="Verified Donor Count")
     beneficiaries_count = models.CharField(max_length=100, default='1,000+ Citizens', verbose_name="Beneficiaries Reached")
+    image = models.ImageField(upload_to='projects/', blank=True, null=True, verbose_name="Upload Program Photo (File)")
     image_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="Hero Image URL")
-    description = models.TextField(verbose_name="Short Summary (English)")
-    description_np = models.TextField(blank=True, verbose_name="Short Summary (Nepali)")
+    description = models.TextField(blank=True, default='', verbose_name="Short Summary (English)")
+    description_np = models.TextField(blank=True, default='', verbose_name="Short Summary (Nepali)")
     full_description = models.TextField(blank=True, verbose_name="Full Story / Operational Goals (English)")
     full_description_np = models.TextField(blank=True, verbose_name="Full Story / Operational Goals (Nepali)")
     is_featured = models.BooleanField(default=True, verbose_name="Featured on Homepage")
@@ -97,6 +99,15 @@ class Project(models.Model):
         ordering = ['-is_featured', '-created_at']
         verbose_name = "Field Program"
         verbose_name_plural = "Field Programs"
+
+    @property
+    def final_image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                pass
+        return self.image_url or "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=1200"
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -443,4 +454,72 @@ class SiteSettings(models.Model):
 
     def __str__(self):
         return f"{self.org_name} Settings"
+
+
+class PaymentConfig(models.Model):
+    """Official Bank Account Details, eSewa, Khalti and Fonepay QR Gateways"""
+    # Bank Details
+    bank_name = models.CharField(max_length=255, default="Global IME Bank Ltd.", verbose_name="Bank Name")
+    account_name = models.CharField(max_length=255, default="GENZICON FOUNDATION NEPAL", verbose_name="Bank Account Name")
+    account_number = models.CharField(max_length=100, default="01201010009823", verbose_name="Bank Account Number")
+    branch = models.CharField(max_length=255, default="Putalisadak Central Branch, Kathmandu", verbose_name="Branch Name")
+    swift_code = models.CharField(max_length=50, default="GLBBNPKA", blank=True, verbose_name="SWIFT Code")
+
+    # Fonepay / Mobile Banking QR
+    fonepay_merchant_name = models.CharField(max_length=255, default="GENZICON FOUNDATION NEPAL", blank=True, verbose_name="Fonepay Merchant Name")
+    fonepay_qr = models.ImageField(upload_to='payment_qrs/', blank=True, null=True, verbose_name="Upload Fonepay QR Code")
+    fonepay_qr_url = models.TextField(blank=True, default="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021226500010np.fonepay01180120101000982302069823005204000053035245802NP5925GENZICON+FOUNDATION+NEP6009Kathmandu", verbose_name="Or Fonepay QR Image URL")
+
+    # eSewa
+    esewa_id = models.CharField(max_length=100, default="9823000000 / genzicon.esewa", verbose_name="eSewa ID / Mobile Number")
+    esewa_registered_name = models.CharField(max_length=255, default="Genzicon Foundation Nepal", blank=True, verbose_name="eSewa Registered Name")
+    esewa_qr = models.ImageField(upload_to='payment_qrs/', blank=True, null=True, verbose_name="Upload eSewa QR Code")
+    esewa_qr_url = models.TextField(blank=True, default="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=esewa://transfer?id=9823000000&name=GenziconFoundation", verbose_name="Or eSewa QR Image URL")
+
+    # Khalti
+    khalti_id = models.CharField(max_length=100, default="9823000000", verbose_name="Khalti ID / Mobile Number")
+    khalti_registered_name = models.CharField(max_length=255, default="Genzicon Foundation Nepal", blank=True, verbose_name="Khalti Registered Name")
+    khalti_qr = models.ImageField(upload_to='payment_qrs/', blank=True, null=True, verbose_name="Upload Khalti QR Code")
+    khalti_qr_url = models.TextField(blank=True, default="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=khalti://pay?id=9823000000", verbose_name="Or Khalti QR Image URL")
+
+    # Hotline Phone & Email
+    hotline_phone = models.CharField(max_length=100, default="+977 1-4240000 / 9823000000", blank=True, verbose_name="Donation Hotline Phone")
+    hotline_email = models.CharField(max_length=150, default="donate@genzicon.org", blank=True, verbose_name="Donation Hotline Email")
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Payment & Bank Configuration"
+        verbose_name_plural = "Payment & Bank Configuration"
+
+    @property
+    def final_fonepay_qr_url(self):
+        if self.fonepay_qr:
+            try:
+                return self.fonepay_qr.url
+            except Exception:
+                pass
+        return self.fonepay_qr_url or ""
+
+    @property
+    def final_esewa_qr_url(self):
+        if self.esewa_qr:
+            try:
+                return self.esewa_qr.url
+            except Exception:
+                pass
+        return self.esewa_qr_url or ""
+
+    @property
+    def final_khalti_qr_url(self):
+        if self.khalti_qr:
+            try:
+                return self.khalti_qr.url
+            except Exception:
+                pass
+        return self.khalti_qr_url or ""
+
+    def __str__(self):
+        return f"{self.bank_name} ({self.account_number}) - eSewa/Khalti"
+
 

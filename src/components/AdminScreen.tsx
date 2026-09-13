@@ -49,7 +49,9 @@ import {
   apiGetClothesHubConfig,
   apiSaveClothesHubConfig,
   apiGetSiteSettings,
-  apiSaveSiteSettings
+  apiSaveSiteSettings,
+  apiGetPaymentConfig,
+  apiSavePaymentConfig
 } from '../services/api';
 import { AdminHeader, AdminTabType } from './admin/AdminHeader';
 import { AdminOverviewTab } from './admin/AdminOverviewTab';
@@ -266,7 +268,8 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           liveDonations,
           liveContacts,
           liveHubConfig,
-          liveSiteSettings
+          liveSiteSettings,
+          livePaymentConfig
         ] = await Promise.all([
           apiGetSiteContent(),
           apiGetProjects(),
@@ -276,6 +279,7 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           apiGetContacts(),
           apiGetClothesHubConfig(),
           apiGetSiteSettings(),
+          apiGetPaymentConfig(),
         ]);
 
         if (liveContent) setSiteContent(prev => ({ ...prev, ...liveContent }));
@@ -304,6 +308,10 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
           setSiteSettings(liveSiteSettings);
           localStorage.setItem('genzicon_site_settings', JSON.stringify(liveSiteSettings));
         }
+        if (livePaymentConfig && (livePaymentConfig.bankName || livePaymentConfig.accountNumber)) {
+          setBankQrConfig(livePaymentConfig);
+          localStorage.setItem('genzicon_bank_qr_config', JSON.stringify(livePaymentConfig));
+        }
       } catch (err) {
         console.warn('Backend sync in Admin:', err);
       }
@@ -322,7 +330,7 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     setSiteContent(newContent);
     localStorage.setItem('genzicon_site_content', JSON.stringify(newContent));
     try {
-      await apiUpdateSiteContent(1, newContent);
+      await apiUpdateSiteContent(newContent);
       if (newContent.impactStats && newContent.impactStats.length > 0) {
         await apiSaveImpactStats(newContent.impactStats);
       }
@@ -333,9 +341,21 @@ export const AdminScreen: React.FC<AdminScreenProps> = ({
     window.dispatchEvent(new Event('genzicon_content_updated'));
   };
 
-  const handleSaveBankQrConfig = (newConfig: BankAndQrConfig) => {
+  const handleSaveBankQrConfig = async (
+    newConfig: BankAndQrConfig,
+    qrFiles?: {
+      fonepayQrFile?: File | null;
+      esewaQrFile?: File | null;
+      khaltiQrFile?: File | null;
+    }
+  ) => {
     setBankQrConfig(newConfig);
     localStorage.setItem('genzicon_bank_qr_config', JSON.stringify(newConfig));
+    try {
+      await apiSavePaymentConfig(newConfig, qrFiles);
+    } catch (e) {
+      console.warn('Backend sync in handleSaveBankQrConfig:', e);
+    }
     window.dispatchEvent(new Event('genzicon_bank_qr_updated'));
   };
 

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { DEFAULT_BANK_QR_CONFIG } from '../data/mockData';
 import { Project, DonationSubmission, Language, BankAndQrConfig, DonationRecord } from '../types';
-import { apiSubmitDonation, apiGetDonations } from '../services/api';
+import { apiSubmitDonation, apiGetDonations, apiGetPaymentConfig } from '../services/api';
 import { compressImage } from '../utils/imageCompress';
 
 interface DonateScreenProps {
@@ -77,6 +77,13 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
   const [approvedDonors, setApprovedDonors] = useState<DonationRecord[]>([]);
 
   useEffect(() => {
+    // Fetch live payment config from backend
+    apiGetPaymentConfig().then(cfg => {
+      if (cfg) {
+        setBankConfig(cfg);
+      }
+    });
+
     // Fetch live donations from backend
     apiGetDonations().then(data => {
       if (data && Array.isArray(data) && data.length > 0) {
@@ -94,11 +101,22 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
       }
     };
 
+    const handleSyncBank = () => {
+      try {
+        const saved = localStorage.getItem('genzicon_bank_qr_config');
+        if (saved) setBankConfig(JSON.parse(saved));
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+
     window.addEventListener('storage', handleSync);
     window.addEventListener('genzicon_donations_updated', handleSync);
+    window.addEventListener('genzicon_bank_qr_updated', handleSyncBank);
     return () => {
       window.removeEventListener('storage', handleSync);
       window.removeEventListener('genzicon_donations_updated', handleSync);
+      window.removeEventListener('genzicon_bank_qr_updated', handleSyncBank);
     };
   }, []);
 
@@ -436,7 +454,7 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                   <div className="grid grid-cols-2 gap-1.5 text-[11px] text-[#434653]">
                     <div>
                       <span className="text-[9px] text-[#737784] uppercase font-bold block">Registered Name:</span>
-                      <strong>{bankConfig.accountName || 'Genzicon Foundation Nepal'}</strong>
+                      <strong>{bankConfig.esewaRegisteredName || bankConfig.accountName || 'Genzicon Foundation Nepal'}</strong>
                     </div>
                     <div>
                       <span className="text-[9px] text-[#737784] uppercase font-bold block">eSewa ID:</span>
@@ -482,7 +500,7 @@ export const DonateScreen: React.FC<DonateScreenProps> = ({
                   <div className="grid grid-cols-2 gap-1.5 text-[11px] text-[#434653]">
                     <div>
                       <span className="text-[9px] text-[#737784] uppercase font-bold block">Registered Name:</span>
-                      <strong>{bankConfig.accountName || 'Genzicon Foundation Nepal'}</strong>
+                      <strong>{bankConfig.khaltiRegisteredName || bankConfig.accountName || 'Genzicon Foundation Nepal'}</strong>
                     </div>
                     <div>
                       <span className="text-[9px] text-[#737784] uppercase font-bold block">Khalti ID:</span>

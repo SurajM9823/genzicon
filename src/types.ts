@@ -329,8 +329,10 @@ export interface BankAndQrConfig {
   fonepayMerchantName: string;
   fonepayQrImage: string;
   esewaId: string;
+  esewaRegisteredName?: string;
   esewaQrImage: string;
   khaltiId: string;
+  khaltiRegisteredName?: string;
   khaltiQrImage: string;
   hotlinePhone: string;
   hotlineEmail: string;

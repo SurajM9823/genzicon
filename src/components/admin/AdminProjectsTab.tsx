@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   FolderKanban, 
   Plus, 
@@ -15,10 +15,12 @@ import {
   Heart,
   Sparkles,
   ExternalLink,
-  Sliders
+  Sliders,
+  Upload
 } from 'lucide-react';
 import { Project, Language } from '../../types';
 import { apiCreateProject, apiUpdateProject, apiAdjustProjectDonations, apiDeleteProject } from '../../services/api';
+import { compressImage } from '../../utils/imageCompress';
 
 interface AdminProjectsTabProps {
   language: Language;
@@ -43,6 +45,12 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(showAddModalDirectly || false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+
+  // Program Image Upload State
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isProcessingImage, setIsProcessingImage] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Quick Donation Adjust Modal
   const [adjustModalProject, setAdjustModalProject] = useState<Project | null>(null);
@@ -84,6 +92,9 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
   const handleOpenAdd = () => {
     setEditingProject(null);
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData({
       title: '',
       titleNp: '',
@@ -111,6 +122,9 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
 
   const handleOpenEdit = (project: Project) => {
     setEditingProject(project);
+    setImageFile(null);
+    setImagePreview(project.imageUrl || null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setFormData(project);
     setIsModalOpen(true);
   };
@@ -118,7 +132,43 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingProject(null);
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     if (onCloseAddModalDirectly) onCloseAddModalDirectly();
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingImage(true);
+    try {
+      // Compress program image to max 1400px JPEG
+      const compressed = await compressImage(file, 1400, 0.85);
+      setImageFile(compressed);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(compressed);
+    } catch (err) {
+      console.warn('Failed to compress image, using original file:', err);
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setIsProcessingImage(false);
+    }
+  };
+
+  const handleRemoveImageFile = () => {
+    setImageFile(null);
+    setImagePreview(editingProject?.imageUrl || formData.imageUrl || null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleDelete = async (id: string) => {
@@ -136,14 +186,16 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
     const raisedNpr = Number(formData.raisedAmountNpr) || 0;
     const donorCount = Number(formData.donorCount) || 0;
     const fundedPct = Math.min(100, Math.round((raisedNpr / goalNpr) * 100));
+    const chosenOrUrlImage = imagePreview || formData.imageUrl;
 
     if (editingProject) {
-      // Update local state
+      // Update local state immediately with preview
       const updatedList = projects.map(p => {
         if (p.id === editingProject.id) {
           return {
             ...p,
             ...formData,
+            imageUrl: chosenOrUrlImage || p.imageUrl,
             goalAmountNpr: goalNpr,
             raisedAmountNpr: raisedNpr,
             donorCount: donorCount,
@@ -155,12 +207,19 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
       onSaveProjects(updatedList);
 
       // Call backend update
-      await apiUpdateProject(editingProject.id, {
+      const backendRes = await apiUpdateProject(editingProject.id, {
         ...formData,
+        imageUrl: imageFile ? undefined : formData.imageUrl,
         goalAmountNpr: goalNpr,
         raisedAmountNpr: raisedNpr,
         donorCount: donorCount,
-      });
+      }, imageFile);
+
+      if (backendRes && (backendRes.final_image_url || backendRes.image)) {
+        const finalUrl = backendRes.final_image_url || backendRes.image;
+        onSaveProjects(updatedList.map(p => p.id === editingProject.id ? { ...p, imageUrl: finalUrl } : p));
+      }
+
       showNotification(`Program "${formData.title}" updated successfully in database!`);
     } else {
       // Create new
@@ -188,14 +247,17 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
         locationNp: formData.locationNp || formData.location,
         beneficiaries: formData.beneficiaries || '1,000+ Citizens',
         beneficiariesNp: formData.beneficiariesNp || formData.beneficiaries,
-        imageUrl: formData.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80',
+        imageUrl: chosenOrUrlImage || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80',
         imageAlt: formData.title || 'Project photo'
       };
 
       try {
-        const created = await apiCreateProject(newProj);
+        const created = await apiCreateProject(newProj, imageFile);
         if (created?.id) {
           newProj.id = String(created.id);
+          if (created.final_image_url || created.image) {
+            newProj.imageUrl = created.final_image_url || created.image;
+          }
         }
       } catch (err) {
         console.warn('API create project error:', err);
@@ -727,33 +789,111 @@ export const AdminProjectsTab: React.FC<AdminProjectsTabProps> = ({
                 </div>
               </div>
 
-              {/* Beneficiaries & Image */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Beneficiaries Target
+              {/* Beneficiaries Target */}
+              <div>
+                <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
+                  Beneficiaries Target
+                </label>
+                <input
+                  type="text"
+                  value={formData.beneficiaries}
+                  onChange={(e) => setFormData({ ...formData, beneficiaries: e.target.value })}
+                  placeholder="18,500+ Vulnerable Citizens"
+                  className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
+                />
+              </div>
+
+              {/* Program Photo / Image Upload (File Picker + URL) */}
+              <div className="p-3 bg-[#f0f4ff] border border-[#bcd0fa] space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold text-[#002660] uppercase tracking-wider flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-[#003c90]" />
+                    Program Hero Image (Choose Image File or Enter URL)
                   </label>
-                  <input
-                    type="text"
-                    value={formData.beneficiaries}
-                    onChange={(e) => setFormData({ ...formData, beneficiaries: e.target.value })}
-                    placeholder="18,500+ Vulnerable Citizens"
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
-                  />
+                  <span className="text-[10px] text-[#5b6b88]">JPG, PNG, WebP (auto-optimized)</span>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-bold text-[#111c2d] uppercase mb-1">
-                    Hero Photo URL
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                    placeholder="https://images.unsplash.com/..."
-                    className="w-full px-3 py-2 border border-[#d8e3fb] bg-[#f9f9ff] text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90] focus:bg-white"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  {/* File picker button */}
+                  <div className="flex flex-col justify-center space-y-1.5">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="image/png,image/jpeg,image/webp,image/jpg"
+                      onChange={handleImageFileChange}
+                      className="hidden"
+                      id="project-image-file-input"
+                    />
+                    <label
+                      htmlFor="project-image-file-input"
+                      className="cursor-pointer inline-flex items-center justify-center gap-2 px-3 py-2 bg-white border-2 border-dashed border-[#003c90] hover:bg-[#e6eeff] text-[#003c90] text-xs font-bold uppercase tracking-wider transition-colors shadow-2xs"
+                    >
+                      <Upload className="w-4 h-4" />
+                      {imageFile ? 'Change Chosen Image' : 'Choose Image File'}
+                    </label>
+
+                    {isProcessingImage && (
+                      <p className="text-[11px] text-blue-600 font-semibold animate-pulse">
+                        Optimizing image...
+                      </p>
+                    )}
+
+                    {imageFile && (
+                      <div className="flex items-center justify-between text-xs text-green-800 bg-green-50 px-2 py-1 border border-green-200">
+                        <span className="truncate max-w-[180px] font-mono font-medium">✓ {imageFile.name}</span>
+                        <button
+                          type="button"
+                          onClick={handleRemoveImageFile}
+                          className="text-red-500 hover:text-red-700 p-0.5 ml-1"
+                          title="Remove chosen file"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Or URL input */}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-[#434653] uppercase mb-1">
+                      Or Paste Image Web URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.imageUrl || ''}
+                      onChange={(e) => {
+                        setFormData({ ...formData, imageUrl: e.target.value });
+                        if (!imageFile) {
+                          setImagePreview(e.target.value);
+                        }
+                      }}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full px-3 py-2 border border-[#d8e3fb] bg-white text-xs text-[#111c2d] focus:outline-none focus:border-[#003c90]"
+                    />
+                  </div>
                 </div>
+
+                {/* Preview Thumbnail */}
+                {(imagePreview || formData.imageUrl) && (
+                  <div className="flex items-center gap-3 pt-2 mt-1 border-t border-[#d8e3fb]">
+                    <div className="w-16 h-14 bg-gray-100 border border-[#b4c8f5] overflow-hidden shrink-0 shadow-2xs">
+                      <img
+                        src={imagePreview || formData.imageUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=400&q=80';
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs text-[#434653] min-w-0">
+                      <div className="font-bold text-[#111c2d]">Selected Image Preview</div>
+                      <div className="text-[11px] text-[#556987] truncate">
+                        {imageFile ? 'Local file selected for upload' : 'Using image URL'}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Short Summary */}
