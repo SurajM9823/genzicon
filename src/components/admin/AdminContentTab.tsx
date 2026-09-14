@@ -12,10 +12,24 @@ import {
   Upload,
   Play,
   Film,
-  Compass
+  Compass,
+  Edit3,
+  ArrowUp,
+  ArrowDown,
+  MapPin,
+  Calendar
 } from 'lucide-react';
-import { SiteContentConfig, Language, StatMetric } from '../../types';
+import { SiteContentConfig, Language, StatMetric, FilmstripScene } from '../../types';
 import { DEFAULT_SITE_CONTENT } from '../../data/mockData';
+import { DEFAULT_FILMSTRIP_SCENES } from '../FilmstripGallery';
+import { AdminFilmstripModal } from './AdminFilmstripModal';
+import { 
+  apiGetFilmstripScenes, 
+  apiSaveFilmstripScenes, 
+  apiCreateFilmstripScene, 
+  apiUpdateFilmstripScene, 
+  apiDeleteFilmstripScene 
+} from '../../services/api';
 import { HeroMediaRenderer, isRiveMedia } from '../HeroMediaRenderer';
 
 interface AdminContentTabProps {
@@ -48,6 +62,85 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
       impactStats: siteContent.impactStats || prev.impactStats || DEFAULT_SITE_CONTENT.impactStats || [],
     }));
   }, [siteContent]);
+
+  // 4. Cinematic 35mm Filmstrip Gallery Scenes State & CRUD
+  const [filmstripScenes, setFilmstripScenes] = useState<FilmstripScene[]>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_filmstrip_scenes');
+      return saved ? JSON.parse(saved) : DEFAULT_FILMSTRIP_SCENES;
+    } catch {
+      return DEFAULT_FILMSTRIP_SCENES;
+    }
+  });
+  const [filmstripModalOpen, setFilmstripModalOpen] = useState(false);
+  const [editingScene, setEditingScene] = useState<FilmstripScene | null>(null);
+  const [filmstripToast, setFilmstripToast] = useState('');
+
+  useEffect(() => {
+    apiGetFilmstripScenes().then((data) => {
+      if (data && data.length > 0) {
+        setFilmstripScenes(data);
+        localStorage.setItem('genzicon_filmstrip_scenes', JSON.stringify(data));
+      }
+    });
+  }, []);
+
+  const handleOpenAddFilmstripScene = () => {
+    setEditingScene(null);
+    setFilmstripModalOpen(true);
+  };
+
+  const handleOpenEditFilmstripScene = (scene: FilmstripScene) => {
+    setEditingScene(scene);
+    setFilmstripModalOpen(true);
+  };
+
+  const handleSaveFilmstripScene = async (scene: FilmstripScene, file?: File) => {
+    const isNew = !filmstripScenes.some(s => s.id === scene.id);
+    let updatedList: FilmstripScene[] = [];
+    
+    if (isNew) {
+      const created = await apiCreateFilmstripScene(scene, file);
+      const savedScene = created || scene;
+      updatedList = [...filmstripScenes, savedScene];
+    } else {
+      const updated = await apiUpdateFilmstripScene(scene.id, scene, file);
+      const savedScene = updated || scene;
+      updatedList = filmstripScenes.map(s => s.id === scene.id ? savedScene : s);
+    }
+
+    setFilmstripScenes(updatedList);
+    localStorage.setItem('genzicon_filmstrip_scenes', JSON.stringify(updatedList));
+    apiSaveFilmstripScenes(updatedList);
+    window.dispatchEvent(new Event('genzicon_filmstrip_updated'));
+
+    setFilmstripToast(isNp ? 'दृश्य सफलतापूर्वक सुरक्षित भयो!' : 'Filmstrip scene saved successfully!');
+    setTimeout(() => setFilmstripToast(''), 3500);
+  };
+
+  const handleDeleteFilmstripScene = async (id: string) => {
+    if (!window.confirm(isNp ? 'के तपाईं यो दृश्य हटाउन निश्चित हुनुहुन्छ?' : 'Are you sure you want to remove this scene?')) return;
+    await apiDeleteFilmstripScene(id);
+    const updatedList = filmstripScenes.filter(s => s.id !== id);
+    setFilmstripScenes(updatedList);
+    localStorage.setItem('genzicon_filmstrip_scenes', JSON.stringify(updatedList));
+    apiSaveFilmstripScenes(updatedList);
+    window.dispatchEvent(new Event('genzicon_filmstrip_updated'));
+    setFilmstripToast(isNp ? 'दृश्य हटाइयो' : 'Scene removed from filmstrip');
+    setTimeout(() => setFilmstripToast(''), 3000);
+  };
+
+  const handleMoveFilmstripScene = (index: number, direction: 'up' | 'down') => {
+    const newIdx = direction === 'up' ? index - 1 : index + 1;
+    if (newIdx < 0 || newIdx >= filmstripScenes.length) return;
+    const reordered = [...filmstripScenes];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(newIdx, 0, moved);
+    setFilmstripScenes(reordered);
+    localStorage.setItem('genzicon_filmstrip_scenes', JSON.stringify(reordered));
+    apiSaveFilmstripScenes(reordered);
+    window.dispatchEvent(new Event('genzicon_filmstrip_updated'));
+  };
 
   // Curated Nepali NGO imagery and interactive Rive animation presets
   const presetMedia = [
@@ -647,6 +740,156 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Section 4: Cinematic 35mm Filmstrip Gallery (Reel Above Core Pillars) */}
+      <div className="bg-white p-5 border border-[#d8e3fb] shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#f0f3ff] pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-amber-500/15 text-amber-600 flex items-center justify-center font-mono text-xs font-bold">
+                <Film className="w-3.5 h-3.5" />
+              </div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#111c2d]">
+                4. Cinematic 35mm Filmstrip Gallery (Above Three Core Pillars)
+              </h3>
+            </div>
+            <p className="text-[11px] text-[#737784] mt-0.5">
+              Manage the 35mm vintage film reel photo scenes, scene badges (SCENE 01, SCENE 02), negative frame codes, and bilingual stories shown on the homepage.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenAddFilmstripScene}
+            className="px-4 py-2 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-xs shrink-0 self-start sm:self-auto"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add New Scene</span>
+          </button>
+        </div>
+
+        {filmstripToast && (
+          <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>{filmstripToast}</span>
+          </div>
+        )}
+
+        {/* List of Filmstrip Scenes */}
+        <div className="space-y-3">
+          {filmstripScenes.map((scene, index) => (
+            <div 
+              key={scene.id} 
+              className="p-3 sm:p-4 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-[#003c90] transition-colors rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            >
+              {/* Thumbnail with film frame number */}
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="relative w-24 h-16 sm:w-28 sm:h-18 bg-black rounded overflow-hidden shrink-0 border border-white/20 shadow-sm">
+                  <img 
+                    src={scene.imageUrl} 
+                    alt={scene.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/80 text-[8px] font-mono font-bold text-amber-400 border border-white/20">
+                    {scene.sceneNumber}
+                  </div>
+                  <div className="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/80 text-[8px] font-mono text-white/80">
+                    #{scene.frameCode}
+                  </div>
+                </div>
+
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="px-2 py-0.5 bg-[#e7eeff] text-[#003c90] text-[10px] font-bold uppercase tracking-wider rounded">
+                      {scene.category}
+                    </span>
+                    <span className="text-[10px] text-[#737784] font-mono">
+                      Frame #{scene.frameCode}
+                    </span>
+                  </div>
+
+                  <h4 className="text-xs sm:text-sm font-bold text-[#111c2d] truncate">
+                    {scene.title}
+                  </h4>
+
+                  {scene.titleNp && (
+                    <p className="text-[11px] text-[#737784] font-medium truncate">
+                      {scene.titleNp}
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-3 text-[10px] text-[#737784]">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-2.5 h-2.5 text-emerald-600" />
+                      <span>{scene.location}</span>
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-2.5 h-2.5 text-blue-600" />
+                      <span>{scene.date}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                {/* Move Up */}
+                <button
+                  type="button"
+                  disabled={index === 0}
+                  onClick={() => handleMoveFilmstripScene(index, 'up')}
+                  className="p-1.5 border border-[#d8e3fb] bg-white text-[#737784] hover:text-[#003c90] hover:bg-slate-50 disabled:opacity-30 rounded transition-colors"
+                  title="Move scene up"
+                >
+                  <ArrowUp className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Move Down */}
+                <button
+                  type="button"
+                  disabled={index === filmstripScenes.length - 1}
+                  onClick={() => handleMoveFilmstripScene(index, 'down')}
+                  className="p-1.5 border border-[#d8e3fb] bg-white text-[#737784] hover:text-[#003c90] hover:bg-slate-50 disabled:opacity-30 rounded transition-colors"
+                  title="Move scene down"
+                >
+                  <ArrowDown className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Edit Button */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenEditFilmstripScene(scene)}
+                  className="px-3 py-1.5 border border-[#003c90] bg-[#e7eeff] hover:bg-[#003c90] text-[#003c90] hover:text-white text-xs font-bold uppercase tracking-wider rounded transition-colors flex items-center gap-1"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>Edit</span>
+                </button>
+
+                {/* Delete Button */}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteFilmstripScene(scene.id)}
+                  className="p-1.5 border border-red-200 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded transition-colors"
+                  title="Delete scene"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Admin Filmstrip Add/Edit Modal */}
+      <AdminFilmstripModal
+        isOpen={filmstripModalOpen}
+        onClose={() => setFilmstripModalOpen(false)}
+        sceneToEdit={editingScene}
+        onSave={handleSaveFilmstripScene}
+        language={language}
+        nextSceneIndex={filmstripScenes.length + 1}
+      />
 
       {/* Bottom Save Bar */}
       <div className="p-4 bg-white border border-[#d8e3fb] flex items-center justify-between">

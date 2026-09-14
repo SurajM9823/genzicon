@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     admin_login, dashboard_overview,
-    SiteContentViewSet, ImpactStatViewSet, ProjectViewSet, ClothesDonorViewSet,
+    SiteContentViewSet, ImpactStatViewSet, FilmstripSceneViewSet, ProjectViewSet, ClothesDonorViewSet,
     ClothesDonationViewSet, VolunteerViewSet, DonationRecordViewSet, ContactInquiryViewSet,
     ClothesHubConfigViewSet, SiteSettingsViewSet, PaymentConfigViewSet
 )
@@ -12,6 +12,7 @@ router.register(r'site-settings', SiteSettingsViewSet, basename='site-settings')
 router.register(r'payment-config', PaymentConfigViewSet, basename='payment-config')
 router.register(r'site-content', SiteContentViewSet, basename='site-content')
 router.register(r'impact-stats', ImpactStatViewSet, basename='impact-stats')
+router.register(r'filmstrip-scenes', FilmstripSceneViewSet, basename='filmstrip-scenes')
 router.register(r'projects', ProjectViewSet, basename='projects')
 router.register(r'clothes-donors', ClothesDonorViewSet, basename='clothes-donors')
 router.register(r'clothes', ClothesDonationViewSet, basename='clothes')

@@ -318,6 +318,26 @@ export interface SiteContentConfig {
   heroBannerTag: string;
   heroBannerTagNp: string;
   impactStats?: StatMetric[];
+  filmstripScenes?: FilmstripScene[];
+}
+
+export interface FilmstripScene {
+  id: string;
+  sceneNumber: string;
+  frameCode: string;
+  title: string;
+  titleNp: string;
+  category: string;
+  categoryNp: string;
+  location: string;
+  locationNp: string;
+  date: string;
+  dateNp: string;
+  description: string;
+  descriptionNp: string;
+  imageUrl: string;
+  quote?: string;
+  quoteNp?: string;
 }
 
 export interface BankAndQrConfig {

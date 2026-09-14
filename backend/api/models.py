@@ -65,6 +65,46 @@ class ImpactStat(models.Model):
     def __str__(self):
         return f"#{self.order} {self.number} - {self.label} [{self.stat_id}]"
 
+class FilmstripScene(models.Model):
+    """Cinematic 35mm Filmstrip Gallery Scenes for Home Page"""
+    scene_number = models.CharField(max_length=50, default="SCENE 01", verbose_name="Scene Number (e.g. SCENE 01)")
+    frame_code = models.CharField(max_length=20, default="16", verbose_name="Negative Frame Code (e.g. 14, 15, 16)")
+    title = models.CharField(max_length=255, verbose_name="Title (English)")
+    title_np = models.CharField(max_length=255, blank=True, verbose_name="Title (Nepali)")
+    category = models.CharField(max_length=100, default="Clothes Bank Nepal", verbose_name="Category (English)")
+    category_np = models.CharField(max_length=100, blank=True, default="कपडा बैंक नेपाल", verbose_name="Category (Nepali)")
+    location = models.CharField(max_length=150, blank=True, default="Kathmandu, Nepal", verbose_name="Location (English)")
+    location_np = models.CharField(max_length=150, blank=True, default="काठमाडौँ, नेपाल", verbose_name="Location (Nepali)")
+    date = models.CharField(max_length=100, blank=True, default="2024", verbose_name="Date / Season (English)")
+    date_np = models.CharField(max_length=100, blank=True, default="२०८१", verbose_name="Date / Season (Nepali)")
+    description = models.TextField(blank=True, verbose_name="Description (English)")
+    description_np = models.TextField(blank=True, verbose_name="Description (Nepali)")
+    image = models.ImageField(upload_to='filmstrip_gallery/', blank=True, null=True, verbose_name="Upload Scene Image")
+    image_url = models.TextField(blank=True, null=True, verbose_name="Or Scene Image URL")
+    quote = models.TextField(blank=True, verbose_name="Quote (English)")
+    quote_np = models.TextField(blank=True, verbose_name="Quote (Nepali)")
+    order = models.PositiveIntegerField(default=0, verbose_name="Display Order")
+    is_active = models.BooleanField(default=True, verbose_name="Is Active?")
+    created_at = models.DateTimeField(default=timezone.now, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Filmstrip Gallery Scene"
+        verbose_name_plural = "Filmstrip Gallery Scenes"
+
+    @property
+    def final_image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                pass
+        return self.image_url or "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1400&q=85"
+
+    def __str__(self):
+        return f"{self.scene_number} - {self.title} (#{self.order})"
+
 class Project(models.Model):
     """Field Programs & Grassroots Projects"""
     STATUS_CHOICES = [

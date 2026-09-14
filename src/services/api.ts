@@ -1,4 +1,4 @@
-import { Project, ClothesHubConfig, SiteSettingsConfig, BankAndQrConfig } from '../types';
+import { Project, ClothesHubConfig, SiteSettingsConfig, BankAndQrConfig, FilmstripScene } from '../types';
 
 const API_BASE = (typeof window !== 'undefined' && (window as any).VITE_API_URL) 
   ? (window as any).VITE_API_URL 
@@ -216,6 +216,228 @@ export async function apiSaveImpactStats(stats: any[]) {
     console.warn('Could not save impact stats to backend:', e);
   }
   return null;
+}
+
+// --------------------------------------------------------------------------
+// 3.5. Filmstrip Gallery Scenes (Cinematic 35mm Reel)
+// --------------------------------------------------------------------------
+export function formatFilmstripSceneFromBackend(s: any): FilmstripScene {
+  return {
+    id: String(s.id),
+    sceneNumber: s.scene_number || s.sceneNumber || 'SCENE 01',
+    frameCode: s.frame_code || s.frameCode || '16',
+    title: s.title || '',
+    titleNp: s.title_np || s.titleNp || s.title || '',
+    category: s.category || 'Ground Work',
+    categoryNp: s.category_np || s.categoryNp || s.category || '',
+    location: s.location || 'Nepal',
+    locationNp: s.location_np || s.locationNp || s.location || '',
+    date: s.date || '2024',
+    dateNp: s.date_np || s.dateNp || s.date || '',
+    description: s.description || '',
+    descriptionNp: s.description_np || s.descriptionNp || s.description || '',
+    imageUrl: s.final_image_url || s.image || s.image_url || s.imageUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1400&q=85',
+    quote: s.quote || '',
+    quoteNp: s.quote_np || s.quoteNp || s.quote || '',
+  };
+}
+
+export async function apiGetFilmstripScenes(): Promise<FilmstripScene[] | null> {
+  try {
+    const res = await fetch(`${API_BASE}/filmstrip-scenes/`, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const results = Array.isArray(data) ? data : (data.results || []);
+      if (results.length > 0) {
+        return results.map(formatFilmstripSceneFromBackend);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not fetch filmstrip scenes from API:', e);
+  }
+  return null;
+}
+
+export async function apiSaveFilmstripScenes(scenes: FilmstripScene[]): Promise<any> {
+  try {
+    const payload = {
+      scenes: scenes.map((s, idx) => ({
+        id: s.id,
+        scene_number: s.sceneNumber,
+        frame_code: s.frameCode,
+        title: s.title,
+        title_np: s.titleNp,
+        category: s.category,
+        category_np: s.categoryNp,
+        location: s.location,
+        location_np: s.locationNp,
+        date: s.date,
+        date_np: s.dateNp,
+        description: s.description,
+        description_np: s.descriptionNp,
+        image_url: s.imageUrl,
+        quote: s.quote,
+        quote_np: s.quoteNp,
+        order: idx + 1,
+      })),
+    };
+    const res = await fetch(`${API_BASE}/filmstrip-scenes/bulk_save/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn('Could not bulk save filmstrip scenes:', e);
+  }
+  return null;
+}
+
+export async function apiCreateFilmstripScene(scene: Partial<FilmstripScene>, file?: File): Promise<FilmstripScene | null> {
+  try {
+    if (file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      if (scene.sceneNumber) formData.append('scene_number', scene.sceneNumber);
+      if (scene.frameCode) formData.append('frame_code', scene.frameCode);
+      if (scene.title) formData.append('title', scene.title);
+      if (scene.titleNp) formData.append('title_np', scene.titleNp);
+      if (scene.category) formData.append('category', scene.category);
+      if (scene.categoryNp) formData.append('category_np', scene.categoryNp);
+      if (scene.location) formData.append('location', scene.location);
+      if (scene.locationNp) formData.append('location_np', scene.locationNp);
+      if (scene.date) formData.append('date', scene.date);
+      if (scene.dateNp) formData.append('date_np', scene.dateNp);
+      if (scene.description) formData.append('description', scene.description);
+      if (scene.descriptionNp) formData.append('description_np', scene.descriptionNp);
+      if (scene.imageUrl) formData.append('image_url', scene.imageUrl);
+
+      const token = localStorage.getItem('genzicon_admin_token');
+      const headers: HeadersInit = {};
+      if (token) headers['Authorization'] = `Token ${token}`;
+
+      const res = await fetch(`${API_BASE}/filmstrip-scenes/`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatFilmstripSceneFromBackend(data);
+      }
+    } else {
+      const res = await fetch(`${API_BASE}/filmstrip-scenes/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          scene_number: scene.sceneNumber,
+          frame_code: scene.frameCode,
+          title: scene.title,
+          title_np: scene.titleNp,
+          category: scene.category,
+          category_np: scene.categoryNp,
+          location: scene.location,
+          location_np: scene.locationNp,
+          date: scene.date,
+          date_np: scene.dateNp,
+          description: scene.description,
+          description_np: scene.descriptionNp,
+          image_url: scene.imageUrl,
+          quote: scene.quote,
+          quote_np: scene.quoteNp,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatFilmstripSceneFromBackend(data);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not create filmstrip scene:', e);
+  }
+  return null;
+}
+
+export async function apiUpdateFilmstripScene(id: string, scene: Partial<FilmstripScene>, file?: File): Promise<FilmstripScene | null> {
+  try {
+    if (file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      if (scene.sceneNumber) formData.append('scene_number', scene.sceneNumber);
+      if (scene.frameCode) formData.append('frame_code', scene.frameCode);
+      if (scene.title) formData.append('title', scene.title);
+      if (scene.titleNp) formData.append('title_np', scene.titleNp);
+      if (scene.category) formData.append('category', scene.category);
+      if (scene.categoryNp) formData.append('category_np', scene.categoryNp);
+      if (scene.location) formData.append('location', scene.location);
+      if (scene.locationNp) formData.append('location_np', scene.locationNp);
+      if (scene.date) formData.append('date', scene.date);
+      if (scene.dateNp) formData.append('date_np', scene.dateNp);
+      if (scene.description) formData.append('description', scene.description);
+      if (scene.descriptionNp) formData.append('description_np', scene.descriptionNp);
+      if (scene.imageUrl) formData.append('image_url', scene.imageUrl);
+
+      const token = localStorage.getItem('genzicon_admin_token');
+      const headers: HeadersInit = {};
+      if (token) headers['Authorization'] = `Token ${token}`;
+
+      const res = await fetch(`${API_BASE}/filmstrip-scenes/${id}/`, {
+        method: 'PATCH',
+        headers,
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatFilmstripSceneFromBackend(data);
+      }
+    } else {
+      const res = await fetch(`${API_BASE}/filmstrip-scenes/${id}/`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          scene_number: scene.sceneNumber,
+          frame_code: scene.frameCode,
+          title: scene.title,
+          title_np: scene.titleNp,
+          category: scene.category,
+          category_np: scene.categoryNp,
+          location: scene.location,
+          location_np: scene.locationNp,
+          date: scene.date,
+          date_np: scene.dateNp,
+          description: scene.description,
+          description_np: scene.descriptionNp,
+          image_url: scene.imageUrl,
+          quote: scene.quote,
+          quote_np: scene.quoteNp,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatFilmstripSceneFromBackend(data);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not update filmstrip scene:', e);
+  }
+  return null;
+}
+
+export async function apiDeleteFilmstripScene(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/filmstrip-scenes/${id}/`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Could not delete filmstrip scene:', e);
+    return false;
+  }
 }
 
 // --------------------------------------------------------------------------

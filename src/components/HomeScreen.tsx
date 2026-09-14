@@ -16,6 +16,7 @@ import { IMPACT_STATS, PROJECTS_DATA, DEFAULT_SITE_CONTENT } from '../data/mockD
 import { Project, NavTab, Language, SiteContentConfig } from '../types';
 import { apiGetSiteContent, apiGetProjects } from '../services/api';
 import { HeroMediaRenderer } from './HeroMediaRenderer';
+import { FilmstripGallery } from './FilmstripGallery';
 
 interface HomeScreenProps {
   language: Language;
@@ -381,6 +382,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           })}
         </div>
       </section>
+
+      {/* Cinematic Filmstrip Gallery: Moments from the Ground & Achievements */}
+      <FilmstripGallery language={language} scenes={siteContent.filmstripScenes} />
 
       {/* 3 Foundational Pillars: Refined Header & 3D Perspective Cards */}
       <section id="pillars-summary-section" className="py-12 px-4 sm:px-6 bg-[#f9f9ff] border-b border-[#d8e3fb] [perspective:1200px]">

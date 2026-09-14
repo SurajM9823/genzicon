@@ -8,12 +8,12 @@ from django.db.models import Sum, Count
 from .authentication import CsrfExemptSessionAuthentication
 
 from .models import (
-    SiteContent, ImpactStat, Project, ClothesDonor,
+    SiteContent, ImpactStat, FilmstripScene, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
     PaymentConfig
 )
 from .serializers import (
-    SiteContentSerializer, ImpactStatSerializer, ProjectSerializer, ClothesDonorSerializer,
+    SiteContentSerializer, ImpactStatSerializer, FilmstripSceneSerializer, ProjectSerializer, ClothesDonorSerializer,
     ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer,
     ClothesHubConfigSerializer, SiteSettingsSerializer, PaymentConfigSerializer
 )
@@ -263,6 +263,195 @@ class ImpactStatViewSet(viewsets.ModelViewSet):
                 }
             )
             saved_records.append(ImpactStatSerializer(obj).data)
+
+        return Response({
+            'status': 'success',
+            'saved': len(saved_records),
+            'results': saved_records,
+        })
+
+
+# --- Filmstrip Gallery Scenes ViewSet ---
+DEFAULT_FILMSTRIP_SCENES_DATA = [
+    {
+        'scene_number': 'SCENE 01',
+        'frame_code': '13',
+        'title': 'Warm Clothes Sorting & Sanitization Drive',
+        'title_np': 'कपडा संकलन तथा निःशुल्क वितरण तयारी',
+        'category': 'Clothes Bank Nepal',
+        'category_np': 'कपडा बैंक नेपाल',
+        'location': 'Central Hub, Kathmandu',
+        'location_np': 'केन्द्रीय संकलन केन्द्र, काठमाडौँ',
+        'date': 'Autumn 2024',
+        'date_np': 'शरद ऋतु २०८१',
+        'description': 'Volunteers meticulously sorting, washing, and packaging thousands of pre-loved wearable garments for cold-wave vulnerable settlements.',
+        'description_np': 'तराईका शीतलहर पीडित परिवारका लागि संकलित कपडाहरू स्वयंसेवकद्वारा धोइपखाली, वर्गीकरण र प्याकेजिङ गरिँदै।',
+        'image_url': 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1400&q=85',
+        'quote': 'Dignity through warmth for every vulnerable family in Nepal.',
+        'quote_np': 'प्रत्येक विपन्न परिवारका लागि न्यानोपन र सम्मान।',
+        'order': 1
+    },
+    {
+        'scene_number': 'SCENE 02',
+        'frame_code': '14',
+        'title': 'School Uniforms & Learning Kits Distribution',
+        'title_np': 'विद्यालय पोशाक तथा शैक्षिक सामग्री सहयोग',
+        'category': 'Education Support',
+        'category_np': 'शिक्षा सहयोग',
+        'location': 'Rural Community School, Janakpur',
+        'location_np': 'ग्रामीण सामुदायिक विद्यालय, जनकपुर',
+        'date': 'September 2024',
+        'date_np': 'असोज २०८१',
+        'description': 'Equipping young primary students with tailored clean school uniforms, backpacks, and essential textbooks to encourage attendance.',
+        'description_np': 'नियमित विद्यालय जान प्रोत्साहन गर्न बालबालिकाहरूलाई नयाँ विद्यालय पोशाक, झोला र पाठ्यपुस्तक वितरण।',
+        'image_url': 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1400&q=85',
+        'quote': 'Every child deserves the confidence of a uniform and a notebook.',
+        'quote_np': 'हरेक बालबालिकालाई शिक्षा र आत्मविश्वासको समान अवसर।',
+        'order': 2
+    },
+    {
+        'scene_number': 'SCENE 03',
+        'frame_code': '15',
+        'title': 'Classroom Dreams & Rural Learning Hubs',
+        'title_np': 'कक्षाकोठामा भविष्य कोर्दै ग्रामीण बालबालिकाहरू',
+        'category': 'Child Education',
+        'category_np': 'बाल शिक्षा',
+        'location': 'Hansapur Primary Hub, Dhanusha',
+        'location_np': 'हंसपुर प्राथमिक केन्द्र, धनुषा',
+        'date': 'August 2024',
+        'date_np': 'भदौ २०८१',
+        'description': 'Students engaged in classroom learning at freshly refurbished community school desks supported by Genzicon education drive.',
+        'description_np': 'जेन्जिकन शिक्षा अभियानद्वारा मर्मत तथा व्यवस्थापन गरिएका डेस्क-बेन्चमा अध्ययनरत विद्यार्थीहरू।',
+        'image_url': 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1400&q=85',
+        'quote': 'Building brighter futures one classroom at a time.',
+        'quote_np': 'कक्षाकोठाबाटै समृद्ध नेपालको भविष्य निर्माण।',
+        'order': 3
+    },
+    {
+        'scene_number': 'SCENE 04',
+        'frame_code': '16',
+        'title': 'Youth Mentorship & Interactive Study Circles',
+        'title_np': 'युवा परामर्श तथा अन्तरक्रियात्मक अध्ययन सत्र',
+        'category': 'Youth Leadership',
+        'category_np': 'युवा नेतृत्व',
+        'location': 'Morang Youth Center, Koshi',
+        'location_np': 'मोरङ युवा केन्द्र, कोशी प्रदेश',
+        'date': 'July 2024',
+        'date_np': 'साउन २०८१',
+        'description': 'Young school leaders and adolescent girls participating in interactive leadership, digital literacy, and health awareness sessions.',
+        'description_np': 'अन्तरक्रियात्मक नेतृत्व विकास, डिजिटल साक्षरता र स्वास्थ्य सचेतनामा सहभागी किशोरीहरू।',
+        'image_url': 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?auto=format&fit=crop&w=1400&q=85',
+        'quote': 'Guiding today’s adolescents into tomorrow’s changemakers.',
+        'quote_np': 'आजका किशोरीहरूलाई भोलिका समाज सुधारक बनाउने दिशा।',
+        'order': 4
+    },
+    {
+        'scene_number': 'SCENE 05',
+        'frame_code': '17',
+        'title': 'Chure Hills Mass Reforestation Drive',
+        'title_np': 'चुरे क्षेत्रमा वृहत् फलफूल वृक्षारोपण',
+        'category': 'Green Nepal',
+        'category_np': 'हरित नेपाल',
+        'location': 'Mithila Chure Ridge, Madhesh',
+        'location_np': 'मिथिला चुरे क्षेत्र, मधेश प्रदेश',
+        'date': 'Monsoon 2024',
+        'date_np': 'वर्षायाम २०८१',
+        'description': 'Planting over 100,000 indigenous fruit-bearing and soil-binding trees along fragile Chure slopes to stop flash floods.',
+        'description_np': 'चुरे संरक्षण तथा बाढी-पहिरो नियन्त्रणका लागि १ लाखभन्दा बढी फलफूलका बिरुवा रोपण।',
+        'image_url': 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&w=1400&q=85',
+        'quote': 'Restoring Nepal’s green canopy for generations ahead.',
+        'quote_np': 'भावी पुस्ताका लागि नेपालको हरित सम्पदाको संरक्षण।',
+        'order': 5
+    },
+    {
+        'scene_number': 'SCENE 06',
+        'frame_code': '18',
+        'title': 'Women Micro-Enterprise & Tailoring Training',
+        'title_np': 'महिला आत्मनिर्भरता सिलाई-कटाई तालिम',
+        'category': 'Livelihood Skills',
+        'category_np': 'जीविकोपार्जन सीप',
+        'location': 'Tinkune Skill Hub, Kathmandu',
+        'location_np': 'तीनकुने सीप केन्द्र, काठमाडौँ',
+        'date': 'June 2024',
+        'date_np': 'असार २०८१',
+        'description': 'Certified 3-month garment craftsmanship and business training empowering single mothers to run self-reliant micro enterprises.',
+        'description_np': 'विपन्न तथा एकल महिलाहरूलाई ३ महिने निःशुल्क सिलाई तालिम र मेसिन हस्तान्तरण।',
+        'image_url': 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1400&q=85',
+        'quote': 'Economic independence is the most enduring form of empowerment.',
+        'quote_np': 'आर्थिक आत्मनिर्भरता नै महिला सशक्तीकरणको स्थायी आधार हो।',
+        'order': 6
+    }
+]
+
+def ensure_default_filmstrip_scenes():
+    """Ensure standard 6 scenes exist in the database if empty"""
+    if FilmstripScene.objects.count() == 0:
+        for item in DEFAULT_FILMSTRIP_SCENES_DATA:
+            FilmstripScene.objects.create(**item)
+
+
+class FilmstripSceneViewSet(viewsets.ModelViewSet):
+    queryset = FilmstripScene.objects.all().order_by('order', 'id')
+    serializer_class = FilmstripSceneSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.AllowAny()]  # Can be tightened to IsAdminUser if session exists
+
+    def list(self, request, *args, **kwargs):
+        ensure_default_filmstrip_scenes()
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['post', 'put'], permission_classes=[permissions.AllowAny])
+    def bulk_save(self, request):
+        """Bulk update or replace scenes from the admin UI"""
+        scenes_data = request.data.get('scenes', [])
+        if not isinstance(scenes_data, list):
+            scenes_data = request.data if isinstance(request.data, list) else []
+
+        saved_records = []
+        for idx, item in enumerate(scenes_data, start=1):
+            scene_id = item.get('id')
+            data = {
+                'scene_number': item.get('sceneNumber') or item.get('scene_number') or f"SCENE {idx:02d}",
+                'frame_code': item.get('frameCode') or item.get('frame_code') or str(12 + idx),
+                'title': item.get('title', ''),
+                'title_np': item.get('titleNp') or item.get('title_np', ''),
+                'category': item.get('category') or 'Ground Work',
+                'category_np': item.get('categoryNp') or item.get('category_np', ''),
+                'location': item.get('location', ''),
+                'location_np': item.get('locationNp') or item.get('location_np', ''),
+                'date': item.get('date', ''),
+                'date_np': item.get('dateNp') or item.get('date_np', ''),
+                'description': item.get('description', ''),
+                'description_np': item.get('descriptionNp') or item.get('description_np', ''),
+                'image_url': item.get('imageUrl') or item.get('image_url', ''),
+                'quote': item.get('quote', ''),
+                'quote_np': item.get('quoteNp') or item.get('quote_np', ''),
+                'order': item.get('order', idx),
+                'is_active': item.get('isActive', True) if 'isActive' in item else item.get('is_active', True),
+            }
+
+            if scene_id and str(scene_id).isdigit():
+                try:
+                    obj = FilmstripScene.objects.get(id=int(scene_id))
+                    for k, v in data.items():
+                        setattr(obj, k, v)
+                    obj.save()
+                except FilmstripScene.DoesNotExist:
+                    obj = FilmstripScene.objects.create(**data)
+            else:
+                # If it's a string id like 'scene-01', try matching by scene_number or create new
+                obj = FilmstripScene.objects.filter(scene_number=data['scene_number']).first()
+                if obj:
+                    for k, v in data.items():
+                        setattr(obj, k, v)
+                    obj.save()
+                else:
+                    obj = FilmstripScene.objects.create(**data)
+
+            saved_records.append(FilmstripSceneSerializer(obj, context={'request': request}).data)
 
         return Response({
             'status': 'success',

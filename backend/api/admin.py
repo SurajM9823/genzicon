@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.db import models
 from django.utils.html import format_html
 from .models import (
-    SiteContent, ImpactStat, Project, ClothesDonor,
+    SiteContent, ImpactStat, FilmstripScene, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
     PaymentConfig
 )
@@ -77,6 +77,36 @@ class ImpactStatAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return True
+
+@admin.register(FilmstripScene)
+class FilmstripSceneAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = ('order', 'scene_number', 'frame_code', 'title', 'category', 'location', 'image_preview', 'is_active')
+    list_display_links = ('scene_number', 'title')
+    list_editable = ('order', 'frame_code', 'is_active')
+    list_filter = ('is_active', 'category')
+    search_fields = ('scene_number', 'title', 'title_np', 'location', 'category', 'description')
+    fieldsets = (
+        ('Film Reel Position & Visibility', {
+            'fields': ('is_active', 'order', 'scene_number', 'frame_code')
+        }),
+        ('English Content', {
+            'fields': ('title', 'category', 'location', 'date', 'description', 'quote')
+        }),
+        ('Nepali Content (नेपाली सामग्री)', {
+            'fields': ('title_np', 'category_np', 'location_np', 'date_np', 'description_np', 'quote_np')
+        }),
+        ('Scene Photo (File Upload OR Image URL)', {
+            'fields': ('image', 'image_url')
+        })
+    )
+
+    def image_preview(self, obj):
+        url = obj.final_image_url
+        if not url:
+            return "-"
+        return format_html('<img src="{}" style="width: 70px; height: 42px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />', url)
+    image_preview.short_description = "Scene Preview"
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
