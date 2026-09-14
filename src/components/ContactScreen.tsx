@@ -229,11 +229,7 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
                   <h3 className="text-sm sm:text-base font-bold text-[#111c2d] font-heading">
                     {isNp ? 'हामीलाई सन्देश पठाउनुहोस्' : 'Send Us a Direct Message'}
                   </h3>
-                  <p className="text-xs text-[#737784]">
-                    {isNp
-                      ? 'सहयोग, सहकार्य, कपडा दान वा संस्थागत सोधपुछका लागि फारम भर्नुहोस्।'
-                      : 'Fill in the form below for partnership, donations, clothes queries, or field support.'}
-                  </p>
+                
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-3">
