@@ -242,9 +242,9 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
     >
       <div className="max-w-[1280px] mx-auto">
         
-        {/* Compact 35mm Film Reel Ribbon Container */}
+        {/* Compact 35mm Film Reel Ribbon Container - Sharp Straight Edges */}
         <div 
-          className="relative w-full bg-[#0b0f19] rounded-lg sm:rounded-xl border border-slate-700/60 shadow-md overflow-hidden select-none"
+          className="relative w-full bg-[#0b0f19] border border-slate-700/60 shadow-md overflow-hidden select-none"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={handleTouchStart}
@@ -256,29 +256,29 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <div className="flex items-center w-full justify-around opacity-90">
               {/* Left frame number */}
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
                 <span className="font-mono text-[9px] sm:text-[10px] font-bold text-amber-400/80">
                   {prevScene.frameCode || '15'}
                 </span>
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
               </div>
 
               {/* Center frame numbers */}
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
                 <span className="font-mono text-[10px] sm:text-xs font-black text-amber-400">
                   {currentScene.frameCode || '16'}
                 </span>
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
               </div>
 
               {/* Right frame number */}
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
                 <span className="font-mono text-[9px] sm:text-[10px] font-bold text-amber-400/80">
                   {nextScene.frameCode || '17'}
                 </span>
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
               </div>
             </div>
           </div>
@@ -290,7 +290,7 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <button
               onClick={handlePrev}
               aria-label="Previous Scene"
-              className="absolute left-2 sm:left-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/65 hover:bg-black/90 text-white border border-white/30 flex items-center justify-center backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 shadow-md"
+              className="absolute left-2 sm:left-4 z-30 w-8 h-8 sm:w-9 sm:h-9 bg-black/65 hover:bg-black/90 text-white border border-white/30 flex items-center justify-center backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 shadow-md"
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </button>
@@ -299,18 +299,18 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <button
               onClick={handleNext}
               aria-label="Next Scene"
-              className="absolute right-2 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/65 hover:bg-black/90 text-white border border-white/30 flex items-center justify-center backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 shadow-md"
+              className="absolute right-2 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 bg-black/65 hover:bg-black/90 text-white border border-white/30 flex items-center justify-center backdrop-blur-sm transition-all transform hover:scale-105 active:scale-95 shadow-md"
             >
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </button>
 
-            {/* 3 Continuous Film Frames: All Clear, Focused & Vibrant */}
+            {/* 3 Continuous Film Frames: Sharp, Clean Rectangular Edges */}
             <div className="w-full flex items-center justify-center gap-1.5 sm:gap-3">
               
-              {/* Left Frame (Previous) - Clear, Sharp & Clickable */}
+              {/* Left Frame (Previous) - Sharp Rectangular Frame */}
               <div 
                 onClick={handlePrev}
-                className="w-[28%] sm:w-[30%] h-[140px] sm:h-[180px] md:h-[210px] lg:h-[230px] relative rounded-md overflow-hidden cursor-pointer group border border-white/15 bg-slate-900"
+                className="w-[28%] sm:w-[30%] h-[140px] sm:h-[180px] md:h-[210px] lg:h-[230px] relative overflow-hidden cursor-pointer group border border-white/15 bg-slate-900"
               >
                 <img 
                   src={prevScene.imageUrl} 
@@ -319,18 +319,18 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
                 />
                 
                 {/* Scene Badge */}
-                <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-xs px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-mono text-white/90 border border-white/20">
+                <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-xs px-1.5 py-0.5 text-[9px] sm:text-[10px] font-mono text-white/90 border border-white/20">
                   {prevScene.sceneNumber}
                 </div>
               </div>
 
-              {/* Center Active Frame - Featured & Crisp */}
+              {/* Center Active Frame - Sharp Rectangular Frame */}
               <motion.div 
                 key={currentScene.id}
                 initial={{ opacity: 0.85, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="w-[44%] sm:w-[40%] h-[155px] sm:h-[195px] md:h-[225px] lg:h-[245px] relative rounded-md sm:rounded-lg overflow-hidden border-2 border-white/40 shadow-lg bg-black group"
+                className="w-[44%] sm:w-[40%] h-[155px] sm:h-[195px] md:h-[225px] lg:h-[245px] relative overflow-hidden border-2 border-white/40 shadow-lg bg-black group"
               >
                 <img 
                   src={currentScene.imageUrl} 
@@ -339,7 +339,7 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
                 />
 
                 {/* Top-Left Scene Badge */}
-                <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-xs px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-bold text-white border border-white/30 flex items-center gap-1.5 shadow-sm">
+                <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-xs px-2 py-0.5 text-[10px] sm:text-xs font-mono font-bold text-white border border-white/30 flex items-center gap-1.5 shadow-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                   <span>{currentScene.sceneNumber}</span>
                 </div>
@@ -347,17 +347,17 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
                 {/* Top-Right Expand Icon Button */}
                 <button
                   onClick={() => setLightboxOpen(true)}
-                  className="absolute top-2 right-2 p-1.5 rounded bg-black/70 hover:bg-black text-white/90 hover:text-white border border-white/25 transition-all shadow-sm active:scale-95"
+                  className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-black text-white/90 hover:text-white border border-white/25 transition-all shadow-sm active:scale-95"
                   title={isNp ? 'ठूलो आकारमा हेर्नुहोस्' : 'Expand Photo'}
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
                 </button>
               </motion.div>
 
-              {/* Right Frame (Next) - Clear, Sharp & Clickable */}
+              {/* Right Frame (Next) - Sharp Rectangular Frame */}
               <div 
                 onClick={handleNext}
-                className="w-[28%] sm:w-[30%] h-[140px] sm:h-[180px] md:h-[210px] lg:h-[230px] relative rounded-md overflow-hidden cursor-pointer group border border-white/15 bg-slate-900"
+                className="w-[28%] sm:w-[30%] h-[140px] sm:h-[180px] md:h-[210px] lg:h-[230px] relative overflow-hidden cursor-pointer group border border-white/15 bg-slate-900"
               >
                 <img 
                   src={nextScene.imageUrl} 
@@ -366,7 +366,7 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
                 />
                 
                 {/* Scene Badge */}
-                <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-xs px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-mono text-white/90 border border-white/20">
+                <div className="absolute top-2 left-2 bg-black/75 backdrop-blur-xs px-1.5 py-0.5 text-[9px] sm:text-[10px] font-mono text-white/90 border border-white/20">
                   {nextScene.sceneNumber}
                 </div>
               </div>
@@ -379,29 +379,29 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <div className="flex items-center w-full justify-around opacity-90">
               {/* Left frame number */}
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
                 <span className="font-mono text-[9px] sm:text-[10px] font-bold text-amber-400/80">
                   {prevScene.frameCode || '15'}
                 </span>
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
               </div>
 
               {/* Center frame numbers */}
               <div className="flex items-center gap-3 sm:gap-4">
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
                 <span className="font-mono text-[10px] sm:text-xs font-black text-amber-400">
                   {currentScene.frameCode || '16'}
                 </span>
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
               </div>
 
               {/* Right frame number */}
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
                 <span className="font-mono text-[9px] sm:text-[10px] font-bold text-amber-400/80">
                   {nextScene.frameCode || '17'}
                 </span>
-                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 rounded-[2px] bg-white/85" />
+                <div className="w-3 h-3.5 sm:w-3.5 sm:h-4 bg-white/85" />
               </div>
             </div>
           </div>
@@ -423,7 +423,7 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <button
               onClick={() => setLightboxOpen(false)}
               aria-label="Close"
-              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors"
+              className="absolute top-4 right-4 z-50 p-2 bg-white/15 hover:bg-white/25 text-white transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -431,7 +431,7 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <button
               onClick={(e) => { e.stopPropagation(); handlePrev(); }}
               aria-label="Previous"
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-full bg-white/15 hover:bg-white/30 text-white transition-colors hidden sm:block"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-2.5 bg-white/15 hover:bg-white/30 text-white transition-colors hidden sm:block"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -439,13 +439,13 @@ export const FilmstripGallery: React.FC<FilmstripGalleryProps> = ({
             <button
               onClick={(e) => { e.stopPropagation(); handleNext(); }}
               aria-label="Next"
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2.5 rounded-full bg-white/15 hover:bg-white/30 text-white transition-colors hidden sm:block"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-2.5 bg-white/15 hover:bg-white/30 text-white transition-colors hidden sm:block"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
 
             <div 
-              className="max-w-4xl w-full bg-[#0b0f19] border border-white/20 rounded-xl overflow-hidden shadow-2xl"
+              className="max-w-4xl w-full bg-[#0b0f19] border border-white/20 overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="w-full max-h-[75vh] bg-black flex items-center justify-center overflow-hidden">

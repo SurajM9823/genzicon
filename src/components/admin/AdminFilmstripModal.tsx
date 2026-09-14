@@ -193,12 +193,12 @@ export const AdminFilmstripModal: React.FC<AdminFilmstripModalProps> = ({
               <Sparkles className="w-3 h-3" />
               <span>{isNp ? 'लाइभ ३५ एमएम रील पूर्वावलोकन' : 'Live 35mm Filmstrip Preview'}</span>
             </label>
-            <div className="w-full bg-[#05070d] rounded-xl border border-white/15 overflow-hidden shadow-inner flex flex-col items-center">
+            <div className="w-full bg-[#05070d] border border-white/15 overflow-hidden shadow-inner flex flex-col items-center">
               {/* Top Sprocket holes */}
               <div className="w-full bg-[#0b0f19] border-b border-white/10 px-3 py-1.5 flex items-center justify-around">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <div key={i} className="flex items-center gap-1.5">
-                    <div className="w-3 h-4 rounded-[2px] bg-white/80" />
+                    <div className="w-3 h-4 bg-white/80" />
                     <span className="font-mono text-[8px] font-bold text-amber-400/80">
                       {formData.frameCode || '16'}
                     </span>
@@ -207,7 +207,7 @@ export const AdminFilmstripModal: React.FC<AdminFilmstripModalProps> = ({
               </div>
 
               {/* Photo Frame */}
-              <div className="w-full sm:w-[70%] h-44 sm:h-52 relative overflow-hidden bg-black flex items-center justify-center my-2 rounded-lg border border-white/20">
+              <div className="w-full sm:w-[70%] h-44 sm:h-52 relative overflow-hidden bg-black flex items-center justify-center my-2 border border-white/20">
                 {previewUrl ? (
                   <img 
                     src={previewUrl} 
@@ -225,13 +225,13 @@ export const AdminFilmstripModal: React.FC<AdminFilmstripModalProps> = ({
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
                 
                 {/* Top Badge */}
-                <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/80 border border-white/20 text-white font-mono text-[10px] font-bold">
+                <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/80 border border-white/20 text-white font-mono text-[10px] font-bold">
                   {formData.sceneNumber || 'SCENE 01'}
                 </div>
 
                 {/* Bottom Title */}
                 <div className="absolute bottom-2 inset-x-2 text-left pointer-events-none">
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-amber-500 text-black inline-block mb-1">
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-amber-500 text-black inline-block mb-1">
                     {formData.category || 'Category'}
                   </span>
                   <div className="text-xs font-bold text-white truncate drop-shadow">
@@ -248,7 +248,7 @@ export const AdminFilmstripModal: React.FC<AdminFilmstripModalProps> = ({
               <div className="w-full bg-[#0b0f19] border-t border-white/10 px-3 py-1.5 flex items-center justify-around">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <div key={i} className="flex items-center gap-1.5">
-                    <div className="w-3 h-4 rounded-[2px] bg-white/80" />
+                    <div className="w-3 h-4 bg-white/80" />
                     <span className="font-mono text-[8px] font-bold text-amber-400/80">
                       {formData.frameCode || '16'}
                     </span>

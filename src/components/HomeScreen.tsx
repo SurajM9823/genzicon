@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'motion/react';
+import { motion, useScroll, useTransform, useSpring } from 'motion/react';
 import { 
   Shirt, 
   Trees, 
@@ -8,8 +8,6 @@ import {
   ShieldCheck, 
   MapPin, 
   ArrowRight,
-  ChevronRight,
-  ChevronLeft,
   Sparkles
 } from 'lucide-react';
 import { IMPACT_STATS, PROJECTS_DATA, DEFAULT_SITE_CONTENT } from '../data/mockData';
@@ -380,185 +378,109 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       {/* Cinematic Filmstrip Gallery: Moments from the Ground & Achievements */}
       <FilmstripGallery language={language} scenes={siteContent.filmstripScenes} />
 
-      {/* 3 Foundational Pillars: Refined Header & 3D Perspective Cards */}
-      <section id="pillars-summary-section" className="py-12 px-4 sm:px-6 bg-[#f9f9ff] border-b border-[#d8e3fb] [perspective:1200px]">
-        <div className="max-w-[1280px] mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+      {/* 3 Core Pillars: Clean Modern Hexagons */}
+      <section id="pillars-summary-section" className="py-8 sm:py-12 px-4 sm:px-6 bg-[#f9f9ff] border-b border-[#d8e3fb]">
+        <div className="max-w-[1280px] mx-auto flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+          
+          {/* Hexagon 1: Clothes Bank Nepal */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8"
+            transition={{ duration: 0.5, delay: 0.05 }}
+            whileHover={{ y: -6, scale: 1.03 }}
+            onClick={() => onSelectTab('clothes-bank')}
+            className="group relative w-52 h-60 sm:w-60 sm:h-68 flex items-center justify-center cursor-pointer select-none drop-shadow-sm hover:drop-shadow-xl transition-all duration-300"
           >
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#00743a] block mb-1">
-                {isNp ? 'मुख्य आधारस्तम्भ' : 'Core Focus Areas'}
-              </span>
-              <h2 className="text-xl sm:text-2xl font-bold text-[#111c2d] font-heading">
-                {isNp ? 'हाम्रा ३ मुख्य स्तम्भहरू' : 'Our Three Core Pillars'}
-              </h2>
-            </div>
-            <button
-              onClick={() => onSelectTab('initiatives')}
-              className="text-xs font-bold text-[#003c90] hover:text-[#002660] flex items-center gap-1 uppercase tracking-wider self-start sm:self-auto group"
+            <svg 
+              viewBox="0 0 200 230" 
+              className="absolute inset-0 w-full h-full filter transition-all duration-300"
             >
-              <span>{isNp ? 'विस्तृत विवरण' : 'Explore All Pillars'}</span>
-              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-            </button>
+              <polygon 
+                points="100,4 196,59 196,171 100,226 4,171 4,59"
+                className="fill-white stroke-[#d8e3fb] group-hover:stroke-[#003c90] group-hover:fill-blue-50/30 transition-all duration-300"
+                strokeWidth="2.5"
+              />
+            </svg>
+
+            <div className="relative z-10 flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#e7eeff] text-[#003c90] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 shadow-xs border border-blue-200/50">
+                <Shirt className="w-7 h-7 sm:w-8 sm:h-8" />
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-[#111c2d] font-heading tracking-tight group-hover:text-[#003c90] transition-colors max-w-[140px] sm:max-w-[160px] leading-snug">
+                {isNp ? 'कपडा बैंक नेपाल' : 'Clothes Bank Nepal'}
+              </h3>
+            </div>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Pillar 1: Clothes Bank */}
-            <motion.div 
-              initial={{ opacity: 0, y: 45, rotateX: 18 }}
-              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.65, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ 
-                y: -8, 
-                rotateX: 4, 
-                rotateY: -3,
-                boxShadow: "0 20px 30px -12px rgba(0, 60, 144, 0.15)",
-                transition: { duration: 0.25 } 
-              }}
-              className="bg-white border border-[#d8e3fb] p-6 shadow-xs flex flex-col justify-between hover:border-[#003c90] transition-colors transform-gpu"
+          {/* Hexagon 2: Clean Nepal, Green Nepal */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            whileHover={{ y: -6, scale: 1.03 }}
+            onClick={() => onSelectTab('initiatives')}
+            className="group relative w-52 h-60 sm:w-60 sm:h-68 flex items-center justify-center cursor-pointer select-none drop-shadow-sm hover:drop-shadow-xl transition-all duration-300"
+          >
+            <svg 
+              viewBox="0 0 200 230" 
+              className="absolute inset-0 w-full h-full filter transition-all duration-300"
             >
-              <div>
-                <div className="w-10 h-10 bg-[#e7eeff] text-[#003c90] flex items-center justify-center mb-3">
-                  <Shirt className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-black text-[#003c90] uppercase tracking-wider block mb-1">
-                  {isNp ? 'स्तम्भ १: जनसेवा' : 'Pillar 01: People'}
-                </span>
-                <h3 className="text-base font-bold text-[#111c2d] mb-1 font-heading">
-                  {isNp ? 'कपडा बैंक नेपाल' : 'Clothes Bank Nepal'}
-                </h3>
-                <p className="text-xs text-[#434653] leading-relaxed mb-5">
-                  {isNp
-                    ? 'पुराना तथा प्रयोगयोग्य कपडा संकलन गरी धोइपखाली तराईका शीतलहर पीडित र मुसहर बस्तीमा निःशुल्क वितरण।'
-                    : 'Collecting and sanitizing wearable pre-loved clothes for free distribution to cold-wave victims and remote villages.'}
-                </p>
-              </div>
-              <button
-                onClick={() => onSelectTab('clothes-bank')}
-                className="w-full py-2 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 shadow-xs"
-              >
-                <span>{isNp ? 'कपडा बैंक पोर्टल' : 'Open Clothes Portal'}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
+              <polygon 
+                points="100,4 196,59 196,171 100,226 4,171 4,59"
+                className="fill-white stroke-[#d8e3fb] group-hover:stroke-[#00743a] group-hover:fill-emerald-50/30 transition-all duration-300"
+                strokeWidth="2.5"
+              />
+            </svg>
 
-            {/* Pillar 2: Nature */}
-            <motion.div 
-              initial={{ opacity: 0, y: 45, rotateX: 18 }}
-              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ 
-                y: -8, 
-                rotateX: 4, 
-                rotateY: 0,
-                boxShadow: "0 20px 30px -12px rgba(0, 116, 58, 0.15)",
-                transition: { duration: 0.25 } 
-              }}
-              className="bg-white border border-[#d8e3fb] p-6 shadow-xs flex flex-col justify-between hover:border-[#00743a] transition-colors transform-gpu"
-            >
-              <div>
-                <div className="w-10 h-10 bg-emerald-50 text-[#00743a] flex items-center justify-center mb-3">
-                  <Trees className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-black text-[#00743a] uppercase tracking-wider block mb-1">
-                  {isNp ? 'स्तम्भ २: प्रकृति' : 'Pillar 02: Nature'}
-                </span>
-                <h3 className="text-base font-bold text-[#111c2d] mb-1 font-heading">
-                  {isNp ? 'सफा नेपाल, हरित नेपाल' : 'Clean Nepal, Green Nepal'}
-                </h3>
-                <p className="text-xs text-[#434653] leading-relaxed mb-5">
-                  {isNp
-                    ? 'चुरे तथा नदी किनारहरूमा १ लाखभन्दा बढी फलफूलका बिरुवा रोपण, प्लास्टिक न्यूनीकरण र नदी सरसफाइ अभियान।'
-                    : '100K native sapling plantation across Chure foothills, bi-weekly river cleanups, and youth eco-clubs.'}
-                </p>
+            <div className="relative z-10 flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-emerald-50 text-[#00743a] flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 shadow-xs border border-emerald-200/50">
+                <Trees className="w-7 h-7 sm:w-8 sm:h-8" />
               </div>
-              <button
-                onClick={() => onSelectTab('initiatives')}
-                className="w-full py-2 bg-[#00743a] hover:bg-[#005227] text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 shadow-xs"
-              >
-                <span>{isNp ? 'हरित अभियान' : 'Explore Green Drives'}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
+              <h3 className="text-sm sm:text-base font-bold text-[#111c2d] font-heading tracking-tight group-hover:text-[#00743a] transition-colors max-w-[140px] sm:max-w-[160px] leading-snug">
+                {isNp ? 'सफा नेपाल, हरित नेपाल' : 'Clean Nepal, Green Nepal'}
+              </h3>
+            </div>
+          </motion.div>
 
-            {/* Pillar 3: Sustainable Growth */}
-            <motion.div 
-              initial={{ opacity: 0, y: 45, rotateX: 18 }}
-              whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.65, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ 
-                y: -8, 
-                rotateX: 4, 
-                rotateY: 3,
-                boxShadow: "0 20px 30px -12px rgba(217, 119, 6, 0.15)",
-                transition: { duration: 0.25 } 
-              }}
-              className="bg-white border border-[#d8e3fb] p-6 shadow-xs flex flex-col justify-between hover:border-amber-600 transition-colors transform-gpu"
+          {/* Hexagon 3: Skills & Micro-Enterprise */}
+          <motion.div
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            whileHover={{ y: -6, scale: 1.03 }}
+            onClick={() => onSelectTab('initiatives')}
+            className="group relative w-52 h-60 sm:w-60 sm:h-68 flex items-center justify-center cursor-pointer select-none drop-shadow-sm hover:drop-shadow-xl transition-all duration-300"
+          >
+            <svg 
+              viewBox="0 0 200 230" 
+              className="absolute inset-0 w-full h-full filter transition-all duration-300"
             >
-              <div>
-                <div className="w-10 h-10 bg-amber-50 text-amber-700 flex items-center justify-center mb-3">
-                  <Briefcase className="w-5 h-5" />
-                </div>
-                <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider block mb-1">
-                  {isNp ? 'स्तम्भ ३: आत्मनिर्भरता' : 'Pillar 03: Sustainable'}
-                </span>
-                <h3 className="text-base font-bold text-[#111c2d] mb-1 font-heading">
-                  {isNp ? 'दक्षता तथा उद्यमशीलता' : 'Skills & Micro-Enterprise'}
-                </h3>
-                <p className="text-xs text-[#434653] leading-relaxed mb-5">
-                  {isNp
-                    ? 'विपन्न महिलाहरूलाई निःशुल्क सिलाई तालिम र सिलाई मेसिन अनुदान, तथा युवाहरूलाई प्राविधिक सीप।'
-                    : 'Free 3-month certified tailoring courses & sewing machines for women, plus youth digital and IT skills.'}
-                </p>
+              <polygon 
+                points="100,4 196,59 196,171 100,226 4,171 4,59"
+                className="fill-white stroke-[#d8e3fb] group-hover:stroke-amber-600 group-hover:fill-amber-50/30 transition-all duration-300"
+                strokeWidth="2.5"
+              />
+            </svg>
+
+            <div className="relative z-10 flex flex-col items-center justify-center p-4 text-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300 shadow-xs border border-amber-200/50">
+                <Briefcase className="w-7 h-7 sm:w-8 sm:h-8" />
               </div>
-              <button
-                onClick={() => onSelectTab('initiatives')}
-                className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1 shadow-xs"
-              >
-                <span>{isNp ? 'सीप कार्यक्रम' : 'Explore Skill Hubs'}</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
-          </div>
+              <h3 className="text-sm sm:text-base font-bold text-[#111c2d] font-heading tracking-tight group-hover:text-amber-700 transition-colors max-w-[140px] sm:max-w-[160px] leading-snug">
+                {isNp ? 'दक्षता तथा उद्यमशीलता' : 'Skills & Micro-Enterprise'}
+              </h3>
+            </div>
+          </motion.div>
+
         </div>
       </section>
 
       {/* Featured Active Projects Grid with 3D Staggered Motion */}
       <section className="py-12 px-4 sm:px-6 bg-white border-b border-[#d8e3fb] [perspective:1200px]">
         <div className="max-w-[1280px] mx-auto">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-8"
-          >
-            <div>
-              <span className="text-[10px] text-[#00743a] uppercase font-bold tracking-wider block mb-1">
-                {isNp ? 'फिल्ड अभियान' : 'Field Initiatives'}
-              </span>
-              <h2
-                className="text-xl sm:text-2xl font-bold text-[#111c2d] font-heading"
-              >
-                {isNp ? 'हाल सञ्चालित मुख्य कार्यक्रमहरू' : 'Active Ground Programs'}
-              </h2>
-            </div>
-            <button
-              onClick={() => onSelectTab('initiatives')}
-              className="text-xs font-bold text-[#003c90] hover:text-[#002660] flex items-center gap-1 uppercase tracking-wider group self-start sm:self-auto"
-            >
-              <span>{isNp ? 'सबै हेर्नुहोस्' : 'View All Programs'}</span>
-              <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-            </button>
-          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {featuredProjects.map((project, index) => (
