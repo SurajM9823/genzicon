@@ -348,35 +348,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                   boxShadow: "0 16px 30px -10px rgba(0, 60, 144, 0.12)",
                   transition: { duration: 0.2 } 
                 }}
-                className="relative p-5 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-[#003c90] flex flex-col justify-between transition-all transform-gpu shadow-xs"
+                className="relative p-5 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-[#003c90] flex flex-col justify-center transition-all transform-gpu shadow-xs"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-8 h-8 flex items-center justify-center border ${getAccentBg()}`}>
-                      {getIcon()}
-                    </div>
-                    <span className="text-[10px] font-bold tracking-wider uppercase text-[#737784]">
-                      Verified Impact
-                    </span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`w-8 h-8 flex items-center justify-center border ${getAccentBg()}`}>
+                    {getIcon()}
                   </div>
-
-                  <div
-                    className={`text-2xl sm:text-3xl font-black mb-1 tracking-tight ${
-                      stat.color === 'primary' ? 'text-[#003c90]' : 'text-[#00743a]'
-                    }`}
-                    style={{ fontFamily: 'Montserrat, sans-serif' }}
-                  >
-                    {stat.number}
-                  </div>
-
-                  <div className="text-xs font-bold tracking-wide uppercase text-[#111c2d] mb-2">
-                    {isNp && stat.labelNp ? stat.labelNp : stat.label}
-                  </div>
+                  <span className="text-[10px] font-bold tracking-wider uppercase text-[#737784]">
+                    Verified Impact
+                  </span>
                 </div>
 
-                <p className="text-[11px] text-[#434653] leading-relaxed pt-2 border-t border-[#d8e3fb]/60">
-                  {isNp && stat.descriptionNp ? stat.descriptionNp : stat.description}
-                </p>
+                <div
+                  className={`text-2xl sm:text-3xl font-black mb-1 tracking-tight ${
+                    stat.color === 'primary' ? 'text-[#003c90]' : 'text-[#00743a]'
+                  }`}
+                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                >
+                  {stat.number}
+                </div>
+
+                <div className="text-xs font-bold tracking-wide uppercase text-[#111c2d]">
+                  {isNp && stat.labelNp ? stat.labelNp : stat.label}
+                </div>
               </motion.div>
             );
           })}
