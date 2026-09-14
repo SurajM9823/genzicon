@@ -6,8 +6,7 @@ import {
   Mail,
   Clock,
   Send,
-  CheckCircle2,
-  MessageSquare
+  CheckCircle2
 } from 'lucide-react';
 import { NavTab, Language, ContactMessage, SiteSettingsConfig, BoardMember } from '../types';
 import { DEFAULT_BOARD_MEMBERS } from '../data/mockData';
@@ -68,11 +67,6 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
   const regAddr = isNp ? (siteSettings?.regionalOfficeAddressNp || siteSettings?.regionalOfficeAddress || 'Station Road, Ward No. 4, Janakpurdham, Dhanusha') : (siteSettings?.regionalOfficeAddress || 'Station Road, Ward No. 4, Janakpurdham, Dhanusha');
   const regPhone = siteSettings?.regionalOfficePhone || '+977 41-520000';
   const regEmail = siteSettings?.regionalOfficeEmail || 'janakpur@genzicon.org';
-
-  const hotlineTitle = isNp ? (siteSettings?.hotlineTitleNp || 'तत्काल कपडा दान तथा सोधपुछ') : (siteSettings?.hotlineTitle || 'Direct Clothes Donation Help');
-  const hotlineDesc = isNp
-    ? (siteSettings?.hotlineTextNp || 'कपडा दान संकलन वा वितरण सहायताका लागि हाम्रो हटलाइन ९८२३०००००० मा सिधै सम्पर्क गर्न सक्नुहुन्छ।')
-    : (siteSettings?.hotlineText || 'For urgent clothes pickup or emergency cold-wave support, call our hotline at 9823000000 or chat on WhatsApp.');
 
   // Contact Form State
   const [formData, setFormData] = useState({
@@ -214,19 +208,6 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
                 )}
               </div>
             </div>
-
-            {/* Direct Support Notice */}
-            <div className="bg-[#e7eeff] p-4 border border-[#d8e3fb]">
-              <div className="flex items-center gap-2 mb-1">
-                <MessageSquare className="w-4 h-4 text-[#003c90]" />
-                <span className="text-xs font-bold text-[#003c90]">
-                  {hotlineTitle}
-                </span>
-              </div>
-              <p className="text-[11px] text-[#434653] leading-relaxed">
-                {hotlineDesc}
-              </p>
-            </div>
           </div>
 
           {/* Right Column: Inquiry Form */}
@@ -357,24 +338,7 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
         </div>
 
         {/* Board Members Section: Clean, small circular image with name and position below */}
-        <div className="mt-14 sm:mt-16 pt-10 border-t border-[#d8e3fb]">
-          <div className="text-center max-w-xl mx-auto mb-10">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#003c90] block mb-1">
-              {isNp ? 'संस्थागत नेतृत्व' : 'Governance & Leadership'}
-            </span>
-            <h2
-              className="text-xl sm:text-2xl font-bold text-[#111c2d]"
-              style={{ fontFamily: 'Montserrat, sans-serif' }}
-            >
-              {isNp ? 'सञ्चालक समिति' : 'Board Members'}
-            </h2>
-            <p className="text-xs text-[#737784] mt-1">
-              {isNp 
-                ? 'गेन्जिकन फाउन्डेसनको दूरदृष्टि, नीति तथा सामाजिक अभियानको नेतृत्व गर्ने सञ्चालक समिति।' 
-                : 'The dedicated stewards guiding Genzicon Foundation’s mission, governance, and ground impact.'}
-            </p>
-          </div>
-
+        <div className="mt-12 sm:mt-14 pt-8 border-t border-[#d8e3fb]">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 sm:gap-8 justify-items-center">
             {boardMembers.filter(m => m.isActive !== false).map((member) => (
               <div 
