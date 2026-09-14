@@ -10,12 +10,12 @@ from .authentication import CsrfExemptSessionAuthentication
 from .models import (
     SiteContent, ImpactStat, FilmstripScene, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
-    PaymentConfig
+    PaymentConfig, BoardMember
 )
 from .serializers import (
     SiteContentSerializer, ImpactStatSerializer, FilmstripSceneSerializer, ProjectSerializer, ClothesDonorSerializer,
     ClothesDonationSerializer, VolunteerSerializer, DonationRecordSerializer, ContactInquirySerializer,
-    ClothesHubConfigSerializer, SiteSettingsSerializer, PaymentConfigSerializer
+    ClothesHubConfigSerializer, SiteSettingsSerializer, PaymentConfigSerializer, BoardMemberSerializer
 )
 
 # --- Admin Authentication Endpoint ---
@@ -452,6 +452,158 @@ class FilmstripSceneViewSet(viewsets.ModelViewSet):
                     obj = FilmstripScene.objects.create(**data)
 
             saved_records.append(FilmstripSceneSerializer(obj, context={'request': request}).data)
+
+        return Response({
+            'status': 'success',
+            'saved': len(saved_records),
+            'results': saved_records,
+        })
+
+
+# --- Board Members & Leadership ---
+DEFAULT_BOARD_MEMBERS_DATA = [
+    {
+        'name': 'Suman Yadav',
+        'name_np': 'सुमन यादव',
+        'position': 'Founder & Chairperson',
+        'position_np': 'संस्थापक तथा अध्यक्ष',
+        'image_url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+        'email': 'suman@genzicon.org',
+        'bio': 'Youth activist leading nationwide Clothes Bank campaigns, disaster response, and civic initiatives.',
+        'bio_np': 'नेपालमा कपडा बैंक, विपद् राहत तथा युवा सशक्तीकरण अभियानका अगुवा।',
+        'order': 1,
+        'is_active': True,
+    },
+    {
+        'name': 'Anita Shrestha',
+        'name_np': 'अनिता श्रेष्ठ',
+        'position': 'Vice Chairperson',
+        'position_np': 'उपाध्यक्ष',
+        'image_url': 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+        'email': 'anita@genzicon.org',
+        'bio': 'Vocational training strategist leading women empowerment and community tailoring centers across districts.',
+        'bio_np': 'महिला आत्मनिर्भरता तथा सीप विकास परियोजना प्रमुख।',
+        'order': 2,
+        'is_active': True,
+    },
+    {
+        'name': 'Rohit Adhikari',
+        'name_np': 'रोहित अधिकारी',
+        'position': 'General Secretary',
+        'position_np': 'महासचिव',
+        'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+        'email': 'rohit@genzicon.org',
+        'bio': 'Environmental engineer managing Clean Nepal Green Nepal, afforestation drives, and community sanitation.',
+        'bio_np': 'सफा नेपाल, हरित नेपाल तथा चुरे संरक्षण अभियानका संयोजक।',
+        'order': 3,
+        'is_active': True,
+    },
+    {
+        'name': 'Priya Thapa',
+        'name_np': 'प्रिया थापा',
+        'position': 'Treasurer',
+        'position_np': 'कोषाध्यक्ष',
+        'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+        'email': 'treasury@genzicon.org',
+        'bio': 'Finance and audit professional overseeing 100% transparent public ledger records and grassroots logistics.',
+        'bio_np': 'पारदर्शी आर्थिक व्यवस्थापन तथा लेखा परीक्षण प्रमुख।',
+        'order': 4,
+        'is_active': True,
+    },
+    {
+        'name': 'Bikash Chaudhary',
+        'name_np': 'बिकेश चौधरी',
+        'position': 'Executive Board Member',
+        'position_np': 'कार्यकारी सदस्य',
+        'image_url': 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+        'email': 'bikash@genzicon.org',
+        'bio': 'Madhesh province ground coordinator leading cold-wave winter clothes distribution hubs.',
+        'bio_np': 'मधेस प्रदेश फिल्ड समन्वय तथा शीतलहर राहत अभियान व्यवस्थापक।',
+        'order': 5,
+        'is_active': True,
+    },
+    {
+        'name': 'Dr. Sunita Regmi',
+        'name_np': 'डा. सुनिता रेग्मी',
+        'position': 'Advisory Board Member',
+        'position_np': 'सल्लाहकार सदस्य',
+        'image_url': 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+        'email': 'advisory@genzicon.org',
+        'bio': 'Public health expert advising on community hygiene, sanitation drives, and school adolescent awareness.',
+        'bio_np': 'सामुदायिक स्वास्थ्य तथा जनस्वास्थ्य अनुसन्धान सल्लाहकार।',
+        'order': 6,
+        'is_active': True,
+    }
+]
+
+def ensure_default_board_members():
+    """Ensure default board members exist in the database if empty"""
+    if BoardMember.objects.count() == 0:
+        for item in DEFAULT_BOARD_MEMBERS_DATA:
+            BoardMember.objects.create(**item)
+
+
+class BoardMemberViewSet(viewsets.ModelViewSet):
+    queryset = BoardMember.objects.all().order_by('order', 'id')
+    serializer_class = BoardMemberSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.AllowAny()]
+
+    def list(self, request, *args, **kwargs):
+        ensure_default_board_members()
+        active_only = request.query_params.get('active_only')
+        if active_only == 'true':
+            queryset = self.filter_queryset(self.get_queryset().filter(is_active=True))
+            serializer = self.get_serializer(queryset, many=True)
+            return Response(serializer.data)
+        return super().list(request, *args, **kwargs)
+
+    @action(detail=False, methods=['post', 'put'], permission_classes=[permissions.AllowAny])
+    def bulk_save(self, request):
+        """Bulk update or replace board members from the admin UI"""
+        members_data = request.data.get('members', [])
+        if not isinstance(members_data, list):
+            members_data = request.data if isinstance(request.data, list) else []
+
+        saved_records = []
+        for idx, item in enumerate(members_data, start=1):
+            member_id = item.get('id')
+            data = {
+                'name': item.get('name', ''),
+                'name_np': item.get('nameNp') or item.get('name_np', ''),
+                'position': item.get('position') or item.get('role', ''),
+                'position_np': item.get('positionNp') or item.get('position_np') or item.get('roleNp') or item.get('role_np', ''),
+                'email': item.get('email', ''),
+                'phone': item.get('phone', ''),
+                'linkedin': item.get('linkedin', ''),
+                'bio': item.get('bio', ''),
+                'bio_np': item.get('bioNp') or item.get('bio_np', ''),
+                'image_url': item.get('imageUrl') or item.get('image_url') or item.get('avatarUrl', ''),
+                'order': item.get('order', idx),
+                'is_active': item.get('isActive', True) if 'isActive' in item else item.get('is_active', True),
+            }
+
+            if member_id and str(member_id).isdigit():
+                try:
+                    obj = BoardMember.objects.get(id=int(member_id))
+                    for k, v in data.items():
+                        setattr(obj, k, v)
+                    obj.save()
+                except BoardMember.DoesNotExist:
+                    obj = BoardMember.objects.create(**data)
+            else:
+                obj = BoardMember.objects.filter(name=data['name']).first()
+                if obj:
+                    for k, v in data.items():
+                        setattr(obj, k, v)
+                    obj.save()
+                else:
+                    obj = BoardMember.objects.create(**data)
+
+            saved_records.append(BoardMemberSerializer(obj, context={'request': request}).data)
 
         return Response({
             'status': 'success',

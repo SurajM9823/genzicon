@@ -2,8 +2,23 @@ from rest_framework import serializers
 from .models import (
     SiteContent, ImpactStat, FilmstripScene, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
-    PaymentConfig
+    PaymentConfig, BoardMember
 )
+
+class BoardMemberSerializer(serializers.ModelSerializer):
+    final_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BoardMember
+        fields = '__all__'
+
+    def get_final_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            if request is not None:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return obj.image_url or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
 
 class FilmstripSceneSerializer(serializers.ModelSerializer):
     final_image_url = serializers.SerializerMethodField()

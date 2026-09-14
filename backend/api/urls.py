@@ -4,7 +4,7 @@ from .views import (
     admin_login, dashboard_overview,
     SiteContentViewSet, ImpactStatViewSet, FilmstripSceneViewSet, ProjectViewSet, ClothesDonorViewSet,
     ClothesDonationViewSet, VolunteerViewSet, DonationRecordViewSet, ContactInquiryViewSet,
-    ClothesHubConfigViewSet, SiteSettingsViewSet, PaymentConfigViewSet
+    ClothesHubConfigViewSet, SiteSettingsViewSet, PaymentConfigViewSet, BoardMemberViewSet
 )
 
 router = DefaultRouter()
@@ -13,6 +13,7 @@ router.register(r'payment-config', PaymentConfigViewSet, basename='payment-confi
 router.register(r'site-content', SiteContentViewSet, basename='site-content')
 router.register(r'impact-stats', ImpactStatViewSet, basename='impact-stats')
 router.register(r'filmstrip-scenes', FilmstripSceneViewSet, basename='filmstrip-scenes')
+router.register(r'board-members', BoardMemberViewSet, basename='board-members')
 router.register(r'projects', ProjectViewSet, basename='projects')
 router.register(r'clothes-donors', ClothesDonorViewSet, basename='clothes-donors')
 router.register(r'clothes', ClothesDonationViewSet, basename='clothes')

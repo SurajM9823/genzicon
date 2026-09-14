@@ -1,4 +1,4 @@
-import { Project, ClothesHubConfig, SiteSettingsConfig, BankAndQrConfig, FilmstripScene } from '../types';
+import { Project, ClothesHubConfig, SiteSettingsConfig, BankAndQrConfig, FilmstripScene, BoardMember } from '../types';
 
 const API_BASE = (typeof window !== 'undefined' && (window as any).VITE_API_URL) 
   ? (window as any).VITE_API_URL 
@@ -436,6 +436,215 @@ export async function apiDeleteFilmstripScene(id: string): Promise<boolean> {
     return res.ok;
   } catch (e) {
     console.warn('Could not delete filmstrip scene:', e);
+    return false;
+  }
+}
+
+// --------------------------------------------------------------------------
+// 3b. Board Members & Leadership
+// --------------------------------------------------------------------------
+export function formatBoardMemberFromBackend(m: any): BoardMember {
+  return {
+    id: m.id,
+    name: m.name || '',
+    nameNp: m.name_np || m.nameNp || '',
+    position: m.position || m.role || '',
+    positionNp: m.position_np || m.positionNp || m.role_np || m.roleNp || '',
+    image: m.image || '',
+    imageUrl: m.final_image_url || m.image_url || m.imageUrl || m.image || '',
+    email: m.email || '',
+    phone: m.phone || '',
+    linkedin: m.linkedin || '',
+    bio: m.bio || '',
+    bioNp: m.bio_np || m.bioNp || '',
+    order: m.order || 0,
+    isActive: m.is_active !== undefined ? m.is_active : (m.isActive !== undefined ? m.isActive : true),
+  };
+}
+
+export async function apiGetBoardMembers(activeOnly: boolean = false): Promise<BoardMember[] | null> {
+  try {
+    const url = activeOnly ? `${API_BASE}/board-members/?active_only=true` : `${API_BASE}/board-members/`;
+    const res = await fetch(url, {
+      headers: getAuthHeaders(),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const results = Array.isArray(data) ? data : (data.results || []);
+      if (results.length > 0) {
+        return results.map(formatBoardMemberFromBackend);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not fetch board members from API:', e);
+  }
+  return null;
+}
+
+export async function apiSaveBoardMembers(members: BoardMember[]): Promise<any> {
+  try {
+    const payload = {
+      members: members.map((m, idx) => ({
+        id: m.id,
+        name: m.name,
+        name_np: m.nameNp,
+        position: m.position,
+        position_np: m.positionNp,
+        email: m.email,
+        phone: m.phone,
+        linkedin: m.linkedin,
+        bio: m.bio,
+        bio_np: m.bioNp,
+        image_url: m.imageUrl,
+        order: m.order || (idx + 1),
+        is_active: m.isActive !== undefined ? m.isActive : true,
+      })),
+    };
+    const res = await fetch(`${API_BASE}/board-members/bulk_save/`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {
+    console.warn('Could not bulk save board members:', e);
+  }
+  return null;
+}
+
+export async function apiCreateBoardMember(member: Partial<BoardMember>, file?: File): Promise<BoardMember | null> {
+  try {
+    if (file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      if (member.name) formData.append('name', member.name);
+      if (member.nameNp) formData.append('name_np', member.nameNp);
+      if (member.position) formData.append('position', member.position);
+      if (member.positionNp) formData.append('position_np', member.positionNp);
+      if (member.email) formData.append('email', member.email);
+      if (member.phone) formData.append('phone', member.phone);
+      if (member.linkedin) formData.append('linkedin', member.linkedin);
+      if (member.bio) formData.append('bio', member.bio);
+      if (member.bioNp) formData.append('bio_np', member.bioNp);
+      if (member.imageUrl) formData.append('image_url', member.imageUrl);
+      if (member.order !== undefined) formData.append('order', String(member.order));
+      if (member.isActive !== undefined) formData.append('is_active', String(member.isActive));
+
+      const token = localStorage.getItem('genzicon_admin_token');
+      const headers: HeadersInit = {};
+      if (token) headers['Authorization'] = `Token ${token}`;
+
+      const res = await fetch(`${API_BASE}/board-members/`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatBoardMemberFromBackend(data);
+      }
+    } else {
+      const res = await fetch(`${API_BASE}/board-members/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          name: member.name,
+          name_np: member.nameNp,
+          position: member.position,
+          position_np: member.positionNp,
+          email: member.email,
+          phone: member.phone,
+          linkedin: member.linkedin,
+          bio: member.bio,
+          bio_np: member.bioNp,
+          image_url: member.imageUrl,
+          order: member.order || 1,
+          is_active: member.isActive !== undefined ? member.isActive : true,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatBoardMemberFromBackend(data);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not create board member:', e);
+  }
+  return null;
+}
+
+export async function apiUpdateBoardMember(id: string | number, member: Partial<BoardMember>, file?: File): Promise<BoardMember | null> {
+  try {
+    if (file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      if (member.name !== undefined) formData.append('name', member.name);
+      if (member.nameNp !== undefined) formData.append('name_np', member.nameNp);
+      if (member.position !== undefined) formData.append('position', member.position);
+      if (member.positionNp !== undefined) formData.append('position_np', member.positionNp);
+      if (member.email !== undefined) formData.append('email', member.email);
+      if (member.phone !== undefined) formData.append('phone', member.phone);
+      if (member.linkedin !== undefined) formData.append('linkedin', member.linkedin);
+      if (member.bio !== undefined) formData.append('bio', member.bio);
+      if (member.bioNp !== undefined) formData.append('bio_np', member.bioNp);
+      if (member.imageUrl !== undefined) formData.append('image_url', member.imageUrl);
+      if (member.order !== undefined) formData.append('order', String(member.order));
+      if (member.isActive !== undefined) formData.append('is_active', String(member.isActive));
+
+      const token = localStorage.getItem('genzicon_admin_token');
+      const headers: HeadersInit = {};
+      if (token) headers['Authorization'] = `Token ${token}`;
+
+      const res = await fetch(`${API_BASE}/board-members/${id}/`, {
+        method: 'PATCH',
+        headers,
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatBoardMemberFromBackend(data);
+      }
+    } else {
+      const res = await fetch(`${API_BASE}/board-members/${id}/`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          name: member.name,
+          name_np: member.nameNp,
+          position: member.position,
+          position_np: member.positionNp,
+          email: member.email,
+          phone: member.phone,
+          linkedin: member.linkedin,
+          bio: member.bio,
+          bio_np: member.bioNp,
+          image_url: member.imageUrl,
+          order: member.order,
+          is_active: member.isActive,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return formatBoardMemberFromBackend(data);
+      }
+    }
+  } catch (e) {
+    console.warn('Could not update board member:', e);
+  }
+  return null;
+}
+
+export async function apiDeleteBoardMember(id: string | number): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/board-members/${id}/`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn('Could not delete board member:', e);
     return false;
   }
 }

@@ -165,6 +165,24 @@ export interface TeamMember {
   linkedin?: string;
 }
 
+export interface BoardMember {
+  id: string | number;
+  name: string;
+  nameNp?: string;
+  position: string;
+  positionNp?: string;
+  image?: string;
+  imageUrl?: string;
+  final_image_url?: string;
+  email?: string;
+  phone?: string;
+  linkedin?: string;
+  bio?: string;
+  bioNp?: string;
+  order?: number;
+  isActive?: boolean;
+}
+
 export interface GalleryMedia {
   id: string;
   title: string;

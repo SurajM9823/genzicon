@@ -563,3 +563,39 @@ class PaymentConfig(models.Model):
         return f"{self.bank_name} ({self.account_number}) - eSewa/Khalti"
 
 
+class BoardMember(models.Model):
+    """Board Members & Leadership Team"""
+    name = models.CharField(max_length=255, verbose_name="Full Name (English)")
+    name_np = models.CharField(max_length=255, blank=True, default='', verbose_name="Full Name (Nepali)")
+    position = models.CharField(max_length=255, verbose_name="Position / Role (English)")
+    position_np = models.CharField(max_length=255, blank=True, default='', verbose_name="Position / Role (Nepali)")
+    image = models.ImageField(upload_to='board_members/', blank=True, null=True, verbose_name="Upload Profile Picture")
+    image_url = models.TextField(blank=True, null=True, verbose_name="Or Image URL")
+    email = models.CharField(max_length=255, blank=True, default='', verbose_name="Email Address")
+    phone = models.CharField(max_length=100, blank=True, default='', verbose_name="Phone / Contact")
+    linkedin = models.CharField(max_length=255, blank=True, default='', verbose_name="LinkedIn Profile URL")
+    bio = models.TextField(blank=True, default='', verbose_name="Bio (English)")
+    bio_np = models.TextField(blank=True, default='', verbose_name="Bio (Nepali)")
+    order = models.PositiveIntegerField(default=0, verbose_name="Display Order")
+    is_active = models.BooleanField(default=True, verbose_name="Is Active / Visible")
+    created_at = models.DateTimeField(default=timezone.now, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'id']
+        verbose_name = "Board Member"
+        verbose_name_plural = "Board Members"
+
+    @property
+    def final_image_url(self):
+        if self.image:
+            try:
+                return self.image.url
+            except Exception:
+                pass
+        return self.image_url or "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
+
+    def __str__(self):
+        return f"#{self.order} {self.name} ({self.position})"
+
+

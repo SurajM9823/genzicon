@@ -17,18 +17,25 @@ import {
   ArrowUp,
   ArrowDown,
   MapPin,
-  Calendar
+  Calendar,
+  Users
 } from 'lucide-react';
-import { SiteContentConfig, Language, StatMetric, FilmstripScene } from '../../types';
-import { DEFAULT_SITE_CONTENT } from '../../data/mockData';
+import { SiteContentConfig, Language, StatMetric, FilmstripScene, BoardMember } from '../../types';
+import { DEFAULT_SITE_CONTENT, DEFAULT_BOARD_MEMBERS } from '../../data/mockData';
 import { DEFAULT_FILMSTRIP_SCENES } from '../FilmstripGallery';
 import { AdminFilmstripModal } from './AdminFilmstripModal';
+import { AdminBoardMemberModal } from './AdminBoardMemberModal';
 import { 
   apiGetFilmstripScenes, 
   apiSaveFilmstripScenes, 
   apiCreateFilmstripScene, 
   apiUpdateFilmstripScene, 
-  apiDeleteFilmstripScene 
+  apiDeleteFilmstripScene,
+  apiGetBoardMembers,
+  apiSaveBoardMembers,
+  apiCreateBoardMember,
+  apiUpdateBoardMember,
+  apiDeleteBoardMember
 } from '../../services/api';
 import { HeroMediaRenderer, isRiveMedia } from '../HeroMediaRenderer';
 
@@ -76,6 +83,19 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
   const [editingScene, setEditingScene] = useState<FilmstripScene | null>(null);
   const [filmstripToast, setFilmstripToast] = useState('');
 
+  // 5. Board Members State & CRUD
+  const [boardMembers, setBoardMembers] = useState<BoardMember[]>(() => {
+    try {
+      const saved = localStorage.getItem('genzicon_board_members');
+      return saved ? JSON.parse(saved) : DEFAULT_BOARD_MEMBERS;
+    } catch {
+      return DEFAULT_BOARD_MEMBERS;
+    }
+  });
+  const [boardModalOpen, setBoardModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<BoardMember | null>(null);
+  const [boardToast, setBoardToast] = useState('');
+
   useEffect(() => {
     apiGetFilmstripScenes().then((data) => {
       if (data && data.length > 0) {
@@ -83,7 +103,72 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
         localStorage.setItem('genzicon_filmstrip_scenes', JSON.stringify(data));
       }
     });
+
+    apiGetBoardMembers().then((data) => {
+      if (data && data.length > 0) {
+        setBoardMembers(data);
+        localStorage.setItem('genzicon_board_members', JSON.stringify(data));
+      }
+    });
   }, []);
+
+  const handleOpenAddBoardMember = () => {
+    setEditingMember(null);
+    setBoardModalOpen(true);
+  };
+
+  const handleOpenEditBoardMember = (member: BoardMember) => {
+    setEditingMember(member);
+    setBoardModalOpen(true);
+  };
+
+  const handleSaveBoardMember = async (member: BoardMember, file?: File) => {
+    const isNew = !boardMembers.some(m => String(m.id) === String(member.id));
+    let updatedList: BoardMember[] = [];
+
+    if (isNew) {
+      const created = await apiCreateBoardMember(member, file);
+      const savedMember = created || member;
+      updatedList = [...boardMembers, savedMember];
+    } else {
+      const updated = await apiUpdateBoardMember(member.id, member, file);
+      const savedMember = updated || member;
+      updatedList = boardMembers.map(m => String(m.id) === String(member.id) ? savedMember : m);
+    }
+
+    setBoardMembers(updatedList);
+    localStorage.setItem('genzicon_board_members', JSON.stringify(updatedList));
+    apiSaveBoardMembers(updatedList);
+    window.dispatchEvent(new Event('genzicon_board_members_updated'));
+
+    setBoardToast(isNp ? 'बोर्ड सदस्य सफलतापूर्वक सुरक्षित गरियो!' : 'Board member saved successfully!');
+    setTimeout(() => setBoardToast(''), 3500);
+  };
+
+  const handleDeleteBoardMember = async (id: string | number) => {
+    if (!window.confirm(isNp ? 'के तपाईं यो सदस्य हटाउन निश्चित हुनुहुन्छ?' : 'Are you sure you want to remove this board member?')) return;
+    await apiDeleteBoardMember(id);
+    const updatedList = boardMembers.filter(m => String(m.id) !== String(id));
+    setBoardMembers(updatedList);
+    localStorage.setItem('genzicon_board_members', JSON.stringify(updatedList));
+    apiSaveBoardMembers(updatedList);
+    window.dispatchEvent(new Event('genzicon_board_members_updated'));
+    setBoardToast(isNp ? 'सदस्य हटाइयो' : 'Member removed');
+    setTimeout(() => setBoardToast(''), 3000);
+  };
+
+  const handleMoveBoardMember = (index: number, direction: 'up' | 'down') => {
+    const newIdx = direction === 'up' ? index - 1 : index + 1;
+    if (newIdx < 0 || newIdx >= boardMembers.length) return;
+    const reordered = [...boardMembers];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(newIdx, 0, moved);
+    const reorderedWithNumbers = reordered.map((m, idx) => ({ ...m, order: idx + 1 }));
+    setBoardMembers(reorderedWithNumbers);
+    localStorage.setItem('genzicon_board_members', JSON.stringify(reorderedWithNumbers));
+    apiSaveBoardMembers(reorderedWithNumbers);
+    window.dispatchEvent(new Event('genzicon_board_members_updated'));
+  };
 
   const handleOpenAddFilmstripScene = () => {
     setEditingScene(null);
@@ -889,6 +974,147 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
         onSave={handleSaveFilmstripScene}
         language={language}
         nextSceneIndex={filmstripScenes.length + 1}
+      />
+
+      {/* ------------------------------------------------------------------ */}
+      {/* Section 5: Board Members & Leadership (सञ्चालक समिति) */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="bg-white border border-[#d8e3fb] p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-[#d8e3fb] gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[#003c90]/10 text-[#003c90] flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-[#111c2d] uppercase tracking-wider font-heading">
+                {isNp ? '५. सञ्चालक समिति तथा संस्थागत नेतृत्व (Contact Page)' : '5. Board Members & Leadership (Contact Page)'}
+              </h3>
+              <p className="text-[11px] text-[#737784]">
+                {isNp 
+                  ? 'सम्पर्क पृष्ठ (/contact) को अन्त्यमा देखिने सञ्चालक समिति सदस्यहरूको सूची, फोटो र पद' 
+                  : 'Manage board of directors shown at the bottom of the contact page'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {boardToast && (
+              <span className="text-xs text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 border border-emerald-200">
+                {boardToast}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={handleOpenAddBoardMember}
+              className="px-3 py-1.5 bg-[#003c90] hover:bg-[#002660] text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isNp ? 'सदस्य थप्नुहोस्' : 'Add Board Member'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Board Members List */}
+        <div className="space-y-3">
+          {boardMembers.length === 0 ? (
+            <div className="p-8 text-center bg-[#f9f9ff] border border-dashed border-[#d8e3fb]">
+              <Users className="w-8 h-8 text-[#737784] mx-auto mb-2 opacity-50" />
+              <p className="text-xs text-[#737784]">
+                {isNp ? 'कुनै बोर्ड सदस्य थपिएको छैन।' : 'No board members added yet.'}
+              </p>
+            </div>
+          ) : (
+            boardMembers.map((member, index) => (
+              <div 
+                key={member.id}
+                className="p-3 bg-[#f9f9ff] border border-[#d8e3fb] hover:border-[#003c90] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors"
+              >
+                {/* Left: Avatar + Details */}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-xs ring-1 ring-[#d8e3fb] bg-[#e7eeff] shrink-0">
+                    <img 
+                      src={member.imageUrl || member.final_image_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'} 
+                      alt={member.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#111c2d]">
+                        {member.name}
+                      </span>
+                      {member.nameNp && (
+                        <span className="text-xs text-[#737784]">({member.nameNp})</span>
+                      )}
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-bold ${
+                        member.isActive !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-700'
+                      }`}>
+                        {member.isActive !== false ? 'Active' : 'Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#00743a] font-semibold mt-0.5">
+                      {member.position} {member.positionNp ? `• ${member.positionNp}` : ''}
+                    </p>
+                    {member.email && (
+                      <span className="text-[10px] text-[#737784] block">{member.email}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => handleMoveBoardMember(index, 'up')}
+                    className="p-1.5 border border-[#d8e3fb] bg-white text-[#737784] hover:text-[#003c90] hover:bg-slate-50 disabled:opacity-30 rounded transition-colors"
+                    title="Move member up"
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index === boardMembers.length - 1}
+                    onClick={() => handleMoveBoardMember(index, 'down')}
+                    className="p-1.5 border border-[#d8e3fb] bg-white text-[#737784] hover:text-[#003c90] hover:bg-slate-50 disabled:opacity-30 rounded transition-colors"
+                    title="Move member down"
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditBoardMember(member)}
+                    className="px-3 py-1.5 border border-[#003c90] bg-[#e7eeff] hover:bg-[#003c90] text-[#003c90] hover:text-white text-xs font-bold uppercase tracking-wider rounded transition-colors flex items-center gap-1"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteBoardMember(member.id)}
+                    className="p-1.5 border border-red-200 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded transition-colors"
+                    title="Delete member"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Admin Board Member Add/Edit Modal */}
+      <AdminBoardMemberModal
+        isOpen={boardModalOpen}
+        onClose={() => setBoardModalOpen(false)}
+        memberToEdit={editingMember}
+        onSave={handleSaveBoardMember}
+        language={language}
+        nextOrder={boardMembers.length + 1}
       />
 
       {/* Bottom Save Bar */}

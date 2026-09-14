@@ -4,7 +4,7 @@ from django.utils.html import format_html
 from .models import (
     SiteContent, ImpactStat, FilmstripScene, Project, ClothesDonor,
     ClothesDonation, Volunteer, DonationRecord, ContactInquiry, ClothesHubConfig, SiteSettings,
-    PaymentConfig
+    PaymentConfig, BoardMember
 )
 
 @admin.register(SiteContent)
@@ -107,6 +107,40 @@ class FilmstripSceneAdmin(admin.ModelAdmin):
             return "-"
         return format_html('<img src="{}" style="width: 70px; height: 42px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd;" />', url)
     image_preview.short_description = "Scene Preview"
+
+@admin.register(BoardMember)
+class BoardMemberAdmin(admin.ModelAdmin):
+    save_on_top = True
+    list_display = ('order', 'name', 'position', 'email', 'phone', 'image_preview', 'is_active')
+    list_display_links = ('name',)
+    list_editable = ('order', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'name_np', 'position', 'position_np', 'email', 'phone', 'bio')
+    fieldsets = (
+        ('Display & Visibility', {
+            'fields': ('is_active', 'order')
+        }),
+        ('Personal & Role Details', {
+            'fields': ('name', 'name_np', 'position', 'position_np')
+        }),
+        ('Contact & Links', {
+            'fields': ('email', 'phone', 'linkedin')
+        }),
+        ('Profile Picture', {
+            'fields': ('image', 'image_url')
+        }),
+        ('Biography', {
+            'fields': ('bio', 'bio_np')
+        }),
+    )
+
+    def image_preview(self, obj):
+        url = obj.final_image_url
+        if not url:
+            return "-"
+        return format_html('<img src="{}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid #ccc;" />', url)
+
+    image_preview.short_description = "Avatar Preview"
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):

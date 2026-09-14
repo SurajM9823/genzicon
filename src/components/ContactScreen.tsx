@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building,
   MapPin,
@@ -9,8 +9,9 @@ import {
   CheckCircle2,
   MessageSquare
 } from 'lucide-react';
-import { NavTab, Language, ContactMessage, SiteSettingsConfig } from '../types';
-import { apiSubmitContact } from '../services/api';
+import { NavTab, Language, ContactMessage, SiteSettingsConfig, BoardMember } from '../types';
+import { DEFAULT_BOARD_MEMBERS } from '../data/mockData';
+import { apiSubmitContact, apiGetBoardMembers } from '../services/api';
 
 interface ContactScreenProps {
   language: Language;
@@ -20,6 +21,39 @@ interface ContactScreenProps {
 
 export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelectTab, siteSettings }) => {
   const isNp = language === 'np';
+
+  // Board Members state (dynamic from backend with default fallback)
+  const [boardMembers, setBoardMembers] = useState<BoardMember[]>(() => {
+    try {
+      const cached = localStorage.getItem('genzicon_board_members');
+      return cached ? JSON.parse(cached) : DEFAULT_BOARD_MEMBERS;
+    } catch {
+      return DEFAULT_BOARD_MEMBERS;
+    }
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadMembers = async () => {
+      const data = await apiGetBoardMembers();
+      if (data && data.length > 0 && isMounted) {
+        setBoardMembers(data);
+        try {
+          localStorage.setItem('genzicon_board_members', JSON.stringify(data));
+        } catch {}
+      }
+    };
+    loadMembers();
+
+    const handleUpdate = () => {
+      loadMembers();
+    };
+    window.addEventListener('genzicon_board_members_updated', handleUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('genzicon_board_members_updated', handleUpdate);
+    };
+  }, []);
 
   // Dynamic Contact info
   const headTitle = isNp ? (siteSettings?.headOfficeTitleNp || 'केन्द्रीय कार्यालय (काठमाडौँ)') : (siteSettings?.headOfficeTitle || 'Central Head Office (Kathmandu)');
@@ -319,6 +353,55 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
                 </form>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Board Members Section: Clean, small circular image with name and position below */}
+        <div className="mt-14 sm:mt-16 pt-10 border-t border-[#d8e3fb]">
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#003c90] block mb-1">
+              {isNp ? 'संस्थागत नेतृत्व' : 'Governance & Leadership'}
+            </span>
+            <h2
+              className="text-xl sm:text-2xl font-bold text-[#111c2d]"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
+            >
+              {isNp ? 'सञ्चालक समिति' : 'Board Members'}
+            </h2>
+            <p className="text-xs text-[#737784] mt-1">
+              {isNp 
+                ? 'गेन्जिकन फाउन्डेसनको दूरदृष्टि, नीति तथा सामाजिक अभियानको नेतृत्व गर्ने सञ्चालक समिति।' 
+                : 'The dedicated stewards guiding Genzicon Foundation’s mission, governance, and ground impact.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 sm:gap-8 justify-items-center">
+            {boardMembers.filter(m => m.isActive !== false).map((member) => (
+              <div 
+                key={member.id} 
+                className="group flex flex-col items-center text-center w-full max-w-[150px]"
+              >
+                {/* Small circular profile image */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-white shadow-sm ring-2 ring-[#d8e3fb] group-hover:ring-[#003c90] transition-all duration-300 transform group-hover:scale-105 bg-[#e7eeff] mb-2.5 shrink-0">
+                  <img 
+                    src={member.imageUrl || member.final_image_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'} 
+                    alt={member.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+
+                {/* Name below */}
+                <h3 className="text-xs sm:text-sm font-bold text-[#111c2d] group-hover:text-[#003c90] transition-colors leading-snug">
+                  {isNp && member.nameNp ? member.nameNp : member.name}
+                </h3>
+
+                {/* Position below */}
+                <p className="text-[11px] text-[#00743a] font-semibold mt-0.5 leading-snug">
+                  {isNp && member.positionNp ? member.positionNp : member.position}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

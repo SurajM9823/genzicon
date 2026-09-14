@@ -2,6 +2,7 @@ import {
   Project, 
   StatMetric, 
   TeamMember, 
+  BoardMember,
   PillarData,
   DropoffHub,
   ClothesDonor,
@@ -477,6 +478,75 @@ export const TEAM_MEMBERS: TeamMember[] = [
     location: 'Lalitpur, Nepal',
     avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
     email: 'clothesbank@genzicon.org'
+  }
+];
+
+export const DEFAULT_BOARD_MEMBERS: BoardMember[] = [
+  {
+    id: 'suman-yadav',
+    name: 'Suman Yadav',
+    nameNp: 'सुमन यादव',
+    position: 'Founder & Chairperson',
+    positionNp: 'संस्थापक तथा अध्यक्ष',
+    imageUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    email: 'suman@genzicon.org',
+    order: 1,
+    isActive: true,
+  },
+  {
+    id: 'anita-shrestha',
+    name: 'Anita Shrestha',
+    nameNp: 'अनिता श्रेष्ठ',
+    position: 'Vice Chairperson',
+    positionNp: 'उपाध्यक्ष',
+    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
+    email: 'anita@genzicon.org',
+    order: 2,
+    isActive: true,
+  },
+  {
+    id: 'rohit-adhikari',
+    name: 'Rohit Adhikari',
+    nameNp: 'रोहित अधिकारी',
+    position: 'General Secretary',
+    positionNp: 'महासचिव',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    email: 'rohit@genzicon.org',
+    order: 3,
+    isActive: true,
+  },
+  {
+    id: 'priya-thapa',
+    name: 'Priya Thapa',
+    nameNp: 'प्रिया थापा',
+    position: 'Treasurer',
+    positionNp: 'कोषाध्यक्ष',
+    imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
+    email: 'treasury@genzicon.org',
+    order: 4,
+    isActive: true,
+  },
+  {
+    id: 'bikash-chaudhary',
+    name: 'Bikash Chaudhary',
+    nameNp: 'बिकेश चौधरी',
+    position: 'Executive Board Member',
+    positionNp: 'कार्यकारी सदस्य',
+    imageUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
+    email: 'bikash@genzicon.org',
+    order: 5,
+    isActive: true,
+  },
+  {
+    id: 'dr-sunita-regmi',
+    name: 'Dr. Sunita Regmi',
+    nameNp: 'डा. सुनिता रेग्मी',
+    position: 'Advisory Board Member',
+    positionNp: 'सल्लाहकार सदस्य',
+    imageUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
+    email: 'advisory@genzicon.org',
+    order: 6,
+    isActive: true,
   }
 ];
 
