@@ -75,7 +75,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             subtitleNp: siteContent.heroSubtitleNp,
             tag: siteContent.heroBannerTag,
             tagNp: siteContent.heroBannerTagNp,
-            imageUrl: siteContent.heroImageUrl,
+            imageUrl: siteContent.heroImageUrl || 'https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif',
           }]
       );
 
@@ -161,7 +161,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const heroY = useTransform(smoothProgress, [0, 0.8], [0, 45]);
   const heroRotateX = useTransform(smoothProgress, [0, 0.8], [0, 8]);
 
-  const activeHeroImg = currentSlide.imageUrl || siteContent.heroImageUrl;
+  const DEFAULT_HERO_IMAGE = 'https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif';
+  const rawHeroImg = currentSlide?.imageUrl || siteContent.heroImageUrl;
+  const activeHeroImg = (!rawHeroImg || rawHeroImg.includes('photo-1544717305-2782549b5136'))
+    ? DEFAULT_HERO_IMAGE
+    : rawHeroImg;
   const activeFitMode = siteContent.heroImageFit || 'cover';
 
   return (

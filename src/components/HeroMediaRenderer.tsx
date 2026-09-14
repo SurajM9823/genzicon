@@ -71,6 +71,8 @@ export function isVideoMedia(url?: string): boolean {
   );
 }
 
+export const DEFAULT_HERO_IMAGE = 'https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif';
+
 export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
   mediaUrl,
   alt = 'Genzicon Hero Media',
@@ -79,7 +81,11 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
   fitMode = 'cover',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const trimmedUrl = (mediaUrl || '').trim();
+  const rawTrimmed = (mediaUrl || '').trim();
+  const fallbackUrl = DEFAULT_HERO_IMAGE;
+  const trimmedUrl = (!rawTrimmed || rawTrimmed.includes('photo-1544717305-2782549b5136'))
+    ? fallbackUrl
+    : rawTrimmed;
 
   // 1. Direct .riv binary file handling via @rive-app/canvas
   useEffect(() => {
@@ -116,14 +122,6 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
       }
     };
   }, [trimmedUrl, fitMode]);
-
-  if (!trimmedUrl) {
-    return (
-      <div className={`bg-gradient-to-br from-[#003c90] to-[#001f4d] flex items-center justify-center ${className}`}>
-        <span className="text-white/40 text-xs font-mono">No Media Configured</span>
-      </div>
-    );
-  }
 
   // 1. Direct .riv Canvas
   if (isDirectRivFile(trimmedUrl)) {
@@ -168,8 +166,6 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
   }
 
   // 4. Standard Photo / Image with Smart Framing to avoid aggressive cut-offs
-  const fallbackUrl = 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600';
-
   // Ambient Mode: Full uncropped image in center with blurred matching background filling wide desktop screens
   if (fitMode === 'ambient') {
     return (
@@ -181,7 +177,8 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover object-center blur-2xl opacity-45 brightness-75 scale-110 pointer-events-none select-none transition-all duration-700"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = fallbackUrl;
+            const target = e.target as HTMLImageElement;
+            if (target.src !== fallbackUrl) target.src = fallbackUrl;
           }}
         />
         {/* Full Uncropped High-Res Foreground Photo */}
@@ -190,7 +187,8 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
           alt={alt}
           className="relative z-10 max-w-full max-h-full w-auto h-auto object-contain object-center drop-shadow-2xl transition-all duration-700"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = fallbackUrl;
+            const target = e.target as HTMLImageElement;
+            if (target.src !== fallbackUrl) target.src = fallbackUrl;
           }}
         />
       </div>
@@ -215,7 +213,8 @@ export const HeroMediaRenderer: React.FC<HeroMediaRendererProps> = ({
       alt={alt}
       className={`w-full h-full object-cover ${positionClass} transition-all duration-700 ${className}`}
       onError={(e) => {
-        (e.target as HTMLImageElement).src = fallbackUrl;
+        const target = e.target as HTMLImageElement;
+        if (target.src !== fallbackUrl) target.src = fallbackUrl;
       }}
     />
   );

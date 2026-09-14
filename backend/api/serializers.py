@@ -23,7 +23,7 @@ class SiteContentSerializer(serializers.ModelSerializer):
             if request is not None:
                 return request.build_absolute_uri(obj.hero_image.url)
             return obj.hero_image.url
-        return obj.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600"
+        return obj.hero_image_url or "https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif"
 
 class ProjectSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.SerializerMethodField()

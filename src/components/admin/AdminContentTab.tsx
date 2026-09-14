@@ -52,6 +52,11 @@ export const AdminContentTab: React.FC<AdminContentTabProps> = ({
   // Curated Nepali NGO imagery and interactive Rive animation presets
   const presetMedia = [
     {
+      title: 'Official Genzicon Hero Banner',
+      type: 'image',
+      url: 'https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif'
+    },
+    {
       title: 'Clothes Distribution in Village',
       type: 'image',
       url: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80'

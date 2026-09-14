@@ -167,7 +167,7 @@ class SiteContentViewSet(viewsets.ModelViewSet):
         hero_images = []
 
         for slide in active_slides:
-            img_url = slide.hero_image.url if slide.hero_image else (slide.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600")
+            img_url = slide.hero_image.url if slide.hero_image else (slide.hero_image_url or "https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif")
             if img_url.startswith('/'):
                 built_uri = request.build_absolute_uri(img_url)
                 proto = request.META.get('HTTP_X_FORWARDED_PROTO', '')
@@ -186,7 +186,7 @@ class SiteContentViewSet(viewsets.ModelViewSet):
                 'imageUrl': img_url,
             })
 
-        first_img = hero_images[0] if hero_images else (first.hero_image_url or "")
+        first_img = hero_images[0] if hero_images else (first.hero_image_url or "https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif")
 
         # Fetch and serialize 4 static impact cards
         ensure_default_impact_stats()

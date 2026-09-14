@@ -18,7 +18,7 @@ class Command(BaseCommand):
                 'hero_title_np': "नेपालभर युवा नेतृत्वमा प्रत्यक्ष सामाजिक रूपान्तरण",
                 'hero_subtitle': "Bridging immediate community needs through civic transparency, verified ground impact, youth volunteer taskforces, and zero administrative waste.",
                 'hero_subtitle_np': "पारदर्शी सेवा, प्रमाणित प्रभाव, युवा स्वयंसेवक परिचालन र प्रत्यक्ष सहयोग मार्फत समुदाय सशक्तिकरण।",
-                'hero_image_url': "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600",
+                'hero_image_url': "https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif",
                 'hero_banner_tag': "Grassroots Youth NGO",
                 'hero_banner_tag_np': "युवा नेतृत्व गैरसरकारी संस्था",
             }

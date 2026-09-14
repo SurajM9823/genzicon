@@ -21,7 +21,7 @@ class SiteContent(models.Model):
     
     # Image upload OR external URL / Rive Animation / Embed
     hero_image = models.ImageField(upload_to='hero_slides/', blank=True, null=True, verbose_name="Upload Hero Image (File)")
-    hero_image_url = models.TextField(default="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600", blank=True, null=True, verbose_name="Or Image URL / Rive Animation / Embed Link")
+    hero_image_url = models.TextField(default="https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif", blank=True, null=True, verbose_name="Or Image URL / Rive Animation / Embed Link")
     
     hero_banner_tag = models.CharField(max_length=100, default="Grassroots Youth NGO", verbose_name="Badge Tag (English)")
     hero_banner_tag_np = models.CharField(max_length=100, default="युवा नेतृत्व गैरसरकारी संस्था", verbose_name="Badge Tag (Nepali)")
@@ -40,7 +40,7 @@ class SiteContent(models.Model):
     def final_image_url(self):
         if self.hero_image:
             return self.hero_image.url
-        return self.hero_image_url or "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=1600"
+        return self.hero_image_url or "https://genzicon.com/media/hero_slides/ChatGPT_Image_Sep_7_2026_10_26_42_PM_xY6nbh0.avif"
 
     def __str__(self):
         status = "Active" if self.is_active else "Inactive"
