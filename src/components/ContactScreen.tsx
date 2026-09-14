@@ -122,18 +122,8 @@ export const ContactScreen: React.FC<ContactScreenProps> = ({ language, onSelect
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#003c90] block mb-0.5">
                 {isNp ? 'सम्पर्क ठेगाना तथा सोधपुछ' : 'Contact & Inquiries'}
               </span>
-              <h1
-                className="text-xl sm:text-2xl md:text-3xl font-bold text-[#111c2d]"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
-              >
-                {isNp ? 'सम्पर्क गर्नुहोस्' : 'Contact Genzicon'}
-              </h1>
+            
             </div>
-            <p className="text-xs text-[#434653] max-w-md">
-              {isNp
-                ? 'काठमाडौँ तथा जनकपुर कार्यालय वा सिधै अनलाइन फारममार्फत हामीलाई सम्पर्क गर्नुहोस्।'
-                : 'Reach out to our offices in Kathmandu and Janakpurdham, or send us a direct message below.'}
-            </p>
           </div>
         </div>
       </div>
